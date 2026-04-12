@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Vault | Curated Inspiration</title>
+    
+    <!-- Typography & Icons -->
+    <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700&f[]=satoshi@900,700,500,300,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Shared Styles (Tokens) -->
+    <link rel="stylesheet" href="shared/theme.css">
+    
+    <!-- Component Specific Styles (Merged for Assemble View) -->
+    <style>
+        /* Navbar Styles from navbar/navbar.html */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height);
+            z-index: 1000; display: flex; align-items: center; transition: all var(--transition-smooth);
+        }
+        header.is-scrolled {
+            height: 64px; background: rgba(13, 13, 13, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--dv-border);
+        }
+        [data-theme="light"] header.is-scrolled { background: rgba(255, 255, 255, 0.8); }
+        nav { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 16px; z-index: 10; }
+        .nav-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5; }
+        .brand-logo { width: 32px; height: 32px; background: var(--dv-brand-yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 200ms ease; }
+        .search-container { display: flex; align-items: center; background: var(--dv-surface-dark); border: 1px solid var(--dv-border); border-radius: var(--radius-pill); padding: 0 16px; height: 44px; gap: 10px; width: 320px; transition: all var(--transition-smooth); }
+        .search-container:focus-within { width: 380px; border-color: rgba(255, 255, 255, 0.3); }
+        .search-container input { background: transparent; border: none; color: var(--dv-text); font-size: 14px; width: 100%; outline: none; }
+        .tab-track { display: flex; background: var(--dv-surface-dark); border: 1px solid var(--dv-border); border-radius: 9999px; padding: 4px; position: relative; }
+        .tab-active-pill { position: absolute; background: #FFFFFF; border-radius: 9999px; height: calc(100% - 8px); top: 4px; left: 4px; z-index: 1; transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .tab-item { padding: 8px 20px; font-size: 14px; font-weight: 600; color: var(--dv-text-ghost); cursor: pointer; z-index: 2; transition: color 250ms ease; white-space: nowrap; }
+        .tab-item.active { color: #000000; }
+        .ghost-link { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--dv-text-ghost); text-decoration: none; }
+        .toggle-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; }
+        .cta-button { background: var(--dv-brand-yellow); color: #000000; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 700; font-size: 14px; cursor: pointer; }
+        .pg-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2D2D2D; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: white; border: 1px solid var(--dv-border); }
+
+        /* Hero Styles from hero/hero.html */
+        .hero-section { padding: 160px 24px 60px; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
+        .hero-content { max-width: 680px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .hero-badge { display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--dv-border); padding: 6px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; color: var(--dv-text-ghost); margin-bottom: 32px; }
+        .hero-section h1 { font-size: clamp(2.5rem, 5vw, 4rem); white-space: normal; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 24px; color: var(--dv-text); max-width: 900px; }
+        .hero-subtitle { font-size: 18px; line-height: 1.6; color: var(--dv-text-ghost); margin-bottom: 40px; }
+        .hero-buttons { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 56px; }
+        .button-ghost { background: transparent; border: 1px solid var(--dv-border); color: var(--dv-text); padding: 12px 28px; border-radius: var(--radius-pill); font-weight: 700; font-size: 15px; cursor: pointer; }
+        .hero-stats { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid var(--dv-border); }
+        .stat-item { font-size: 14px; font-weight: 600; color: var(--dv-text-ghost); display: flex; align-items: center; gap: 8px; }
+        .stat-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--dv-text-ghost); opacity: 0.3; }
+
+        /* Sort Bar Styles from sort-bar/sort-bar.html */
+        .filter-bar { width: 100% !important; border-bottom: 1px solid var(--dv-border); background: var(--dv-bg); display: block !important; padding: 12px 0; }
+        .filter-container { max-width: 1440px !important; width: 100% !important; margin: 0 auto !important; padding: 0 24px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; height: 64px !important; }
+        .filter-left { display: flex; gap: 32px; height: 100%; align-items: center; }
+        .filter-tab { font-size: 14px; font-weight: 500; color: var(--dv-text-ghost); cursor: pointer; height: 100%; display: flex; align-items: center; position: relative; transition: color var(--transition-smooth); }
+        .filter-tab:hover, .filter-tab.active { color: var(--dv-text); }
+        .filter-tab.active { font-weight: 700; }
+        .filter-tab.active::after { content: ''; position: absolute; bottom: -12px; left: 0; width: 100%; height: 3px; background: var(--dv-text); }
+        .filter-right { display: flex; align-items: center; gap: 12px; color: var(--dv-text); font-size: 14px; font-weight: 600; cursor: pointer; }
+
+        /* Card Grid Styles from card-grid/card-grid.html */
+        .grid-section { padding: 40px 24px 100px; max-width: 1440px; margin: 0 auto; width: 100%; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 32px; width: 100%; }
+        .dv-card { background: var(--dv-surface-dark); border: 1px solid var(--dv-border); border-radius: 20px; overflow: hidden; transition: all var(--transition-smooth); cursor: pointer; position: relative; }
+        .dv-card:hover { transform: translateY(-8px); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4); }
+        .card-image-wrapper { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; background: #252525; }
+        .card-image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1); }
+        .dv-card:hover .card-image-wrapper img { transform: scale(1.08); }
+        .card-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; gap: 16px; opacity: 0; transition: opacity 300ms ease; z-index: 10; }
+        .dv-card:hover .card-overlay { opacity: 1; }
+        .overlay-btn { width: 48px; height: 48px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; transition: all 200ms ease; }
+        .overlay-btn:hover { background: var(--dv-brand-yellow); color: #000; transform: scale(1.1); }
+        .card-footer { padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .card-info { display: flex; flex-direction: column; gap: 4px; }
+        .card-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--dv-text); }
+        .card-tag { font-size: 12px; font-weight: 600; color: var(--dv-text-ghost); text-transform: uppercase; letter-spacing: 0.05em; }
+        .author-avatar { width: 28px; height: 28px; border-radius: 50%; background: #333; border: 1px solid var(--dv-border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+
+        /* Shared Mobile Adjustments */
+        @media (max-width: 768px) {
+            .hero-section h1 { font-size: 36px; white-space: normal; }
+            .card-grid { grid-template-columns: 1fr; }
+            .nav-center { display: none; }
+            .mobile-bottom-nav { position: fixed; bottom: 24px; left: 16px; right: 16px; z-index: 2000; display: flex; justify-content: center; }
+            .mobile-bottom-nav .tab-track { width: 100%; background: rgba(13, 13, 13, 0.9); backdrop-filter: blur(16px); overflow-x: auto; scrollbar-width: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- [NAVBAR] -->
+    <header id="dv-header">
+        <nav>
+            <div class="nav-left">
+                <div class="brand-logo" title="Design Vault">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 8.5C19 12.0899 15.8657 15 12 15H7V22H19C19 22 19 22 19 22V8.5Z" fill="#0D0D0D" />
+                        <path d="M12 2H5V15H12C15.8657 15 19 12.0899 19 8.5C19 4.91015 15.8657 2 12 2Z" fill="#0D0D0D" />
+                    </svg>
+                </div>
+                <div class="search-container">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search Websites, Screens, UI Elements, Flows">
+                </div>
+            </div>
+            <div class="nav-center">
+                <div class="tab-track" id="desktop-track">
+                    <div class="tab-active-pill" id="desktop-pill"></div>
+                    <div class="tab-item active" onclick="handleTab(this)">Websites</div>
+                    <div class="tab-item" onclick="handleTab(this)">Apps</div>
+                    <div class="tab-item" onclick="handleTab(this)">Resources</div>
+                    <div class="tab-item" onclick="handleTab(this)">Fonts</div>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="ghost-link"><i data-lucide="bookmark"></i><span>Saved</span></div>
+                <div class="toggle-btn" onclick="toggleMode()"><i id="mode-icon" data-lucide="moon"></i></div>
+                <button class="cta-button">Submit a Flow</button>
+                <div class="pg-avatar">PG</div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-bottom-nav">
+        <div class="tab-track" id="mobile-track">
+            <div class="tab-active-pill" id="mobile-pill"></div>
+            <div class="tab-item active" onclick="handleTab(this, true)">Websites</div>
+            <div class="tab-item" onclick="handleTab(this, true)">Apps</div>
+            <div class="tab-item" onclick="handleTab(this, true)">Resources</div>
+            <div class="tab-item" onclick="handleTab(this, true)">Fonts</div>
+        </div>
+    </div>
+
+    <main>
+        <!-- [HERO] -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-badge">Free · Open · Always Growing</div>
+                <h1>Every flow. Every screen. <span style="color:var(--dv-brand-yellow)">One vault.</span></h1>
+                <p class="hero-subtitle">A curated library of UI flows, websites, landing pages, dashboards, Figma components and font resources.</p>
+                <div class="hero-buttons">
+                    <button class="cta-button">Explore Flows</button>
+                    <button class="button-ghost">Browse Categories</button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">240+ Flows</div><div class="stat-dot"></div>
+                    <div class="stat-item">180+ Websites</div><div class="stat-dot"></div>
+                    <div class="stat-item">90+ Components</div><div class="stat-dot"></div>
+                    <div class="stat-item">60+ Font Links</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- [SORT BAR] -->
+        <div class="filter-bar">
+            <div class="filter-container">
+                <div class="filter-left">
+                    <div class="filter-tab">Latest</div>
+                    <div class="filter-tab active">Most popular</div>
+                </div>
+                <div class="filter-right"><i data-lucide="sliders-horizontal"></i><span>Filter</span></div>
+            </div>
+        </div>
+
+        <!-- [CARD GRID] -->
+        <section class="grid-section">
+            <div class="card-grid">
+                <!-- Data from card-grid/card-grid.html -->
+                <div class="dv-card">
+                    <div class="card-image-wrapper">
+                        <img src="assets/saas_landing_preview_1775308725020.png" alt="SaaS">
+                        <div class="card-overlay">
+                            <div class="overlay-btn"><i data-lucide="eye"></i></div>
+                            <div class="overlay-btn"><i data-lucide="bookmark"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-info"><span class="card-tag">SaaS · Landing Page</span><div class="card-title">FlowFlow Dash v2</div></div>
+                        <div class="author-avatar">JD</div>
+                    </div>
+                </div>
+                <div class="dv-card">
+                    <div class="card-image-wrapper">
+                        <img src="assets/mobile_flow_preview_1775308756331.png" alt="Mobile">
+                        <div class="card-overlay">
+                            <div class="overlay-btn"><i data-lucide="eye"></i></div>
+                            <div class="overlay-btn"><i data-lucide="bookmark"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-info"><span class="card-tag">App · Onboarding</span><div class="card-title">Glow App Journey</div></div>
+                        <div class="author-avatar">PG</div>
+                    </div>
+                </div>
+                <div class="dv-card">
+                    <div class="card-image-wrapper">
+                        <img src="assets/ecommerce_page_preview_1775308777229.png" alt="Fashion">
+                        <div class="card-overlay">
+                            <div class="overlay-btn"><i data-lucide="eye"></i></div>
+                            <div class="overlay-btn"><i data-lucide="bookmark"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-info"><span class="card-tag">Fashion · E-commerce</span><div class="card-title">Aurelia Lorenzo</div></div>
+                        <div class="author-avatar">AL</div>
+                    </div>
+                </div>
+                <!-- Dynamic placeholders ... -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        const header = document.getElementById('dv-header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) header.classList.add('is-scrolled');
+            else header.classList.remove('is-scrolled');
+        });
+
+        function updatePill(tab, isMobile) {
+            const pillId = isMobile ? 'mobile-pill' : 'desktop-pill';
+            const pill = document.getElementById(pillId);
+            if (!pill) return;
+            pill.style.width = `${tab.offsetWidth}px`;
+            pill.style.transform = `translateX(${tab.offsetLeft - 4}px)`;
+        }
+
+        function handleTab(el, isMobile = false) {
+            const parent = el.parentElement;
+            parent.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            updatePill(el, isMobile);
+        }
+
+        window.addEventListener('load', () => {
+            const dActive = document.querySelector('#desktop-track .tab-item.active');
+            const mActive = document.querySelector('#mobile-track .tab-item.active');
+            if (dActive) updatePill(dActive, false);
+            if (mActive) updatePill(mActive, true);
+        });
+
+        let Theme = 'dark';
+        function toggleMode() {
+            Theme = Theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', Theme);
+            const icon = document.getElementById('mode-icon');
+            icon.setAttribute('data-lucide', Theme === 'dark' ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

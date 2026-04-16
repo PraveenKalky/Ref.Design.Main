@@ -2,9 +2,10 @@ import React from 'react';
 
 const NavbarBrand = () => {
   return (
-    <a href="/" className="navbar-brand">
-      <span>Ref.</span>Design
-    </a>
+    <div className="nav-left">
+      <div className="rf-avatar">RF</div>
+      <a href="/" className="wordmark">Ref.Design</a>
+    </div>
   );
 };
 

@@ -1,13 +1,13 @@
 import React from 'react';
 import HeroContent from './HeroContent';
-import HeroPreview from './HeroPreview';
 import './hero.css';
 
 const Hero = () => {
   return (
     <section className="hero">
-      <HeroContent />
-      <HeroPreview />
+      <div className="hero-container">
+        <HeroContent />
+      </div>
     </section>
   );
 };

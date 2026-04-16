@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap');
 
 :root {
   /* Colors */
@@ -29,8 +29,8 @@
   --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
 
   /* Typography */
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Archivo', sans-serif;
+  --font-heading: 'Urbanist', sans-serif;
+  --font-body: 'Urbanist', sans-serif;
 }
 
 * {
@@ -41,10 +41,11 @@
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--dv-bg);
+  color: var(--dv-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
 }
 
 h1, h2, h3, h4, h5, h6 {

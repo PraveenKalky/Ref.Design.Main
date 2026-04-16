@@ -3,11 +3,11 @@ import { Search } from 'lucide-react';
 
 const NavbarSearch = () => {
   return (
-    <div className="navbar-search">
-      <Search className="navbar-search-icon" size={18} />
+    <div className="search-container">
+      <Search size={18} className="lucide-search" />
       <input 
         type="text" 
-        placeholder="Search design flows, components, or screens..." 
+        placeholder="Search Websites, Screens, UI Elements, Flows" 
       />
     </div>
   );

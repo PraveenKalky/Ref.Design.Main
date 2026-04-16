@@ -1,26 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Search } from 'lucide-react';
 
 const NavbarTabs = () => {
-  const tabs = [
-    { label: 'Flows', active: true },
-    { label: 'Components', active: false },
-    { label: 'Collections', active: false },
-    { label: 'Curated', active: false },
-  ];
+    // Single source of truth for all nav links
+    const [activeLink, setActiveLink] = useState('Home');
 
-  return (
-    <nav className="navbar-tabs">
-      {tabs.map((tab) => (
-        <a 
-          key={tab.label} 
-          href={`/${tab.label.toLowerCase()}`} 
-          className={`navbar-tab-item ${tab.active ? 'active' : ''}`}
-        >
-          {tab.label}
-        </a>
-      ))}
-    </nav>
-  );
+    const navLinks = ['Home', 'Websites', 'Apps', 'Resources', 'Fonts', 'UI/UX Tastes', 'Search'];
+
+    return (
+        <div className="nav-center">
+            {navLinks.map((link) => (
+                <button 
+                    key={link}
+                    className={`nav-link ${activeLink === link ? 'active' : ''}`}
+                    onClick={() => setActiveLink(link)}
+                >
+                    {link === 'Search' && <Search size={16} />}
+                    {link}
+                </button>
+            ))}
+        </div>
+    );
 };
 
 export default NavbarTabs;

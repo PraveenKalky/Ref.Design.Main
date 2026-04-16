@@ -1,17 +1,17 @@
 import React from 'react';
 import NavbarBrand from './NavbarBrand';
-import NavbarSearch from './NavbarSearch';
 import NavbarTabs from './NavbarTabs';
 import NavbarActions from './NavbarActions';
 import './navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ savedCount }) => {
   return (
-    <header className="navbar">
-      <NavbarBrand />
-      <NavbarSearch />
-      <NavbarTabs />
-      <NavbarActions />
+    <header className="navbar-header">
+      <nav className="navbar-nav">
+        <NavbarBrand />
+        <NavbarTabs />
+        <NavbarActions savedCount={savedCount} />
+      </nav>
     </header>
   );
 };

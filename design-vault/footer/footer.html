@@ -1,0 +1,83 @@
+<footer class="dv-footer">
+    <div class="footer-container">
+        <div class="footer-top">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h4>Inspiration</h4>
+                    <a href="#">Websites</a>
+                    <a href="#">Apps</a>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <a href="#">Figma Community</a>
+                    <a href="#">fonts</a>
+                    <a href="#">webflow</a>
+                    <a href="#">Framer</a>
+                </div>
+                <div class="footer-column">
+                    <h4>Popular fonts</h4>
+                    <a href="#">inter</a>
+                    <a href="#">Graphik</a>
+                    <a href="#">Roobert</a>
+                </div>
+                <div class="footer-column">
+                    <!-- Column 4 remains for future alignment or expansion -->
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-big-text-wrapper">
+          <span class="footer-big-text" id="footerBigText">Ref.design</span>
+        </div>
+
+        <script>
+          function fitFooterText() {
+            const wrapper = document.querySelector('.footer-big-text-wrapper');
+            const text = document.getElementById('footerBigText');
+            if (!wrapper || !text) return;
+
+            // Reset first
+            text.style.fontSize = '10px';
+
+            const targetWidth = wrapper.getBoundingClientRect().width;
+            let low = 10, high = 600, mid;
+
+            while (low <= high) {
+              mid = Math.floor((low + high) / 2);
+              text.style.fontSize = mid + 'px';
+              if (text.getBoundingClientRect().width < targetWidth) {
+                low = mid + 1;
+              } else {
+                high = mid - 1;
+              }
+            }
+            text.style.fontSize = high + 'px';
+          }
+
+          // Run after full page load
+          if (document.readyState === 'complete') {
+            fitFooterText();
+          } else {
+            window.addEventListener('load', fitFooterText);
+          }
+          window.addEventListener('resize', fitFooterText);
+        </script>
+
+        <div class="footer-divider"></div>
+        <div class="footer-bottom">
+            <div class="footer-legal">
+                <a href="#">Cookies Policy</a> · 
+                <a href="#">Legal Terms</a> · 
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-social">
+                <span class="footer-social-label">Connect:</span>
+                <a href="#">Instagram</a> · 
+                <a href="#">LinkedIn</a> · 
+                <a href="#">Twitter</a> · 
+                <a href="#">Facebook</a> · 
+                <a href="#">Pinterest</a>
+            </div>
+        </div>
+    </div>
+</footer>

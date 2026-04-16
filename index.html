@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Vault by Praveen | Curated Inspiration</title>
+
+    <!-- Typography: Fontshare CDN -->
+    <link
+        href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700&f[]=satoshi@900,700,500,300,400&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons: Lucide CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Shared Styles (Tokens) -->
+    <link rel="stylesheet" href="design-vault/shared/theme.css">
+
+    <!-- External Component Styles -->
+    <link rel="stylesheet" href="design-vault/footer/footer.css">
+
+    <style>
+        :root {
+            /* Brand DNA (from image + skill tokens) */
+            --dv-brand-yellow: #FDE047;
+            --dv-brand-black: #0D0D0D;
+            --dv-surface-dark: #1A1A1A;
+            --dv-surface-light: #F3F4F6;
+
+            --dv-bg: #0D0D0D;
+            --dv-text: #FFFFFF;
+            --dv-text-ghost: rgba(255, 255, 255, 0.6);
+            --dv-border: rgba(255, 255, 255, 0.1);
+
+            --font-display: 'Cabinet Grotesk', sans-serif;
+            --font-body: 'Satoshi', sans-serif;
+
+            --nav-height: 72px;
+            --radius-pill: 99px;
+            --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --dv-bg: #FFFFFF;
+            --dv-text: #0D0D0D;
+            --dv-text-ghost: rgba(0, 0, 0, 0.6);
+            --dv-border: rgba(0, 0, 0, 0.08);
+            --dv-surface-dark: #F3F4F6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--dv-bg);
+            color: var(--dv-text);
+            font-family: var(--font-body);
+            transition: background var(--transition-smooth);
+            overflow-x: hidden;
+        }
+
+        /* --- Header Shell --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            transition: all var(--transition-smooth);
+        }
+
+        header.is-scrolled {
+            height: 64px;
+            background: rgba(13, 13, 13, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--dv-border);
+        }
+
+        [data-theme="light"] header.is-scrolled {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        nav {
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* --- Nav Sections --- */
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .nav-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        /* Logo Component */
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--dv-brand-yellow);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 200ms ease;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.05);
+        }
+
+        /* Search Component */
+        .search-container {
+            display: flex;
+            align-items: center;
+            background: var(--dv-surface-dark);
+            border: 1px solid var(--dv-border);
+            border-radius: var(--radius-pill);
+            padding: 0 16px;
+            height: 44px;
+            gap: 10px;
+            width: 320px;
+            transition: all var(--transition-smooth);
+        }
+
+        .search-container:focus-within {
+            width: 380px;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .search-container input {
+            background: transparent;
+            border: none;
+            color: var(--dv-text);
+            font-family: var(--font-body);
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+        }
+
+        .search-container input::placeholder {
+            color: var(--dv-text-ghost);
+        }
+
+        .search-container i {
+            width: 18px;
+            height: 18px;
+            color: var(--dv-text-ghost);
+        }
+
+        /* Segmented Tabs (Visual DNA from Image) */
+        .tab-track {
+            display: flex;
+            background: var(--dv-surface-dark);
+            border: 1px solid var(--dv-border);
+            border-radius: 9999px;
+            padding: 4px;
+            position: relative;
+        }
+
+        .tab-active-pill {
+            position: absolute;
+            background: #FFFFFF;
+            border-radius: 9999px;
+            height: calc(100% - 8px);
+            top: 4px;
+            left: 4px;
+            z-index: 1;
+            transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tab-item {
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dv-text-ghost);
+            cursor: pointer;
+            z-index: 2;
+            transition: color 250ms ease;
+            white-space: nowrap;
+        }
+
+        .tab-item.active {
+            color: #000000;
+        }
+
+        /* Nav Actions */
+        .ghost-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dv-text-ghost);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 150ms ease;
+        }
+
+        #saved-count {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-left: -2px;
+        }
+
+        .ghost-link:hover {
+            color: var(--dv-text);
+        }
+
+        .toggle-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--dv-text-ghost);
+            border-radius: 50%;
+            transition: all 200ms ease;
+        }
+
+        .toggle-btn:hover {
+            background: var(--dv-surface-dark);
+            color: var(--dv-text);
+        }
+
+        .cta-button {
+            background: var(--dv-brand-yellow);
+            color: #000000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 200ms ease;
+            white-space: nowrap;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.03);
+            filter: brightness(1.05);
+        }
+
+        .pg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #2D2D2D;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: white;
+            border: 1px solid var(--dv-border);
+            font-family: var(--font-display);
+        }
+
+        /* --- Layout --- */
+        main {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        /* --- Hero --- */
+        .hero-section {
+            padding: 160px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* --- Filter Bar --- */
+        .filter-bar {
+            width: 100% !important;
+            border-bottom: 1px solid var(--dv-border);
+            background: var(--dv-bg);
+            display: block !important;
+        }
+
+        .filter-container {
+            max-width: 1440px !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+            padding: 0 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            height: 64px !important;
+        }
+
+        .filter-left {
+            display: flex;
+            gap: 32px;
+            height: 100%;
+            align-items: center;
+        }
+
+        .filter-tab {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--dv-text-ghost);
+            cursor: pointer;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: color var(--transition-smooth);
+        }
+
+        .filter-tab:hover {
+            color: var(--dv-text);
+        }
+
+        .filter-tab.active {
+            color: var(--dv-text);
+            font-weight: 700;
+        }
+
+        .filter-left {
+            display: flex;
+            gap: 32px;
+            height: 100%;
+            align-items: center;
+            position: relative;
+        }
+
+        .filter-indicator {
+            position: absolute;
+            bottom: -1px;
+            height: 3px;
+            background: var(--dv-text);
+            transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 5;
+        }
+
+        /* --- Card Grid Section --- */
+        .design-feed-section {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 32px 24px 100px;
+            width: 100%;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 448px);
+            gap: 24px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .dv-card {
+            width: 448px;
+            height: auto;
+            background: transparent;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 200ms ease;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .dv-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .card-image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 328px;
+            overflow: hidden;
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .card-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dv-card:hover .card-image-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0);
+            transition: background 200ms ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .dv-card:hover .card-overlay {
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: all 200ms ease;
+        }
+
+        .dv-card:hover .card-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .action-btn:hover {
+            background: white;
+            color: black;
+            border-color: white;
+        }
+
+        .action-btn.saved {
+            background: var(--dv-brand-yellow);
+            color: black;
+            border-color: var(--dv-brand-yellow);
+        }
+
+        /* Toast Nudge */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            opacity: 0;
+            background: #1A1A1A;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--dv-border);
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .card-footer {
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #222;
+        }
+
+        .card-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--dv-text);
+        }
+
+        /* --- Tag Filter Section --- */
+        .tag-filter-section {
+            padding: 16px 0;
+            max-width: 1440px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .tag-row {
+            padding: 0 24px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .tag-row::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .tag-pill {
+            padding: 6px 14px;
+            border-radius: 99px;
+            border: 1.5px solid var(--dv-border);
+            background: transparent;
+            color: var(--dv-text);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 200ms ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-pill:hover {
+            border-color: var(--dv-text);
+        }
+
+        .tag-pill.active {
+            background: var(--dv-text);
+            color: var(--dv-bg);
+            border-color: var(--dv-text);
+        }
+
+        .tag-count {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 1px;
+        }
+
+        .tag-pill.active .tag-count {
+            color: inherit;
+            opacity: 0.8;
+        }
+
+        /* lucide icons sizing */
+        .dv-card .lucide {
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--dv-text);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity var(--transition-smooth);
+        }
+
+        .filter-right:hover {
+            opacity: 0.7;
+        }
+
+        .filter-right i {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* --- Pagination --- */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 64px 0 48px;
+            width: 100%;
+            font-family: 'Satoshi', sans-serif;
+        }
+
+        .page-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 1.5px solid var(--dv-border);
+            background: transparent;
+            color: var(--dv-text);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 150ms ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Satoshi', sans-serif;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--dv-text);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-numbers {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-number {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dv-text-ghost);
+            transition: all 150ms ease;
+            font-family: 'Satoshi', sans-serif;
+        }
+
+        .page-number:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--dv-text);
+        }
+
+        .page-number.active {
+            background: #111;
+            color: #fff;
+        }
+
+        [data-theme="light"] .page-number.active {
+            background: #000;
+            color: #fff;
+        }
+
+        /* --- Scroll to Top --- */
+        .scroll-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #111;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] .scroll-btn {
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .scroll-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-btn:hover {
+            background: #222;
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .scroll-btn:hover {
+            background: #fff;
+        }
+
+        .scroll-btn i {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-btn {
+                bottom: 100px; /* Avoid mobile bottom nav */
+            }
+        }
+
+        .hero-content {
+            max-width: 680px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Small Label Pill */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--dv-border);
+            padding: 6px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dv-text-ghost);
+            margin-bottom: 32px;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-section h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            white-space: nowrap;
+            width: max-content;
+            line-height: 0.92;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+            color: var(--dv-text);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-body);
+            font-size: 18px;
+            line-height: 1.6;
+            color: var(--dv-text-ghost);
+            margin-bottom: 40px;
+        }
+
+        /* Buttons Group */
+        .hero-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 56px;
+        }
+
+        .button-ghost {
+            background: transparent;
+            border: 1px solid var(--dv-border);
+            color: var(--dv-text);
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .button-ghost:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Stats Row */
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            padding-top: 24px;
+            border-top: 1px solid var(--dv-border);
+        }
+
+        .stat-item {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dv-text-ghost);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--dv-text-ghost);
+            opacity: 0.3;
+        }
+
+        /* --- Mobile Styles --- */
+        @media (max-width: 1024px) {
+            .search-container {
+                width: 200px;
+            }
+
+            .search-container:focus-within {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                height: 60px;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .search-container {
+                width: 44px;
+                padding: 0;
+                justify-content: center;
+                background: transparent;
+                border: none;
+            }
+
+            .search-container input {
+                display: none;
+            }
+
+            .ghost-link span,
+            .cta-button {
+                display: none;
+            }
+
+            /* Mobile Bottom Navigation */
+            .mobile-bottom-nav {
+                position: fixed;
+                bottom: 24px;
+                left: 16px;
+                right: 16px;
+                z-index: 2000;
+                display: flex;
+                justify-content: center;
+            }
+
+            .mobile-bottom-nav .tab-track {
+                width: 100%;
+                background: rgba(13, 13, 13, 0.9);
+                backdrop-filter: blur(16px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .mobile-bottom-nav .tab-track::-webkit-scrollbar {
+                display: none;
+            }
+
+            .hero-section h1 {
+                font-size: 48px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-buttons button {
+                width: 100%;
+            }
+
+            .hero-stats {
+                gap: 12px;
+                flex-direction: column;
+            }
+
+            .stat-dot {
+                display: none;
+            }
+
+            .filter-left {
+                gap: 20px;
+            }
+
+            .filter-tab {
+                font-size: 13px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-bottom-nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+
+    <header id="dv-header">
+        <nav>
+            <!-- Left: Brand & Search -->
+            <div class="nav-left">
+                <div class="brand-logo" title="Design Vault">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 8.5C19 12.0899 15.8657 15 12 15H7V22H19C19 22 19 22 19 22V8.5Z" fill="#0D0D0D" />
+                        <path d="M12 2H5V15H12C15.8657 15 19 12.0899 19 8.5C19 4.91015 15.8657 2 12 2Z"
+                            fill="#0D0D0D" />
+                    </svg>
+                </div>
+                <div class="search-container">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search Websites, Screens, UI Elements, Flows">
+                </div>
+            </div>
+
+            <!-- Center: Segmented Tabs (Desktop) -->
+            <div class="nav-center">
+                <div class="tab-track" id="desktop-track">
+                    <div class="tab-active-pill" id="desktop-pill"></div>
+                    <div class="tab-item" onclick="handleTab(this)">Websites</div>
+                    <div class="tab-item" onclick="handleTab(this)">Apps</div>
+                    <div class="tab-item" onclick="handleTab(this)">Resources</div>
+                    <div class="tab-item" onclick="handleTab(this)">Fonts</div>
+                </div>
+            </div>
+
+            <!-- Right: Utility -->
+            <div class="nav-right">
+                <div class="ghost-link">
+                    <i data-lucide="bookmark"></i>
+                    <span>Saved<span id="saved-count"></span></span>
+                </div>
+                <div class="toggle-btn" onclick="toggleMode()">
+                    <i id="mode-icon" data-lucide="moon"></i>
+                </div>
+                <button class="cta-button">Submit a Flow</button>
+                <div class="pg-avatar">PG</div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile-only Bottom Tab Bar -->
+    <div class="mobile-bottom-nav">
+        <div class="tab-track" id="mobile-track">
+            <div class="tab-active-pill" id="mobile-pill"></div>
+            <div class="tab-item" onclick="handleTab(this, true)">Websites</div>
+            <div class="tab-item" onclick="handleTab(this, true)">Apps</div>
+            <div class="tab-item" onclick="handleTab(this, true)">Resources</div>
+            <div class="tab-item" onclick="handleTab(this, true)">Fonts</div>
+        </div>
+    </div>
+
+    <main>
+        <section class="hero-section">
+            <div class="hero-content">
+                <!-- Label Pill -->
+                <div class="hero-badge">
+                    Free · Open · Always Growing
+                </div>
+
+                <!-- H1 Header -->
+                <h1>Every flow. Every screen. <span style="color:var(--dv-brand-yellow)">One vault.</span></h1>
+
+                <!-- Subtitle -->
+                <p class="hero-subtitle">
+                    A curated library of UI flows, websites, landing pages, dashboards, Figma components and font
+                    resources — built for designers and developers.
+                </p>
+
+                <!-- Buttons -->
+                <div class="hero-buttons">
+                    <button class="cta-button">Explore Flows</button>
+                    <button class="button-ghost">Browse Categories</button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="hero-stats">
+                    <div class="stat-item">240+ Flows</div>
+                    <div class="stat-dot"></div>
+                    <div class="stat-item">180+ Websites</div>
+                    <div class="stat-dot"></div>
+                    <div class="stat-item">90+ Components</div>
+                    <div class="stat-dot"></div>
+                    <div class="stat-item">60+ Font Links</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sort/Filter Bar Section -->
+        <div class="filter-bar">
+            <div class="filter-container">
+                <div class="filter-left" id="filter-track">
+                    <div class="filter-indicator" id="filter-indicator"></div>
+                    <div class="filter-tab active" data-sort="latest" onclick="handleSort(this)">Latest</div>
+                    <div class="filter-tab" data-sort="popular" onclick="handleSort(this)">Most popular</div>
+                </div>
+                <div class="filter-right">
+                    <i data-lucide="sliders-horizontal"></i>
+                    <span>Filter</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAG FILTER ROW - HIDDEN, DO NOT DELETE
+        <div class="tag-filter-section">
+            <div class="tag-row">
+                <div class="tag-pill active" onclick="toggleTag(this)">SaaS <span class="tag-count">341</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Landing Page <span class="tag-count">48</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Mobile App <span class="tag-count">74</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Dashboard <span class="tag-count">62</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">E-commerce <span class="tag-count">54</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Blog <span class="tag-count">29</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Portfolio <span class="tag-count">36</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Agency <span class="tag-count">41</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">crypto <span class="tag-count">341</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Product <span class="tag-count">209</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">blockchain <span class="tag-count">140</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">travel <span class="tag-count">116</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">healthcare <span class="tag-count">113</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Software <span class="tag-count">85</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Technology <span class="tag-count">79</span></div>
+                <div class="tag-pill" onclick="toggleTag(this)">Mobile App <span class="tag-count">74</span></div>
+            </div>
+        </div>
+        -->
+
+        <!-- Feed Section -->
+        <section class="design-feed-section">
+            <div id="design-feed" class="card-grid"></div>
+            <div id="pagination" class="pagination"></div>
+        </section>
+    </main>
+
+    <!-- Footer loads dynamically from design-vault/footer/footer.html -->
+    <div id="footer-mount"></div>
+
+    <div id="scroll-to-top" class="scroll-btn" title="Back to Top">
+        <i data-lucide="arrow-up"></i>
+    </div>
+
+    <script>
+        // --- Component Loader ---
+        async function loadComponent(id, url) {
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const content = doc.body ? doc.body.innerHTML : html;
+                
+                const container = document.getElementById(id);
+                container.innerHTML = content;
+
+                // Execute scripts manually (innerHTML doesn't run them)
+                const scripts = container.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+
+                lucide.createIcons(); // Refresh icons for the new content
+            } catch (err) {
+                console.error(`Failed to load component from ${url}:`, err);
+            }
+        }
+
+        // Init Icons
+        lucide.createIcons();
+
+        // --- Sticky Behavior ---
+        const header = document.getElementById('dv-header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('is-scrolled');
+            } else {
+                header.classList.remove('is-scrolled');
+            }
+        });
+
+        // --- Segmented Tab Animation ---
+        function updatePill(tab, isMobile) {
+            const pillId = isMobile ? 'mobile-pill' : 'desktop-pill';
+            const pill = document.getElementById(pillId);
+            if (!pill) return;
+
+            pill.style.width = `${tab.offsetWidth}px`;
+            pill.style.transform = `translateX(${tab.offsetLeft - 4}px)`;
+            pill.style.opacity = '1';
+        }
+
+        function handleTab(el, isMobile = false) {
+            const parent = el.parentElement;
+            parent.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            updatePill(el, isMobile);
+        }
+
+        // Initialize pill positions
+        window.addEventListener('load', () => {
+            const dActive = document.querySelector('#desktop-track .tab-item.active');
+            const mActive = document.querySelector('#mobile-track .tab-item.active');
+            if (dActive) updatePill(dActive, false);
+            if (mActive) updatePill(mActive, true);
+        });
+
+        window.addEventListener('resize', () => {
+            const dActive = document.querySelector('#desktop-track .tab-item.active');
+            const mActive = document.querySelector('#mobile-track .tab-item.active');
+            if (dActive) updatePill(dActive, false);
+            if (mActive) updatePill(mActive, true);
+        });
+
+        // --- Sorting & Feed ---
+        const designData = [
+            { id: 1, name: 'leonardo-ai', title: 'Leonardo AI', subtitle: 'The creator-first AI platform', timestamp: 1775308900000, popularity: 1450 },
+            { id: 2, name: 'todesktop', title: 'ToDesktop', subtitle: 'Convert web app to a desktop app', timestamp: 1775308800000, popularity: 1250 },
+            { id: 3, name: 'maison-bovrsier', title: 'Maison Bovrsier', subtitle: 'Artisan furniture for modern spaces', timestamp: 1775308700000, popularity: 1100 },
+            { id: 4, name: 'little-amps', title: 'Little Amps Coffee', subtitle: 'Never ending quest for the perfect coffee', timestamp: 1775308600000, popularity: 920 },
+            { id: 5, name: 'framer-templates', title: 'Framer Templates', subtitle: 'Launch your next site in minutes', timestamp: 1775308500000, popularity: 850 },
+            { id: 6, name: 'linear-dash', title: 'Linear Dashboard', subtitle: 'The issue tracker you actually like using', timestamp: 1775308400000, popularity: 1350 },
+            { id: 7, name: 'stripe', title: 'Stripe', subtitle: 'Financial infrastructure for the internet', timestamp: 1775308300000, popularity: 1600 },
+            { id: 8, name: 'vercel', title: 'Vercel', subtitle: 'Develop. Preview. Ship.', timestamp: 1775308200000, popularity: 1550 },
+            { id: 9, name: 'notion', title: 'Notion', subtitle: 'Your connected workspace', timestamp: 1775308100000, popularity: 1500 },
+            // Page 1 additions
+            { id: 10, name: 'figma', title: 'Figma', subtitle: 'The collaborative interface design tool', timestamp: 1775308000000, popularity: 1800 },
+            { id: 11, name: 'slack', title: 'Slack', subtitle: 'Where work happens', timestamp: 1775307900000, popularity: 1750 },
+            { id: 12, name: 'discord', title: 'Discord', subtitle: 'Your place to talk', timestamp: 1775307800000, popularity: 1700 },
+            { id: 13, name: 'spotify', title: 'Spotify', subtitle: 'Music for everyone', timestamp: 1775307700000, popularity: 1900 },
+            { id: 14, name: 'airbnb', title: 'Airbnb', subtitle: 'Book unique homes and experiences', timestamp: 1775307600000, popularity: 1850 },
+            { id: 15, name: 'uber', title: 'Uber', subtitle: 'Always the ride you want', timestamp: 1775307500000, popularity: 1650 },
+            { id: 16, name: 'dropbox', title: 'Dropbox', subtitle: 'Focus on the work that matters', timestamp: 1775307400000, popularity: 1400 },
+            { id: 17, name: 'loom', title: 'Loom', subtitle: 'Say it with video', timestamp: 1775307300000, popularity: 1300 },
+            { id: 18, name: 'raycast', title: 'Raycast', subtitle: 'A supercharged command palette', timestamp: 1775307200000, popularity: 1450 },
+            { id: 19, name: 'arc', title: 'Arc Browser', subtitle: 'The browser that works for you', timestamp: 1775307100000, popularity: 1550 },
+            { id: 20, name: 'framer-ai', title: 'Framer AI', subtitle: 'Start your next site with AI', timestamp: 1775307000000, popularity: 1600 },
+            { id: 21, name: 'runway', title: 'Runway', subtitle: 'Next-generation creative tools', timestamp: 1775306900000, popularity: 1500 },
+            // Page 2
+            { id: 22, name: 'webflow', title: 'Webflow', subtitle: 'Build with the power of code', timestamp: 1775306800000, popularity: 1700 },
+            { id: 23, name: 'carrd', title: 'Carrd', subtitle: 'Simple, free, responsive one-page sites', timestamp: 1775306700000, popularity: 1400 },
+            { id: 24, name: 'readcv', title: 'Readcv', subtitle: 'A better way to read a CV', timestamp: 1775306600000, popularity: 1350 },
+            { id: 25, name: 'polywork', title: 'Polywork', subtitle: 'A new kind of professional network', timestamp: 1775306500000, popularity: 1200 },
+            { id: 26, name: 'contra', title: 'Contra', subtitle: 'The future of work is freelance', timestamp: 1775306400000, popularity: 1300 },
+            { id: 27, name: 'gumroad', title: 'Gumroad', subtitle: 'Sell anything to anyone', timestamp: 1775306300000, popularity: 1450 },
+            { id: 28, name: 'substack', title: 'Substack', subtitle: 'The home for great writing', timestamp: 1775306200000, popularity: 1550 },
+            { id: 29, name: 'ghost', title: 'Ghost', subtitle: 'Professional publishing platform', timestamp: 1775306100000, popularity: 1500 },
+            { id: 30, name: 'medium', title: 'Medium', subtitle: 'Where good ideas find you', timestamp: 1775306000000, popularity: 1400 },
+            { id: 31, name: 'twitter', title: 'Twitter', subtitle: "What's happening", timestamp: 1775305900000, popularity: 1950 },
+            { id: 32, name: 'threads', title: 'Threads', subtitle: 'Say more with Threads', timestamp: 1775305800000, popularity: 1850 },
+            { id: 33, name: 'instagram', title: 'Instagram', subtitle: 'Bring you closer to people and things', timestamp: 1775305700000, popularity: 1900 },
+            { id: 34, name: 'pinterest', title: 'Pinterest', subtitle: 'Discover recipes and style inspiration', timestamp: 1775305600000, popularity: 1800 },
+            { id: 35, name: 'dribbble', title: 'Dribbble', subtitle: 'Show and tell for designers', timestamp: 1775305500000, popularity: 1750 },
+            { id: 36, name: 'behance', title: 'Behance', subtitle: "The world's largest creative network", timestamp: 1775305400000, popularity: 1700 },
+            { id: 37, name: 'adobe', title: 'Adobe', subtitle: 'Creative Cloud for everyone', timestamp: 1775305300000, popularity: 1850 },
+            { id: 38, name: 'canva', title: 'Canva', subtitle: 'Design anything. Publish anywhere.', timestamp: 1775305200000, popularity: 1900 },
+            { id: 39, name: 'spline', title: 'Spline', subtitle: '3D design tool in the browser', timestamp: 1775305100000, popularity: 1650 },
+            { id: 40, name: 'rive', title: 'Rive', subtitle: 'Interactive design and animation', timestamp: 1775305000000, popularity: 1600 },
+            { id: 41, name: 'lottiefiles', title: 'LottieFiles', subtitle: 'Animations for apps and web', timestamp: 1775304900000, popularity: 1550 },
+            { id: 42, name: 'framer-motion', title: 'Framer Motion', subtitle: 'Motion library for React', timestamp: 1775304800000, popularity: 1500 }
+        ];
+
+        let savedCards = new Set();
+        let currentPage = 1;
+        const itemsPerPage = 21;
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function updateSavedCount() {
+            const countEl = document.getElementById('saved-count');
+            if (savedCards.size > 0) {
+                countEl.innerText = ` (${savedCards.size})`;
+            } else {
+                countEl.innerText = '';
+            }
+        }
+
+        function toggleSave(id, event, btn) {
+            event.stopPropagation();
+            if (savedCards.has(id)) {
+                savedCards.delete(id);
+                btn.classList.remove('saved');
+                btn.innerHTML = '<i data-lucide="bookmark"></i> Save';
+                showToast("Removed from saves");
+            } else {
+                savedCards.add(id);
+                btn.classList.add('saved');
+                btn.innerHTML = '<i data-lucide="bookmark-check"></i> Saved';
+                showToast("Saved successfully ✓");
+            }
+            updateSavedCount();
+            lucide.createIcons();
+        }
+
+        function handlePage(page) {
+            currentPage = page;
+            const activeSortTab = document.querySelector('.filter-tab.active');
+            handleSort(activeSortTab, false); // false to avoid resetting currentPage
+            
+            // Smooth scroll to top of grid
+            const grid = document.getElementById('design-feed');
+            grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function renderPagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="handlePage(${currentPage - 1})">
+                    <i data-lucide="chevron-left"></i> Previous
+                </button>
+                <div class="page-numbers">
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <div class="page-number ${i === currentPage ? 'active' : ''}" onclick="handlePage(${i})">
+                        ${i}
+                    </div>
+                `;
+            }
+
+            html += `
+                </div>
+                <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="handlePage(${currentPage + 1})">
+                    Next <i data-lucide="chevron-right"></i>
+                </button>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderFeed(data) {
+            const feed = document.getElementById('design-feed');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = data.slice(start, end);
+
+            feed.innerHTML = pageData.map(item => `
+                <div class="dv-card">
+                    <div class="card-image-wrapper">
+                        <img src="https://picsum.photos/seed/${item.name}/432/328" alt="${item.title}">
+                        <div class="card-overlay">
+                            <div class="card-actions">
+                                <button class="action-btn" onclick="window.open('#', '_blank')">
+                                    <i data-lucide="arrow-up-right"></i> Open
+                                </button>
+                                <button class="action-btn ${savedCards.has(item.id) ? 'saved' : ''}" 
+                                        onclick="toggleSave(${item.id}, event, this)">
+                                    <i data-lucide="${savedCards.has(item.id) ? 'bookmark-check' : 'bookmark'}"></i> 
+                                    ${savedCards.has(item.id) ? 'Saved' : 'Save'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <img class="card-logo" src="https://picsum.photos/seed/${item.name}/36/36" alt="${item.title} Logo">
+                        <div class="card-text">
+                            <div class="card-title">${item.title}</div>
+                            <div class="card-subtitle">${item.subtitle}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            renderPagination(data.length);
+            lucide.createIcons();
+        }
+
+        function updateSortIndicator(tab) {
+            const indicator = document.getElementById('filter-indicator');
+            if (!indicator) return;
+            indicator.style.width = `${tab.offsetWidth}px`;
+            indicator.style.left = `${tab.offsetLeft}px`;
+        }
+
+        function handleSort(el, resetPage = true) {
+            if (resetPage) currentPage = 1;
+            const track = el.parentElement;
+            track.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            updateSortIndicator(el);
+
+            const method = el.getAttribute('data-sort');
+            const sortedData = [...designData];
+
+            if (method === 'latest') {
+                sortedData.sort((a, b) => b.timestamp - a.timestamp);
+            } else if (method === 'popular') {
+                sortedData.sort((a, b) => b.popularity - a.popularity);
+            }
+
+            renderFeed(sortedData);
+        }
+
+        // --- Tag Selection ---
+        function toggleTag(el) {
+            el.classList.toggle('active');
+        }
+
+        // Initialize Feed & Indicators
+        window.addEventListener('load', () => {
+            const initialTab = document.querySelector('.filter-tab.active');
+            if (initialTab) updateSortIndicator(initialTab);
+            handleSort(initialTab);
+
+            // Load Modular Footer
+            loadComponent('footer-mount', 'design-vault/footer/footer.html');
+        });
+
+        window.addEventListener('resize', () => {
+            const activeTab = document.querySelector('.filter-tab.active');
+            if (activeTab) updateSortIndicator(activeTab);
+        });
+
+        // --- Theme Toggle ---
+        let Theme = 'dark';
+        function toggleMode() {
+            Theme = Theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', Theme);
+            const icon = document.getElementById('mode-icon');
+            icon.setAttribute('data-lucide', Theme === 'dark' ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+
+        // --- Scroll to Top ---
+        const scrollBtn = document.getElementById('scroll-to-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollBtn.classList.add('show');
+            } else {
+                scrollBtn.classList.remove('show');
+            }
+        });
+
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+    <div id="toast" class="toast">Saved successfully ✓</div>
+</body>
+
+</html>

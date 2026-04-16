@@ -1,0 +1,176 @@
+.filter-bar-container {
+    width: 100%;
+    margin-top: 0;
+    border-bottom: 1px solid var(--dv-border);
+    background: transparent;
+}
+
+.filter-bar-content {
+    max-width: 1392px;
+    /* Matches overall app content width */
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0px;
+}
+
+/* Tabs Left Side */
+.filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.filter-tab {
+    background: none;
+    border: none;
+    padding: 16px 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px !important;
+    font-weight: 500;
+    color: var(--dv-text-ghost);
+    cursor: pointer;
+    position: relative;
+    transition: color var(--transition-smooth);
+}
+
+.filter-tab:hover {
+    color: var(--dv-text);
+}
+
+.filter-tab.active {
+    color: var(--dv-text);
+    font-weight: 600;
+}
+
+/* Actions Right Side */
+.filter-actions {
+    display: flex;
+    align-items: center;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 16px 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px !important;
+    font-weight: 600;
+    color: var(--dv-text);
+    cursor: pointer;
+    transition: opacity var(--transition-smooth);
+}
+
+.filter-btn:hover {
+    opacity: 0.8;
+}
+
+/* Categories Bar */
+.filter-categories-wrapper {
+    width: 100%;
+    max-width: 1392px;
+    margin: 0 auto;
+    padding: 12px 24px 24px;
+    overflow: hidden;
+}
+
+.filter-categories-scroll {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+    flex-wrap: nowrap;
+}
+
+.filter-categories-scroll::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+.filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 9999px;
+    background-color: var(--dv-surface-dark);
+    border: 1px solid var(--dv-border);
+    color: var(--dv-text-ghost);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.filter-chip:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--dv-text);
+}
+
+.filter-chip.active {
+    background-color: var(--dv-text);
+    border-color: var(--dv-text);
+    color: var(--dv-bg);
+}
+
+.chip-emoji {
+    font-size: 14px;
+}
+
+/* Responsive adjustments */
+
+/* Default: Tablet and Desktop - Wrap to multiple rows */
+.filter-categories-scroll {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    /* Wrap on desktop */
+    overflow-x: visible;
+}
+
+/* Mobile: Specific horizontal scroll behavior */
+@media (max-width: 768px) {
+    .filter-bar-container {
+        margin-top: 32px;
+    }
+
+    .filter-tabs {
+        gap: 20px;
+    }
+
+    .filter-tab,
+    .filter-btn {
+        font-size: 14px;
+    }
+
+    .filter-categories-wrapper {
+        padding: 8px 16px 16px;
+    }
+
+    .filter-categories-scroll {
+        flex-wrap: nowrap;
+        /* Force single row */
+        overflow-x: auto;
+        /* Enable horizontal scroll */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .filter-categories-scroll::-webkit-scrollbar {
+        display: none;
+    }
+}

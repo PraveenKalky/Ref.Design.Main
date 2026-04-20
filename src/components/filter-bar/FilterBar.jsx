@@ -1,37 +1,25 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, ChevronUp, ChevronDown } from 'lucide-react';
+import CategoryFilterExpanded from '../filters/CategoryFilterExpanded';
 import './filter-bar.css';
 
-const categories = [
-    { name: 'All', emoji: '' },
-    { name: 'Productivity', emoji: '⚡' },
-    { name: 'Health & Fitness', emoji: '🏃' },
-    { name: 'Social Networking', emoji: '💬' },
-    { name: 'Finance', emoji: '💰' },
-    { name: 'Education', emoji: '🎓' },
-    { name: 'Photo & Video', emoji: '📷' },
-    { name: 'Lifestyle', emoji: '✨' },
-    { name: 'Food & Drink', emoji: '🍔' },
-    { name: 'News', emoji: '📰' },
-    { name: 'Games', emoji: '🎮' },
-    { name: 'Sports', emoji: '⚽' },
-    { name: 'Utilities', emoji: '🛠️' },
-    { name: 'Travel', emoji: '✈️' },
-    { name: 'Graphics & Design', emoji: '🎨' },
-    { name: 'Book', emoji: '📖' },
-    { name: 'Weather', emoji: '☀️' },
-    { name: 'Reference', emoji: '📚' },
-    { name: 'Browser & AI', emoji: '🤖' }
-];
+
 
 const FilterBar = () => {
     const [activeTab, setActiveTab] = useState('popular');
-    const [activeCategory, setActiveCategory] = useState('All');
+    const [isExpanded, setIsExpanded] = useState(false);
 
     return (
         <div className="filter-bar-container">
             <div className="filter-bar-content">
                 <div className="filter-tabs">
+                    <button 
+                        className={`collapse-btn ${isExpanded ? 'active' : ''}`}
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        title={isExpanded ? "Collapse" : "Expand"}
+                    >
+                        <ChevronDown size={16} strokeWidth={3} className="arrow-icon" />
+                    </button>
                     <button 
                         className={`filter-tab ${activeTab === 'latest' ? 'active' : ''}`}
                         onClick={() => setActiveTab('latest')}
@@ -52,18 +40,9 @@ const FilterBar = () => {
                 </div>
             </div>
             
-            <div className="filter-categories-wrapper">
-                <div className="filter-categories-scroll">
-                    {categories.map((cat) => (
-                        <button
-                            key={cat.name}
-                            className={`filter-chip ${activeCategory === cat.name ? 'active' : ''}`}
-                            onClick={() => setActiveCategory(cat.name)}
-                        >
-                            {cat.emoji && <span className="chip-emoji">{cat.emoji}</span>}
-                            <span className="chip-label">{cat.name}</span>
-                        </button>
-                    ))}
+            <div className={`filter-categories-wrapper ${isExpanded ? 'expanded' : ''}`}>
+                <div className="filter-categories-inner">
+                    <CategoryFilterExpanded />
                 </div>
             </div>
         </div>

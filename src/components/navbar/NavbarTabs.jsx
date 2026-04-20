@@ -5,20 +5,22 @@ const NavbarTabs = () => {
     // Single source of truth for all nav links
     const [activeLink, setActiveLink] = useState('Home');
 
-    const navLinks = ['Home', 'Websites', 'Apps', 'Resources', 'Fonts', 'UI/UX Tastes', 'Search'];
+    const navLinks = ['Home', 'Websites', 'Apps', 'Resources', 'Fonts', 'UI/UX Tastes'];
 
     return (
         <div className="nav-center">
-            {navLinks.map((link) => (
-                <button 
-                    key={link}
-                    className={`nav-link ${activeLink === link ? 'active' : ''}`}
-                    onClick={() => setActiveLink(link)}
-                >
-                    {link === 'Search' && <Search size={16} />}
-                    {link}
-                </button>
-            ))}
+            <div className="nav-links-container">
+                {navLinks.map((link) => (
+                    <button 
+                        key={link}
+                        className={`nav-link ${activeLink === link ? 'active' : ''}`}
+                        onClick={() => setActiveLink(link)}
+                    >
+                        {link === 'Search' && <Search size={16} />}
+                        {link}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 };

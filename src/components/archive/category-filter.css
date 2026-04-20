@@ -6,9 +6,10 @@
 }
 
 .filter-bar-content {
-    max-width: 1440px;
+    max-width: 1392px;
+    /* Matches overall app content width */
     margin: 0 auto;
-    padding: 0 32px;
+    padding: 0 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -22,46 +23,14 @@
     gap: 20px;
 }
 
-.collapse-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #f0f0f0;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    color: #333;
-    flex-shrink: 0;
-    transition: background 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.collapse-btn:hover {
-    background: #e0e0e0;
-    transform: scale(1.1);
-}
-
-.arrow-icon {
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.collapse-btn.active .arrow-icon {
-    transform: rotate(180deg);
-}
-
 .filter-tab {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     background: none;
     border: none;
     padding: 16px 0;
     font-family: 'Outfit', sans-serif;
-    font-size: 16px;
+    font-size: 20px !important;
     font-weight: 500;
-    color: #999999;
+    color: var(--dv-text-ghost);
     cursor: pointer;
     position: relative;
     transition: color var(--transition-smooth);
@@ -90,9 +59,9 @@
     border: none;
     padding: 16px 0;
     font-family: 'Outfit', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: #999999;
+    font-size: 20px !important;
+    font-weight: 600;
+    color: var(--dv-text);
     cursor: pointer;
     transition: opacity var(--transition-smooth);
 }
@@ -104,25 +73,10 @@
 /* Categories Bar */
 .filter-categories-wrapper {
     width: 100%;
-    max-width: 1440px;
+    max-width: 1392px;
     margin: 0 auto;
-    padding: 0 32px;
+    padding: 12px 24px 24px;
     overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease,
-                padding 0.3s ease;
-}
-
-.filter-categories-wrapper.expanded {
-    max-height: 500px; /* Adjusted from 300px to ensure multi-row tags fit */
-    opacity: 1;
-    padding: 12px 32px 24px;
-}
-
-.filter-categories-inner {
-    min-height: 0;
 }
 
 .filter-categories-scroll {

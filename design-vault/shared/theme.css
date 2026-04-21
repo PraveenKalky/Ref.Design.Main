@@ -37,7 +37,6 @@ body {
     background-color: var(--dv-bg);
     color: var(--dv-text);
     font-family: var(--font-body);
-    transition: background var(--transition-smooth);
     overflow-x: hidden;
 }
 

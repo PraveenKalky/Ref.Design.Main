@@ -10,6 +10,21 @@ const CATEGORIES = [
   'Minimal', 'Grid Layout', 'Unusual Layout', 'Art', 'Use of Animation'
 ];
 
+const CATEGORY_COUNTS = {
+  'Agencies & Consultancies': '324',
+  'Typographic': '842',
+  'Design & Art Direction': '561',
+  'Portfolio': '1,291',
+  'Web & Interactive Design': '732',
+  'E-Commerce': '418',
+  'Fashion': '290',
+  'Minimal': '645',
+  'Grid Layout': '312',
+  'Unusual Layout': '187',
+  'Art': '456',
+  'Use of Animation': '203'
+};
+
 const CategoryFilterExpanded = () => {
   const [selectedItems, setSelectedItems] = useState(['Agencies & Consultancies', 'Minimal', 'Portfolio']);
 
@@ -42,6 +57,7 @@ const CategoryFilterExpanded = () => {
             onClick={() => toggleItem(cat)}
           >
             {cat}
+            <span className="cfe-tag-count">{CATEGORY_COUNTS[cat]}</span>
           </button>
         ))}
       </div>

@@ -1,0 +1,272 @@
+/* ============================================================
+   Login Modal — Pixel-perfect match to reference image
+   ============================================================ */
+
+/* ── Backdrop ── */
+.lm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lm-fade-in 0.2s ease forwards;
+}
+
+@keyframes lm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal ── */
+.lm-modal {
+  position: relative;
+  display: flex;
+  width: 820px;
+  border-radius: 8px;
+  overflow: visible;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  animation: lm-pop-in 0.25s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+  background: #fff;
+}
+
+@keyframes lm-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ══════════════════════════════════════
+   LEFT PANEL
+══════════════════════════════════════ */
+.lm-left {
+  width: 380px;
+  flex-shrink: 0;
+  background: #EBEBEB;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 36px;
+  border-radius: 8px 0 0 8px;
+}
+
+.lm-welcome {
+  font-family: 'Outfit', sans-serif;
+  font-size: 21px;
+  font-weight: 500;
+  color: #111;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Brand center block */
+.lm-brand-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: auto 0;
+  padding: 20px 0;
+}
+
+.lm-wordmark {
+  font-family: 'Playfair Display', serif;
+  font-size: 80px;
+  font-weight: 900;
+  color: #111;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* Smiley SVG */
+.lm-smiley {
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+}
+
+.lm-smiley svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Register link */
+.lm-register {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  color: #444;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.lm-register-link {
+  font-weight: 700;
+  color: #111;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lm-register-link:hover {
+  opacity: 0.7;
+}
+
+/* ══════════════════════════════════════
+   RIGHT PANEL
+══════════════════════════════════════ */
+.lm-right {
+  flex: 1;
+  background: #ffffff;
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  border-radius: 0 8px 8px 0;
+}
+
+.lm-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── Form ── */
+.lm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lm-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #999;
+  text-transform: uppercase;
+}
+
+/* Underline-only input — matches reference exactly */
+.lm-input {
+  width: 100%;
+  height: 36px;
+  border: none;
+  border-bottom: 1.5px solid #D8D8D8;
+  border-radius: 0;
+  padding: 0 2px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: #111;
+  outline: none;
+  background: transparent;
+  box-sizing: border-box;
+  transition: border-color 0.18s ease;
+}
+
+.lm-input:focus {
+  border-bottom-color: #111;
+}
+
+.lm-input::placeholder {
+  color: #C4C4C4;
+}
+
+/* Checkbox row */
+.lm-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+}
+
+.lm-checkbox {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #bbb;
+  border-radius: 2px;
+  accent-color: #111;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Pill submit button */
+.lm-submit {
+  width: 100%;
+  height: 54px;
+  background: #1a1a1a;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+
+.lm-submit:hover {
+  background: #000;
+  transform: translateY(-1px);
+}
+
+.lm-submit:active {
+  transform: translateY(0);
+}
+
+/* Forgot password — left aligned */
+.lm-forgot-wrap {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -6px;
+}
+
+.lm-forgot {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: #555;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lm-forgot:hover {
+  color: #111;
+}
+
+
+/* ── Close button — fixed to bottom right of the screen ── */
+.lm-close {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px; /* matching the square-ish look in the reference */
+  border: none;
+  background: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  z-index: 10001;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.lm-close:hover {
+  background: #000;
+  transform: translateY(-2px);
+}
+

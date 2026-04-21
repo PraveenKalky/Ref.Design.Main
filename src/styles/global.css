@@ -23,10 +23,10 @@
   --space-3xl: 4rem;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-  --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
 
   /* Typography */
   --font-heading: 'Urbanist', sans-serif;
@@ -45,10 +45,14 @@ body {
   color: var(--dv-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  transition: background-color var(--transition-smooth), color var(--transition-smooth);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   color: var(--color-foreground);
@@ -97,4 +101,35 @@ h1, h2, h3, h4, h5, h6 {
 .card:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+}
+
+/* ============================================================
+   Ink Bleed — View Transitions API (zero blank screen)
+   Browser snapshots old theme, switches theme, reveals
+   new theme from center via expanding circle.
+   Old snapshot stays visible underneath = no blank ever.
+   ============================================================ */
+
+/* Disable default cross-fade */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Old theme: stay static behind the reveal */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* New theme: expand from center as a circle */
+::view-transition-new(root) {
+  z-index: 2;
+  clip-path: circle(0% at 50% 50%);
+  animation: ink-bleed-reveal 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes ink-bleed-reveal {
+  from { clip-path: circle(0% at 50% 50%); }
+  to   { clip-path: circle(150% at 50% 50%); }
 }

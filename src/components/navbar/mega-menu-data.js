@@ -194,5 +194,5 @@ export const megaMenuData = {
   },
 };
 
-// Nav items that trigger the mega menu
-export const MEGA_MENU_LINKS = ['Websites', 'Apps', 'Resources', 'Fonts', 'UI/UX Tastes'];
+// Nav items that trigger the mega menu (Fonts has its own page, not a mega menu)
+export const MEGA_MENU_LINKS = ['Websites', 'Apps', 'Resources', 'UI/UX Tastes'];

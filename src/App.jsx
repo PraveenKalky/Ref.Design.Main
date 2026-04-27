@@ -6,6 +6,8 @@ import FilterBar from './components/filter-bar/FilterBar';
 import CardGrid from './components/card-grid/CardGrid';
 import Footer from './components/footer/Footer';
 import { Agentation } from 'agentation';
+import { Routes, Route } from 'react-router-dom';
+import Fonts from './pages/Fonts';
 
 function App() {
   const [savedItems, setSavedItems] = useState(() => {
@@ -53,9 +55,16 @@ function App() {
   return (
     <div className="app-container">
       <Navbar savedCount={savedCount} theme={theme} toggleTheme={toggleTheme} />
-      <Hero />
-      <FilterBar />
-      <CardGrid savedItems={savedItems} toggleSave={toggleSave} />
+      <Routes>
+        <Route path="/" element={
+          <>
+            <Hero />
+            <FilterBar />
+            <CardGrid savedItems={savedItems} toggleSave={toggleSave} />
+          </>
+        } />
+        <Route path="/fonts" element={<Fonts />} />
+      </Routes>
       <Footer />
       <Agentation />
     </div>

@@ -9,7 +9,8 @@
 
 .mega-menu {
   position: fixed;
-  top: 80px; /* exact navbar height */
+  top: 80px;
+  /* exact navbar height */
   left: 0;
   width: 100vw;
   height: calc(100vh - 80px);
@@ -51,6 +52,12 @@
   gap: 0;
   max-width: 1440px;
   margin: 0 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.mega-menu__inner::-webkit-scrollbar {
+  display: none;
 }
 
 /* Column */

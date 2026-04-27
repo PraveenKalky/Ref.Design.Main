@@ -176,7 +176,9 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    width: fit-content;
     background: transparent;
     border: none;
     border-radius: 9999px;
@@ -184,6 +186,7 @@
     padding: 0 16px;
     position: relative;
     z-index: 1;
+    white-space: nowrap;
 }
 
 .nav-link.active {
@@ -204,12 +207,19 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Hover works on ALL links — including active (Home stays usable) */
+.nav-link:hover {
+    opacity: 0.75;
+}
+
 .nav-link:hover:not(.active) {
     color: #555;
+    opacity: 1;
 }
 
 [data-theme="dark"] .nav-link:hover:not(.active) {
     color: rgba(255, 255, 255, 0.7);
+    opacity: 1;
 }
 
 /* Right Section */

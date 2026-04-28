@@ -88,6 +88,7 @@
   width: 100%;
   padding: 0 0 80px;
   background: transparent;
+  scroll-margin-top: 112px;
 }
 
 [data-theme="dark"] .fonts-gallery-section {

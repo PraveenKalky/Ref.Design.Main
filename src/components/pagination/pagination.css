@@ -1,0 +1,101 @@
+.pagination-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-top: 56px;
+  margin-bottom: 0;
+  padding-bottom: 32px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.pagination-label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--dv-text-ghost);
+  text-transform: uppercase;
+  text-align: center;
+  width: 100%;
+}
+
+.pagination {
+  display: flex;
+  padding-top: 0px;
+  align-items: center;
+  gap: 24px;
+}
+
+.pg-numbers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--dv-border);
+  border-radius: 9999px;
+  /* Fully rounded pill */
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  height: 44px;
+  padding: 0 24px;
+  transition: all 0.2s;
+  color: var(--dv-text);
+}
+
+.pg-btn:hover:not(.disabled) {
+  border-color: var(--dv-text);
+  background-color: var(--dv-surface-dark);
+}
+
+.pg-prev {
+  padding-left: 20px;
+}
+
+.pg-next {
+  padding-right: 20px;
+}
+
+.pg-prev.disabled,
+.pg-next.disabled {
+  color: var(--dv-text-ghost);
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Make sure active/inactive states match image */
+.pg-num {
+  background: transparent;
+  border: none;
+  color: var(--dv-text-ghost);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  /* Perfect circle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.pg-num:hover:not(.active) {
+  color: var(--dv-text);
+  background-color: var(--dv-surface-dark);
+}
+
+.pg-num.active {
+  background-color: var(--dv-text);
+  color: var(--dv-bg);
+}

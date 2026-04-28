@@ -1,0 +1,20 @@
+/* Stats Row - ARCHIVED */
+.hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--dv-text-ghost);
+    margin-top: 16px;
+    animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.hero-stats .separator {
+    color: var(--dv-border);
+    font-size: 20px;
+    line-height: 1;
+}

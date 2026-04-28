@@ -1,0 +1,85 @@
+/* ARCHIVED — Fonts page sidebar filter panel
+// To re-enable: copy this back to src/components/ and import in Fonts.jsx
+// Archived on: 2026-04-28
+*/
+
+/* ── Sidebar ── */
+.fonts-sidebar {
+  flex-shrink: 0;
+  width: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  max-width: 230px;
+  transition: max-width 0.3s ease, opacity 0.3s ease;
+  opacity: 1;
+}
+
+.fonts-sidebar.is-hidden {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flt-group {
+  margin-bottom: 20px;
+}
+
+/* Divider line above every group except the first */
+.flt-group + .flt-group {
+  border-top: 1px solid #e8e8e8;
+  padding-top: 20px;
+}
+
+[data-theme="dark"] .flt-group + .flt-group {
+  border-top-color: #2a2a2a;
+}
+
+.flt-group-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 10px 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+[data-theme="dark"] .flt-group-label {
+  color: #fff;
+}
+
+.flt-group-divider {
+  display: none; /* Dividers are now handled between groups, not under labels */
+}
+
+.flt-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.flt-checkbox {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid #bbb;
+  border-radius: 3px;
+  accent-color: #7b61ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.flt-check-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: #333;
+  line-height: 1;
+  user-select: none;
+}
+
+[data-theme="dark"] .flt-check-label {
+  color: #ccc;
+}

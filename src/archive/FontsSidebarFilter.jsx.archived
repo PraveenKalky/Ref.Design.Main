@@ -1,0 +1,53 @@
+// ARCHIVED — Fonts page sidebar filter panel
+// To re-enable: copy this back to src/components/ and import in Fonts.jsx
+// Archived on: 2026-04-28
+
+const FILTER_GROUPS = [
+  {
+    label: 'Categories',
+    key: 'categories',
+    options: ['Serif', 'Sans-Serif', 'Script and Handwritten', 'Decorative'],
+  },
+  {
+    label: 'Spacing',
+    key: 'spacing',
+    options: ['Normal', 'Monospace', 'Condensed', 'Expanded'],
+  },
+  {
+    label: 'Optimum Size',
+    key: 'size',
+    options: ['Large (Display / Poster)', 'Small (Book / Magazine)', 'Condensed', 'Any Size'],
+  },
+  {
+    label: 'Properties',
+    key: 'properties',
+    options: ['Web Font'],
+  },
+];
+
+// JSX Snippet:
+/*
+<aside className={`fonts-sidebar ${filtersVisible ? 'is-visible' : 'is-hidden'}`}>
+  {FILTER_GROUPS.map(group => (
+    <div className="flt-group" key={group.key}>
+      <p className="flt-group-label">{group.label}</p>
+      <div className="flt-group-divider" />
+      {group.options.map(opt => {
+        const id = `${group.key}-${opt}`;
+        return (
+          <label className="flt-check-row" key={id} htmlFor={id}>
+            <input
+              id={id}
+              type="checkbox"
+              className="flt-checkbox"
+              checked={!!checked[id]}
+              onChange={() => toggleCheck(id)}
+            />
+            <span className="flt-check-label">{opt}</span>
+          </label>
+        );
+      })}
+    </div>
+  ))}
+</aside>
+*/

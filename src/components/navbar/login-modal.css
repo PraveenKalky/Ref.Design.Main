@@ -1,0 +1,394 @@
+/* ============================================================
+   Login Modal — Pixel-perfect match to reference image
+   ============================================================ */
+
+/* ── Backdrop ── */
+.lm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Modal ── */
+.lm-modal {
+  position: relative;
+  display: flex;
+  width: 820px;
+  max-height: 90vh;
+  border-radius: 8px;
+  overflow: visible;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  background: #fff;
+}
+
+/* ══════════════════════════════════════
+   LEFT PANEL
+══════════════════════════════════════ */
+.lm-left {
+  width: 380px;
+  flex-shrink: 0;
+  background: #EBEBEB;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 36px;
+  border-radius: 8px 0 0 8px;
+}
+
+.lm-welcome {
+  font-family: 'Outfit', sans-serif;
+  font-size: 21px;
+  font-weight: 500;
+  color: #111;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Brand center block */
+.lm-brand-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: auto 0;
+  padding: 20px 0;
+}
+
+.lm-wordmark {
+  font-family: 'Playfair Display', serif;
+  font-size: 80px;
+  font-weight: 900;
+  color: #111;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* Smiley SVG */
+.lm-smiley {
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+}
+
+.lm-smiley svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Register link */
+.lm-register {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  color: #444;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.lm-register-link {
+  font-weight: 700;
+  color: #111;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lm-register-link:hover {
+  opacity: 0.7;
+}
+
+/* ══════════════════════════════════════
+   RIGHT PANEL
+══════════════════════════════════════ */
+.lm-right {
+  flex: 1;
+  background: #ffffff;
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0 8px 8px 0;
+  position: relative;
+  overflow-y: auto;
+}
+
+.lm-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+
+.lm-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── Form ── */
+.lm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lm-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #999;
+  text-transform: uppercase;
+}
+
+/* Underline-only input — matches reference exactly */
+.lm-input {
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-bottom: 1.5px solid #D8D8D8;
+  border-radius: 0;
+  padding: 0 2px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: #111;
+  outline: none;
+  background: transparent;
+  box-sizing: border-box;
+  transition: border-color 0.18s ease;
+}
+
+.lm-input:focus {
+  border-bottom-color: #111;
+}
+
+.lm-input::placeholder {
+  color: #C4C4C4;
+}
+
+/* Password Input Wrapper */
+.lm-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.lm-input-wrap .lm-input {
+  padding-right: 32px; /* Prevent text from overlapping the eye icon */
+}
+
+.lm-eye-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.15s ease;
+}
+
+.lm-eye-btn:hover {
+  color: #111;
+}
+
+/* Checkbox row */
+.lm-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+}
+
+.lm-checkbox {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #bbb;
+  border-radius: 2px;
+  accent-color: #111;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Pill submit button */
+.lm-submit {
+  width: 100%;
+  height: 54px;
+  background: #1a1a1a;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+
+.lm-submit:hover {
+  background: #000;
+  transform: translateY(-1px);
+}
+
+.lm-submit:active {
+  transform: translateY(0);
+}
+
+/* Forgot password — left aligned */
+.lm-forgot-wrap {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -6px;
+}
+
+.lm-forgot {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  color: #555;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lm-forgot:hover {
+  color: #111;
+}
+
+
+/* ── Close button — fixed to bottom right of the screen ── */
+.lm-close {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px; /* matching the square-ish look in the reference */
+  border: none;
+  background: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  z-index: 10001;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.lm-close:hover {
+  background: #000;
+  transform: translateY(-2px);
+}
+
+/* ── Form Error States ── */
+.lm-input--error {
+  border-bottom-color: #E02424 !important;
+}
+
+.lm-error-msg {
+  color: #E02424;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  margin-top: 4px;
+}
+
+/* ── Toasts ── */
+.lm-toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10005;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.lm-toast {
+  width: 380px;
+  height: 50px;
+  background: #1a1a1a;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px 0 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+}
+
+.lm-toast-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.lm-toast-success {
+  background: #22c55e;
+}
+
+.lm-toast-error {
+  background: #ef4444;
+}
+
+.lm-toast-msg {
+  flex: 1;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  margin-left: 12px;
+  line-height: 1.2;
+}
+
+.lm-toast-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.lm-toast-close:hover {
+  opacity: 1;
+}
+
+/* ── Dark Mode for Toasts Only ── */
+[data-theme='dark'] .lm-toast {
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .lm-toast-msg,
+[data-theme='dark'] .lm-toast-close {
+  color: #111111;
+}

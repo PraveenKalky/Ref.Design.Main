@@ -1,0 +1,113 @@
+/* =============================================
+   Mega Menu — Pixel-perfect match to reference
+   - Full-viewport height
+   - Vivid neon green background (#00E54C)
+   - Large typography with superscript counts
+   - Two equal columns
+   - Radial glow blobs
+   ============================================= */
+
+.mega-menu {
+  position: fixed;
+  top: 80px;
+  /* exact navbar height */
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 80px);
+  background-color: #FFFFFF;
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear 0.2s;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mega-menu--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: all;
+  transition:
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear 0s;
+}
+
+
+
+/* Content wrapper */
+.mega-menu__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  height: 100%;
+  padding: 52px 72px 52px 60px;
+  gap: 0;
+  max-width: 1440px;
+  margin: 0 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.mega-menu__inner::-webkit-scrollbar {
+  display: none;
+}
+
+/* Column */
+.mega-menu__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Default — all items start black */
+.mega-menu__item {
+  font-family: 'Urbanist', 'Outfit', sans-serif;
+  font-size: clamp(36px, 4.2vw, 54px);
+  font-weight: 400;
+  line-height: 1.18;
+  color: #000000;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  display: inline-block;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  user-select: none;
+}
+
+/* Hovered item — stays full black, crisp */
+.mega-menu__item--hovered {
+  color: #000000;
+  opacity: 1;
+}
+
+/* All OTHER items when something is hovered — dim to light grey */
+.mega-menu__item--dimmed {
+  color: rgba(0, 0, 0, 0.2);
+  opacity: 1;
+}
+
+
+
+/* Superscript count */
+.mega-menu__sup {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.32em;
+  font-weight: 400;
+  vertical-align: super;
+  color: #000000;
+  letter-spacing: 0;
+  margin-left: 3px;
+}
+
+/* Always dark panel stays green regardless of light/dark theme */
+[data-theme="light"] .mega-menu,
+[data-theme="dark"] .mega-menu {
+  background-color: #FFFFFF;
+}

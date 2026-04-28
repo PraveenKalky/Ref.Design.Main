@@ -22,5 +22,12 @@ export const cardsData = [
   { id: 21, name: 'miro', title: 'Miro', subtitle: 'The visual workspace for innovation', image: 'https://picsum.photos/seed/miro/432/328', logo: 'https://picsum.photos/seed/mirologo/36/36', link: '#' },
   { id: 22, name: 'loom', title: 'Loom', subtitle: 'Video messaging for work', image: 'https://picsum.photos/seed/loom/432/328', logo: 'https://picsum.photos/seed/loomlogo/36/36', link: '#' },
   { id: 23, name: 'cron', title: 'Cron', subtitle: 'The next-generation calendar', image: 'https://picsum.photos/seed/cron/432/328', logo: 'https://picsum.photos/seed/cronlogo/36/36', link: '#' },
-  { id: 24, name: 'superhuman', title: 'Superhuman', subtitle: 'The fastest email experience ever made', image: 'https://picsum.photos/seed/superhuman/432/328', logo: 'https://picsum.photos/seed/superhumanlogo/36/36', link: '#' }
+  { id: 24, name: 'superhuman', title: 'Superhuman', subtitle: 'The fastest email experience ever made', image: 'https://picsum.photos/seed/superhuman/432/328', logo: 'https://picsum.photos/seed/superhumanlogo/36/36', link: '#' },
+  { id: 25, name: 'canva', title: 'Canva', subtitle: 'Design for everyone', image: 'https://picsum.photos/seed/canva/432/328', logo: 'https://picsum.photos/seed/canvalogo/36/36', link: '#' },
+  { id: 26, name: 'adobe', title: 'Adobe', subtitle: 'Creative Cloud', image: 'https://picsum.photos/seed/adobe/432/328', logo: 'https://picsum.photos/seed/adobelogo/36/36', link: '#' },
+  { id: 27, name: 'zoom', title: 'Zoom', subtitle: 'Video communications', image: 'https://picsum.photos/seed/zoom/432/328', logo: 'https://picsum.photos/seed/zoomlogo/36/36', link: '#' },
+  { id: 28, name: 'trello', title: 'Trello', subtitle: 'Manage your teams projects', image: 'https://picsum.photos/seed/trello/432/328', logo: 'https://picsum.photos/seed/trellologo/36/36', link: '#' },
+  { id: 29, name: 'asana', title: 'Asana', subtitle: 'Work anytime, anywhere', image: 'https://picsum.photos/seed/asana/432/328', logo: 'https://picsum.photos/seed/asanalogo/36/36', link: '#' },
+  { id: 30, name: 'monday', title: 'Monday.com', subtitle: 'Work OS', image: 'https://picsum.photos/seed/monday/432/328', logo: 'https://picsum.photos/seed/mondaylogo/36/36', link: '#' }
 ];
+

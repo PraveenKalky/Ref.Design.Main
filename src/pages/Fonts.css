@@ -10,19 +10,24 @@
   background: #111111;
 }
 
+.fonts-page-wrapper {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
 /* ── Hero Section (untouched) ── */
 .fonts-hero {
   width: 100%;
-  padding: 80px 32px 100px 32px;
+  padding: 80px 0 100px 0;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
 }
 
 .fonts-hero-content {
-  max-width: 1440px;
   width: 100%;
-  margin: 0 auto;
 }
 
 .fonts-breadcrumb {
@@ -81,193 +86,161 @@
 ════════════════════════════════════════════ */
 .fonts-gallery-section {
   width: 100%;
-  padding: 0 32px 80px;
-  background: #ffffff;
+  padding: 0 0 80px;
+  background: transparent;
 }
 
 [data-theme="dark"] .fonts-gallery-section {
-  background: #111111;
+  background: transparent;
 }
 
 .fonts-gallery-inner {
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
 }
 
-/* ── Top bar ── */
-.fonts-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 0;
-}
-
-.fonts-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: #111;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: opacity 0.15s ease;
-}
-
-.fonts-toggle-btn:hover {
-  opacity: 0.65;
-}
-
-[data-theme="dark"] .fonts-toggle-btn {
-  color: #fff;
-}
-
-.fonts-sort {
+/* ── NEW HORIZONTAL FILTER BAR ── */
+.fonts-horizontal-filter-bar {
+  width: 100%;
+  height: 60px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-bottom: 0;
+}
+
+[data-theme="dark"] .fonts-horizontal-filter-bar {
+  background: #222;
+}
+
+.fh-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fh-pill {
+  background: #ffffff;
+  border: none;
+  border-radius: 8px;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  transition: background 0.2s ease;
+}
+
+.fh-pill:hover {
+  background: #e8e8e8;
+}
+
+[data-theme="dark"] .fh-pill {
+  background: #333;
+  color: #ccc;
+}
+
+[data-theme="dark"] .fh-pill:hover {
+  background: #444;
+}
+
+.fh-icon-type {
   color: #888;
 }
 
-.fonts-sort-btn {
+.fh-color-bars {
+  display: flex;
+  gap: 2px;
+}
+
+.fh-bar {
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.fh-bar-1 { background: #c4b5e8; }
+.fh-bar-2 { background: #9b87d4; }
+.fh-bar-3 { background: #7c6bbf; }
+
+.fh-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.fh-badge {
+  background: #FF6B35;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fh-reset {
+  display: flex;
+  align-items: center;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s ease;
 }
 
-[data-theme="dark"] .fonts-sort-btn {
-  color: #fff;
-}
-
-.fonts-topbar-divider {
-  width: 100%;
-  height: 1px;
-  background: #e8e8e8;
-  margin-bottom: 28px;
-}
-
-[data-theme="dark"] .fonts-topbar-divider {
-  background: #2a2a2a;
-}
-
-/* ── Two-panel body ── */
-.fonts-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 32px;
-}
-
-/* ── Sidebar ── */
-.fonts-sidebar {
-  flex-shrink: 0;
-  width: 230px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-  max-width: 230px;
-  transition: max-width 0.3s ease, opacity 0.3s ease;
-  opacity: 1;
-}
-
-.fonts-sidebar.is-hidden {
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.flt-group {
-  margin-bottom: 20px;
-}
-
-/* Divider line above every group except the first */
-.flt-group + .flt-group {
-  border-top: 1px solid #e8e8e8;
-  padding-top: 20px;
-}
-
-[data-theme="dark"] .flt-group + .flt-group {
-  border-top-color: #2a2a2a;
-}
-
-.flt-group-label {
+.fh-reset-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
   color: #111;
-  margin: 0 0 10px 0;
-  text-transform: none;
-  letter-spacing: 0;
+  margin-left: 10px;
 }
 
-[data-theme="dark"] .flt-group-label {
-  color: #fff;
-}
-
-.flt-group-divider {
-  display: none; /* Dividers are now handled between groups, not under labels */
-}
-
-.flt-check-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-
-.flt-checkbox {
-  width: 15px;
-  height: 15px;
-  border: 1.5px solid #bbb;
-  border-radius: 3px;
-  accent-color: #7b61ff;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.flt-check-label {
-  font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  color: #333;
-  line-height: 1;
-  user-select: none;
-}
-
-[data-theme="dark"] .flt-check-label {
+[data-theme="dark"] .fh-reset-text {
   color: #ccc;
 }
 
-/* ── Cards area ── */
-.fonts-cards-wrap {
-  flex: 1;
-  min-width: 0;
+.fh-reset-icon {
+  margin-left: 4px;
+}
+
+.fh-reset:hover {
+  opacity: 0.7;
+}
+
+.fonts-topbar-divider {
+  display: none;
+}
+
+[data-theme="dark"] .fonts-topbar-divider {
+  display: none;
 }
 
 .fonts-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  margin-top: 24px;
 }
 
 /* ── Individual font card ── */
 .font-card {
   position: relative;
-  height: 240px;
+  height: 280px;
   border-radius: 8px;
   overflow: hidden;
   display: flex;

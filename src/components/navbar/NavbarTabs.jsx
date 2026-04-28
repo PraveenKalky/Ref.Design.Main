@@ -79,19 +79,33 @@ const NavbarTabs = () => {
                 <div className="nav-links-container" ref={containerRef}>
                     <div className="nav-active-pill" style={pillStyle} />
 
-                    {navLinks.map((item) => (
-                        <button
-                            key={item.name}
-                            ref={(el) => (linksRef.current[item.name] = el)}
-                            className={`nav-link ${activeLink === item.name ? 'active' : ''}`}
-                            onClick={() => handleClick(item)}
-                            onMouseEnter={() => handleMouseEnter(item.name)}
-                            onMouseLeave={handleMouseLeave}
-                        >
-                            {item.name === 'Search' && <Search size={16} />}
-                            {item.name}
-                        </button>
-                    ))}
+                    {navLinks.map((item) => {
+                        // Determine active state using both path and activeLink to disambiguate shared '/' paths
+                        const isActive = (location.pathname === item.path && activeLink === item.name);
+                        const isHome = item.name === 'Home';
+
+                        // Apply hover handlers only if the item is not active and not the Home item
+                        const handleEnter = (!isActive && !isHome) ? () => handleMouseEnter(item.name) : undefined;
+                        const handleLeave = (!isActive && !isHome) ? handleMouseLeave : undefined;
+
+                        return (
+                            <button
+                                key={item.name}
+                                ref={(el) => (linksRef.current[item.name] = el)}
+                                className={`nav-link ${isActive ? 'active' : ''}`}
+                                onClick={() => handleClick(item)}
+                                onMouseEnter={handleEnter}
+                                onMouseLeave={handleLeave}
+                                style={{
+                                    ...(isActive ? { cursor: 'default' } : {}),
+                                    ...((isActive || isHome) ? { opacity: 1 } : {})
+                                }}
+                            >
+                                {item.name === 'Search' && <Search size={16} />}
+                                {item.name}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

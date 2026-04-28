@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Bookmark, Download, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { Bookmark, Download, ChevronDown, Type, RotateCcw, ArrowUpRight } from 'lucide-react';
+import '../components/card-grid/card-grid.css';
 import './Fonts.css';
 
 const FONT_CARDS = [
@@ -17,143 +18,101 @@ const FONT_CARDS = [
   { id: 12, name: 'The Youth',   bg: '#1a4575', color: '#e8c98a', style: 'script',     display: 'The Youth' },
 ];
 
-const FILTER_GROUPS = [
-  {
-    label: 'Categories',
-    key: 'categories',
-    options: ['Serif', 'Sans-Serif', 'Script and Handwritten', 'Decorative'],
-  },
-  {
-    label: 'Spacing',
-    key: 'spacing',
-    options: ['Normal', 'Monospace', 'Condensed', 'Expanded'],
-  },
-  {
-    label: 'Optimum Size',
-    key: 'size',
-    options: ['Large (Display / Poster)', 'Small (Book / Magazine)', 'Condensed', 'Any Size'],
-  },
-  {
-    label: 'Properties',
-    key: 'properties',
-    options: ['Web Font'],
-  },
-];
-
 const Fonts = () => {
-  const [filtersVisible, setFiltersVisible] = useState(true);
-  const [checked, setChecked] = useState({});
   const [hoveredCard, setHoveredCard] = useState(null);
-
-  const toggleCheck = (key) => {
-    setChecked(prev => ({ ...prev, [key]: !prev[key] }));
-  };
 
   return (
     <div className="fonts-page">
-
-      {/* ── HERO (untouched) ── */}
-      <section className="fonts-hero">
-        <div className="fonts-hero-content">
-          <div className="fonts-breadcrumb">
-            All Items &nbsp;»&nbsp; <span className="current">Fonts</span>
-          </div>
-          <h1 className="fonts-heading">
-            <span className="dark-text">High-Quality </span>
-            <span className="purple-text">Fonts</span>
-          </h1>
-          <p className="fonts-subtext">
-            Set your projects apart with exceptional typography. Explore our range of premium fonts,
-            from statement text to subtle body copy; we have it all to capture the mood for your project.
-          </p>
-        </div>
-      </section>
-
-      {/* ── GALLERY SECTION ── */}
-      <section className="fonts-gallery-section">
-        <div className="fonts-gallery-inner">
-
-          {/* Top bar */}
-          <div className="fonts-topbar">
-            <button
-              className="fonts-toggle-btn"
-              onClick={() => setFiltersVisible(v => !v)}
-            >
-              <SlidersHorizontal size={16} strokeWidth={2} />
-              <span>{filtersVisible ? 'Hide Filters' : 'Show Filters'}</span>
-            </button>
-            <div className="fonts-sort">
-              <span>Sort by</span>
-              <button className="fonts-sort-btn">
-                Popular <ChevronDown size={14} />
-              </button>
+      <div className="fonts-page-wrapper">
+        {/* ── HERO (untouched) ── */}
+        <section className="fonts-hero">
+          <div className="fonts-hero-content">
+            <div className="fonts-breadcrumb">
+              All Items &nbsp;»&nbsp; <span className="current">Fonts</span>
             </div>
+            <h1 className="fonts-heading">
+              <span className="dark-text">High-Quality </span>
+              <span className="purple-text">Fonts</span>
+            </h1>
+            <p className="fonts-subtext">
+              Set your projects apart with exceptional typography. Explore our range of premium fonts,
+              from statement text to subtle body copy; we have it all to capture the mood for your project.
+            </p>
           </div>
-          <div className="fonts-topbar-divider" />
+        </section>
 
-          {/* Two-panel layout */}
-          <div className="fonts-body">
+        {/* ── GALLERY SECTION ── */}
+        <section className="fonts-gallery-section">
+          <div className="fonts-gallery-inner">
 
-            {/* LEFT SIDEBAR */}
-            <aside className={`fonts-sidebar ${filtersVisible ? 'is-visible' : 'is-hidden'}`}>
-              {FILTER_GROUPS.map(group => (
-                <div className="flt-group" key={group.key}>
-                  <p className="flt-group-label">{group.label}</p>
-                  <div className="flt-group-divider" />
-                  {group.options.map(opt => {
-                    const id = `${group.key}-${opt}`;
-                    return (
-                      <label className="flt-check-row" key={id} htmlFor={id}>
-                        <input
-                          id={id}
-                          type="checkbox"
-                          className="flt-checkbox"
-                          checked={!!checked[id]}
-                          onChange={() => toggleCheck(id)}
-                        />
-                        <span className="flt-check-label">{opt}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              ))}
-            </aside>
+            {/* ── NEW HORIZONTAL FILTER BAR ── */}
+            <div className="fonts-horizontal-filter-bar">
+              <div className="fh-left">
+                <button className="fh-pill">Awards <ChevronDown size={12} color="#555" strokeWidth={2.5} /></button>
+                <button className="fh-pill">Category <ChevronDown size={12} color="#555" strokeWidth={2.5} /></button>
+                <button className="fh-pill">Tag <ChevronDown size={12} color="#555" strokeWidth={2.5} /></button>
+                <button className="fh-pill">Technology <ChevronDown size={12} color="#555" strokeWidth={2.5} /></button>
+                <button className="fh-pill">Country <ChevronDown size={12} color="#555" strokeWidth={2.5} /></button>
+                <button className="fh-pill">
+                  Font <ChevronDown size={12} color="#555" strokeWidth={2.5} />
+                  <Type size={16} className="fh-icon-type" strokeWidth={2} />
+                </button>
+                <button className="fh-pill">
+                  Color <ChevronDown size={12} color="#555" strokeWidth={2.5} />
+                  <div className="fh-color-bars">
+                    <div className="fh-bar fh-bar-1"></div>
+                    <div className="fh-bar fh-bar-2"></div>
+                    <div className="fh-bar fh-bar-3"></div>
+                  </div>
+                </button>
+              </div>
+              
+              <div className="fh-right">
+                <div className="fh-badge">0</div>
+                <button className="fh-reset">
+                  <span className="fh-reset-text">Reset filters</span>
+                  <RotateCcw size={16} color="#555" strokeWidth={2} className="fh-reset-icon" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="fonts-topbar-divider" />
 
-            {/* RIGHT — CARDS GRID */}
-            <div className="fonts-cards-wrap">
-              <div className="fonts-grid">
-                {FONT_CARDS.map(card => (
-                  <div
-                    key={card.id}
-                    className="font-card"
-                    style={{ background: card.bg }}
-                    onMouseEnter={() => setHoveredCard(card.id)}
-                    onMouseLeave={() => setHoveredCard(null)}
+            {/* ── CARDS GRID ── */}
+            <div className="fonts-grid">
+              {FONT_CARDS.map(card => (
+                <div
+                  key={card.id}
+                  className="font-card card-container"
+                  style={{ background: card.bg }}
+                  onMouseEnter={() => setHoveredCard(card.id)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
+                  <span
+                    className="font-card-name"
+                    style={{ color: card.color, fontFamily: card.style === 'script' ? 'Georgia, serif' : card.style === 'serif' ? 'Georgia, Times, serif' : 'inherit' }}
                   >
-                    <span
-                      className="font-card-name"
-                      style={{ color: card.color, fontFamily: card.style === 'script' ? 'Georgia, serif' : card.style === 'serif' ? 'Georgia, Times, serif' : 'inherit' }}
-                    >
-                      {card.display}
-                    </span>
+                    {card.display}
+                  </span>
 
-                    {/* Hover actions */}
-                    <div className={`font-card-actions ${hoveredCard === card.id ? 'is-visible' : ''}`}>
-                      <button className="font-card-btn" aria-label="Save">
-                        <Bookmark size={15} strokeWidth={2} />
+                  {/* Homepage card hover overlay */}
+                  <div className="card-overlay">
+                    <div className="card-actions">
+                      <button className="card-action-btn card-action-open">
+                        <ArrowUpRight strokeWidth={2} size={18} /> Open
                       </button>
-                      <button className="font-card-btn" aria-label="Download">
-                        <Download size={15} strokeWidth={2} />
+                      <button className="card-action-btn card-action-save">
+                        <Bookmark strokeWidth={2} size={18} /> Save
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
 
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 };

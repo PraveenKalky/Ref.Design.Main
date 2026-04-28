@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Bookmark, Download, ChevronDown, Type, RotateCcw, ArrowUpRight } from 'lucide-react';
+import { Bookmark, ChevronDown, Type, RotateCcw, ArrowUpRight } from 'lucide-react';
+import Pagination from '../components/pagination/Pagination';
 import '../components/card-grid/card-grid.css';
 import './Fonts.css';
 
@@ -16,15 +17,42 @@ const FONT_CARDS = [
   { id: 10, name: 'Oslla',       bg: '#4355d1', color: '#f5e642', style: 'display',    display: 'OSLLA' },
   { id: 11, name: 'Vogun',       bg: '#f7f0e8', color: '#111111', style: 'serif',      display: 'vogun' },
   { id: 12, name: 'The Youth',   bg: '#1a4575', color: '#e8c98a', style: 'script',     display: 'The Youth' },
+  { id: 13, name: 'Aether',      bg: '#000000', color: '#00ff00', style: 'sans-serif', display: 'AETHER' },
+  { id: 14, name: 'Bolden',      bg: '#ffffff', color: '#000000', style: 'sans-serif', display: 'BOLDEN' },
+  { id: 15, name: 'Cursive',     bg: '#ff00ff', color: '#ffffff', style: 'script',     display: 'Cursive' },
+  { id: 16, name: 'Dante',       bg: '#333333', color: '#cccccc', style: 'serif',      display: 'Dante' },
+  { id: 17, name: 'Ego',         bg: '#444444', color: '#eeeeee', style: 'sans-serif', display: 'EGO' },
+  { id: 18, name: 'Flare',       bg: '#555555', color: '#ffffff', style: 'display',    display: 'FLARE' },
+  { id: 19, name: 'Ghost',       bg: '#111111', color: '#444444', style: 'sans-serif', display: 'GHOST' },
+  { id: 20, name: 'Haze',        bg: '#222222', color: '#888888', style: 'sans-serif', display: 'HAZE' },
+  { id: 21, name: 'Iris',        bg: '#333333', color: '#aaaaaa', style: 'serif',      display: 'IRIS' },
+  { id: 22, name: 'Jade',        bg: '#444444', color: '#00cc00', style: 'sans-serif', display: 'JADE' },
+  { id: 23, name: 'Kite',        bg: '#555555', color: '#ffff00', style: 'display',    display: 'KITE' },
+  { id: 24, name: 'Lark',        bg: '#666666', color: '#ffffff', style: 'sans-serif', display: 'LARK' },
+  { id: 25, name: 'Mist',        bg: '#777777', color: '#ffffff', style: 'sans-serif', display: 'MIST' },
+  { id: 26, name: 'Nova',        bg: '#888888', color: '#ffffff', style: 'sans-serif', display: 'NOVA' },
+  { id: 27, name: 'Opal',        bg: '#999999', color: '#ffffff', style: 'serif',      display: 'OPAL' },
+  { id: 28, name: 'Pike',        bg: '#aaaaaa', color: '#ffffff', style: 'sans-serif', display: 'PIKE' }
 ];
 
 const Fonts = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const cardsPerPage = 24;
+
+  const totalPages = Math.ceil(FONT_CARDS.length / cardsPerPage);
+  const indexOfLastCard = currentPage * cardsPerPage;
+  const indexOfFirstCard = indexOfLastCard - cardsPerPage;
+  const currentCards = FONT_CARDS.slice(indexOfFirstCard, indexOfLastCard);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="fonts-page">
       <div className="fonts-page-wrapper">
-        {/* ── HERO (untouched) ── */}
         <section className="fonts-hero">
           <div className="fonts-hero-content">
             <div className="fonts-breadcrumb">
@@ -41,11 +69,8 @@ const Fonts = () => {
           </div>
         </section>
 
-        {/* ── GALLERY SECTION ── */}
         <section className="fonts-gallery-section">
           <div className="fonts-gallery-inner">
-
-            {/* ── NEW HORIZONTAL FILTER BAR ── */}
             <div className="fonts-horizontal-filter-bar">
               <div className="fh-left">
                 <button className="fh-pill">Awards <ChevronDown size={12} color="#555" strokeWidth={2.5} /></button>
@@ -78,9 +103,8 @@ const Fonts = () => {
             
             <div className="fonts-topbar-divider" />
 
-            {/* ── CARDS GRID ── */}
             <div className="fonts-grid">
-              {FONT_CARDS.map(card => (
+              {currentCards.map(card => (
                 <div
                   key={card.id}
                   className="font-card card-container"
@@ -95,7 +119,6 @@ const Fonts = () => {
                     {card.display}
                   </span>
 
-                  {/* Homepage card hover overlay */}
                   <div className="card-overlay">
                     <div className="card-actions">
                       <button className="card-action-btn card-action-open">
@@ -110,6 +133,11 @@ const Fonts = () => {
               ))}
             </div>
 
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={handlePageChange} 
+            />
           </div>
         </section>
       </div>

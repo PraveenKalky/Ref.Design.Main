@@ -43,10 +43,23 @@ const Card = ({ id, name, title, subtitle, image, logo, link, isSaved, toggleSav
 };
 
 export default function CardGrid({ savedItems, toggleSave }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const cardsPerPage = 24;
+  
+  const totalPages = Math.ceil(cardsData.length / cardsPerPage);
+  const indexOfLastCard = currentPage * cardsPerPage;
+  const indexOfFirstCard = indexOfLastCard - cardsPerPage;
+  const currentCards = cardsData.slice(indexOfFirstCard, indexOfLastCard);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <section className="card-grid-section">
       <div className="card-grid">
-        {cardsData.map((card) => (
+        {currentCards.map((card) => (
           <Card 
             key={card.id} 
             {...card} 
@@ -55,7 +68,12 @@ export default function CardGrid({ savedItems, toggleSave }) {
           />
         ))}
       </div>
-      <Pagination />
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={handlePageChange} 
+      />
     </section>
   );
 }
+

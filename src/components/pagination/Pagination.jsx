@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import './pagination.css';
 
-export default function Pagination({ totalPages = 5 }) {
-  const [current, setCurrent] = useState(1);
+export default function Pagination({ currentPage = 1, totalPages = 5, onPageChange }) {
+  const prev = () => onPageChange(Math.max(1, currentPage - 1));
+  const next = () => onPageChange(Math.min(totalPages, currentPage + 1));
 
-  const prev = () => setCurrent(p => Math.max(1, p - 1));
-  const next = () => setCurrent(p => Math.min(totalPages, p + 1));
+  if (totalPages <= 1) return null;
 
   return (
     <div className="pagination-wrapper">
       <div className="pagination-label">
-        PAGE {current} OF {totalPages}
+        PAGE {currentPage} OF {totalPages}
       </div>
       <div className="pagination">
-        <button className={`pg-btn pg-prev ${current === 1 ? 'disabled' : ''}`} onClick={prev}>
+        <button 
+          className={`pg-btn pg-prev ${currentPage === 1 ? 'disabled' : ''}`} 
+          onClick={prev}
+          disabled={currentPage === 1}
+        >
           <ChevronLeft size={18} strokeWidth={2.5} /> Previous
         </button>
 
@@ -22,18 +26,23 @@ export default function Pagination({ totalPages = 5 }) {
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
             <button
               key={n}
-              className={`pg-num ${n === current ? 'active' : ''}`}
-              onClick={() => setCurrent(n)}
+              className={`pg-num ${n === currentPage ? 'active' : ''}`}
+              onClick={() => onPageChange(n)}
             >
               {n}
             </button>
           ))}
         </div>
 
-        <button className={`pg-btn pg-next ${current === totalPages ? 'disabled' : ''}`} onClick={next}>
+        <button 
+          className={`pg-btn pg-next ${currentPage === totalPages ? 'disabled' : ''}`} 
+          onClick={next}
+          disabled={currentPage === totalPages}
+        >
           Next <ChevronRight size={18} strokeWidth={2.5} />
         </button>
       </div>
     </div>
   );
 }
+

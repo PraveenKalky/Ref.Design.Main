@@ -1,0 +1,103 @@
+.sandbox-arc-wrapper {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, sans-serif;
+  background: #000;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sandbox-carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Centered content layout block */
+.sandbox-center-content {
+  position: absolute;
+  top: 68%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 100%;
+  max-width: 800px; /* Constrain width to prevent overlapping cards on the edges */
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none; /* Let clicks pass through if needed, though buttons need pointer-events: auto */
+}
+
+.sandbox-center-content > * {
+  pointer-events: auto;
+}
+
+/* The magic arc card tracking layout system */
+.sandbox-arc-card {
+  position: absolute;
+  width: 120px;
+  height: 132px; /* Reduced by ~18% for a slimmer aspect ratio */
+  border-radius: 0px;
+  background: #333;
+  overflow: hidden;
+  
+  /* Calculate center point origin anchor path */
+  left: 50%;
+  top: 65%;
+  
+  /* Set rotation origin deep below the cards to sweep them into an outer arc */
+  transform-origin: 50% 400px; 
+  
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.sandbox-arc-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sandbox-carousel-container {
+    height: 400px;
+  }
+  .sandbox-arc-card {
+    width: 80px;
+    height: 120px;
+    transform-origin: 50% 250px;
+  }
+}
+
+/* Sandbox-specific typography overrides for the imported HeroContent
+   Ensures text is fully readable against the sandbox's black background 
+   and fits within the safe zone of the arc carousel. */
+.sandbox-center-content .hero-content h1 {
+  color: #ffffff !important;
+  font-size: 72px !important; /* Fixed font size per feedback */
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.sandbox-center-content .hero-description {
+  color: #a3a3a3 !important;
+  font-size: 16px !important; /* Set to 16px per feedback */
+  max-width: 800px !important; /* Increased width per feedback */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sandbox-center-content .hero-pill {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sandbox-center-content .hero-pill span {
+  color: #a3a3a3 !important;
+}

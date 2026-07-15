@@ -1,17 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
+import gsap from 'gsap';
 // import StatsBar from '../archive/StatsBar'; // ARCHIVED
 
 const HeroContent = () => {
+    useEffect(() => {
+        let ctx = gsap.context(() => {
+            const tl = gsap.timeline();
+            tl.to("#revealEyebrow", { translateY: "0%", duration: 0.5, ease: "power2.out" })
+              .to("#revealHeadline", { translateY: "0%", duration: 0.8, ease: "power4.out" }, "-=0.3")
+              .to("#revealDesc", { opacity: 1, duration: 0.6 }, "-=0.2");
+        });
+        return () => ctx.revert(); // Cleanup for React 18 strict mode
+    }, []);
+
     return (
         <div className="hero-content">
-            <div className="hero-pill">
-                <span>Flows. Screens. Inspiration. All in one place.</span>
-            </div>
+            <span className="hero-mask">
+                <div className="hero-pill" id="revealEyebrow">
+                    <span>Flows. Screens. Inspiration. All in one place.</span>
+                </div>
+            </span>
 
-            <h1>A curated museum of digital product design.</h1>
+            <span className="hero-mask">
+                <h1 id="revealHeadline">A Curated Museum of Digital Product Design.</h1>
+            </span>
 
-            <p className="hero-description">
+            <p className="hero-description" id="revealDesc">
                 Design Vault is Praveen G's personal inspiration platform for designers and developers.
                 Browse UI flows, websites, dashboards, apps, Figma references and font resources
                 without pricing walls or gated access.

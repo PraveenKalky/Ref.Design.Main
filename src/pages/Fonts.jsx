@@ -3,6 +3,7 @@ import { Plus, ChevronDown, ChevronUp, X, Type, RotateCcw, LayoutGrid, Menu, Max
 import { DownloadSimple, BookmarkSimple, FadersHorizontal, CaretUpDown, SquaresFour, List } from '@phosphor-icons/react';
 import Pagination from '../components/pagination/Pagination';
 import LoginModal from '../components/navbar/LoginModal';
+import AaPathPreview from '../components/font-preview/AaPathPreview';
 import '../components/filter-bar/filter-bar.css';
 import '../components/filters/category-filter-expanded.css';
 import './Fonts.css';
@@ -109,6 +110,9 @@ const FontCard = ({ font, globalText, globalFontSize, viewMode, savedIds, toggle
   const [fontSize, setFontSize] = useState(globalFontSize || 120);
   const [letterSpacing, setLetterSpacing] = useState(0);
   const [lineHeight, setLineHeight] = useState(1.2);
+  const defaultFontSize = globalFontSize || 120;
+  const defaultLineHeight = 1.2;
+  const defaultLetterSpacing = 0;
   const [isHovered, setIsHovered] = useState(false);
   const [autoFontSize, setAutoFontSize] = useState(null);
   const [activeSwatch, setActiveSwatch] = useState(null);
@@ -300,48 +304,93 @@ const FontCard = ({ font, globalText, globalFontSize, viewMode, savedIds, toggle
               {/* 2. Font size */}
               <div className="fchc-pill fchc-control">
                 <span className="fchc-label">Size</span>
-                <input
-                  type="range"
-                  min="24"
-                  max="200"
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="fchc-slider"
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <div className="fchc-slider-wrapper">
+                  <input
+                    type="range"
+                    min="24"
+                    max="200"
+                    value={fontSize}
+                    onChange={(e) => setFontSize(Number(e.target.value))}
+                    className="fchc-slider"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div 
+                    className="fchc-slider-default-marker"
+                    style={{ left: 'calc(5px + (100% - 10px) * 0.22727)' }}
+                  />
+                </div>
                 <span className="fchc-value">{fontSize}</span>
+                {fontSize !== defaultFontSize && (
+                  <button
+                    className="fchc-reset-btn"
+                    onClick={(e) => { e.stopPropagation(); setFontSize(defaultFontSize); }}
+                    title="Reset size"
+                  >
+                    <RotateCcw size={12} strokeWidth={2.5} />
+                  </button>
+                )}
               </div>
 
               {/* 3. Leading (Line Height) */}
               <div className="fchc-pill fchc-control">
                 <span className="fchc-label">Leading</span>
-                <input
-                  type="range"
-                  min="0.8"
-                  max="2.5"
-                  step="0.05"
-                  value={lineHeight}
-                  onChange={(e) => setLineHeight(Number(e.target.value))}
-                  className="fchc-slider"
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <div className="fchc-slider-wrapper">
+                  <input
+                    type="range"
+                    min="0.8"
+                    max="2.5"
+                    step="0.05"
+                    value={lineHeight}
+                    onChange={(e) => setLineHeight(Number(e.target.value))}
+                    className="fchc-slider"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div 
+                    className="fchc-slider-default-marker"
+                    style={{ left: 'calc(5px + (100% - 10px) * 0.23529)' }}
+                  />
+                </div>
                 <span className="fchc-value">{parseFloat(lineHeight).toFixed(2)}</span>
+                {lineHeight !== defaultLineHeight && (
+                  <button
+                    className="fchc-reset-btn"
+                    onClick={(e) => { e.stopPropagation(); setLineHeight(defaultLineHeight); }}
+                    title="Reset leading"
+                  >
+                    <RotateCcw size={12} strokeWidth={2.5} />
+                  </button>
+                )}
               </div>
 
               {/* 4. Tracking */}
               <div className="fchc-pill fchc-control">
                 <span className="fchc-label">Spacing</span>
-                <input
-                  type="range"
-                  min="-0.5"
-                  max="0.5"
-                  step="0.01"
-                  value={letterSpacing}
-                  onChange={(e) => setLetterSpacing(Number(e.target.value))}
-                  className="fchc-slider"
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <div className="fchc-slider-wrapper">
+                  <input
+                    type="range"
+                    min="-0.5"
+                    max="0.5"
+                    step="0.01"
+                    value={letterSpacing}
+                    onChange={(e) => setLetterSpacing(Number(e.target.value))}
+                    className="fchc-slider"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div 
+                    className="fchc-slider-default-marker"
+                    style={{ left: 'calc(5px + (100% - 10px) * 0.5)' }}
+                  />
+                </div>
                 <span className="fchc-value">{parseFloat(letterSpacing).toFixed(2)}</span>
+                {letterSpacing !== defaultLetterSpacing && (
+                  <button
+                    className="fchc-reset-btn"
+                    onClick={(e) => { e.stopPropagation(); setLetterSpacing(defaultLetterSpacing); }}
+                    title="Reset spacing"
+                  >
+                    <RotateCcw size={12} strokeWidth={2.5} />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -356,7 +405,7 @@ const FontCard = ({ font, globalText, globalFontSize, viewMode, savedIds, toggle
         <div className="card-top-right">
 
           <button className="font-card-action-btn icon-only" title="Download">
-            <DownloadSimple size={16} weight="regular" />
+            <DownloadSimple size={16} weight="bold" />
             <span className="btn-text">Download</span>
           </button>
           <button
@@ -364,7 +413,7 @@ const FontCard = ({ font, globalText, globalFontSize, viewMode, savedIds, toggle
             onClick={(e) => { e.stopPropagation(); toggleSave?.(font.id); }}
             title={savedIds?.[font.id] ? 'Unsave' : 'Save'}
           >
-            <BookmarkSimple size={16} weight={savedIds?.[font.id] ? "fill" : "regular"} />
+            <BookmarkSimple size={16} weight={savedIds?.[font.id] ? "fill" : "bold"} />
             <span className="btn-text">{savedIds?.[font.id] ? 'Saved' : 'Save'}</span>
           </button>
         </div>
@@ -380,21 +429,32 @@ const FontCard = ({ font, globalText, globalFontSize, viewMode, savedIds, toggle
             fontStyle: selectedStyle.italic ? 'italic' : 'normal',
           }}
         >
-          {/* Inner span used by JS for text measurement */}
-          <span
-            ref={previewSpanRef}
-            style={{
-              fontSize: autoFontSize ? `${autoFontSize}px` : `${MAX_SIZE}px`,
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-              display: 'inline-block',
-            }}
-          >
-            {viewMode === 'grid' 
-              ? (globalText && globalText.trim() !== '' ? globalText : "Aa")
-              : textToShow
-            }
-          </span>
+          {viewMode === 'grid' && (!globalText || globalText.trim() === '') ? (
+            /* AaPathPreview uses opentype.js to extract glyph outlines.
+               Output is a real SVG <path> — no <text> node, no Typography
+               panel in Figma, pure vector shapes that scale cleanly. */
+            <AaPathPreview
+              googleFont={font.googleFont}
+              weight={selectedStyle.weight}
+              italic={selectedStyle.italic}
+              color="currentColor"
+              width={238}
+              height={152}
+              ariaLabel={`${font.name} Aa preview`}
+            />
+          ) : (
+            <span
+              ref={previewSpanRef}
+              style={{
+                fontSize: autoFontSize ? `${autoFontSize}px` : `${MAX_SIZE}px`,
+                lineHeight: 1,
+                whiteSpace: 'nowrap',
+                display: 'inline-block',
+              }}
+            >
+              {viewMode === 'grid' ? globalText : textToShow}
+            </span>
+          )}
         </span>
         <span className="preview-hover" style={{ 
           fontSize: `${fontSize}px`, 
@@ -450,11 +510,18 @@ const Fonts = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   const dropdownRef = useRef(null);
+  
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [selectedSort, setSelectedSort] = useState("Most recent first");
+  const sortDropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+        setIsSortOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -581,9 +648,37 @@ const Fonts = () => {
                   <FadersHorizontal size={16} weight="bold" /> Filters
                 </button>
 
-                <button className="fcb-action-btn fcb-sort">
-                  Recent first <CaretUpDown size={16} weight="bold" />
-                </button>
+                <div className="sort-container" ref={sortDropdownRef}>
+                  <button 
+                    className="fcb-action-btn fcb-sort sort-trigger"
+                    onClick={(e) => { e.stopPropagation(); setIsSortOpen(!isSortOpen); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setIsSortOpen(false);
+                    }}
+                    aria-haspopup="listbox" 
+                    aria-expanded={isSortOpen}
+                  >
+                    <span id="sortLabel">{selectedSort}</span> <CaretUpDown size={16} weight="bold" />
+                  </button>
+
+                  <div className={`sort-dropdown ${isSortOpen ? 'open' : ''}`} role="listbox">
+                    {['Most recent first', 'Most popular first', 'Alphabetical A-Z', 'Alphabetical Z-A'].map((opt) => (
+                      <button 
+                        key={opt}
+                        role="option"
+                        aria-selected={selectedSort === opt}
+                        className={`sort-option ${selectedSort === opt ? 'selected' : ''}`}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setSelectedSort(opt); 
+                          setIsSortOpen(false); 
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <span className="top-bar-count">Showing {ITEMS_PER_PAGE} of 3200 fonts</span>

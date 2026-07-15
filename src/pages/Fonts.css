@@ -158,6 +158,91 @@
   background: #333333;
 }
 
+/* ── Sorting Dropdown ── */
+.sort-container {
+  position: relative;
+  display: inline-block;
+}
+
+.sort-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f0f0f0;
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 12px;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  transform-origin: top center;
+  z-index: 100;
+}
+
+.sort-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.sort-option {
+  width: 100%;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none;
+  background: #ffffff;
+  color: #111;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.sort-option:hover, .sort-option:focus-visible {
+  background: #e4e4e4;
+  outline: none;
+}
+
+.sort-option.selected {
+  background: #111111;
+  color: #ffffff;
+}
+
+.sort-option.selected:hover {
+  background: #000000;
+}
+
+[data-theme="dark"] .sort-dropdown {
+  background: #1a1a1a;
+}
+[data-theme="dark"] .sort-option {
+  background: #2a2a2a;
+  color: #fff;
+}
+[data-theme="dark"] .sort-option:hover, [data-theme="dark"] .sort-option:focus-visible {
+  background: #333;
+}
+[data-theme="dark"] .sort-option.selected {
+  background: #ffffff;
+  color: #000000;
+}
+[data-theme="dark"] .sort-option.selected:hover {
+  background: #e4e4e4;
+}
+
 .font-view-toggle {
   display: flex;
   align-items: center;
@@ -260,7 +345,9 @@
 .font-card {
   background: transparent;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0 !important;
+  border-radius: 26px !important;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
   padding: 24px 0;
   overflow: visible;
   width: 100%;
@@ -718,15 +805,15 @@
   align-items: center;
   gap: 6px;
   height: 32px !important;
-  padding: 0 12px;        /* increased from 10px */
+  padding: 0 12px;
   background: #efefef;
   border-radius: 9999px;
   border: none;
   box-sizing: border-box;
-  flex-shrink: 1;         /* allow shrinking — key fix */
+  flex-shrink: 1;
   white-space: nowrap;
   cursor: pointer;
-  min-width: 0;           /* allow content to compress */
+  min-width: 0;
 }
 
 .fchc-pill:hover {
@@ -862,6 +949,62 @@
   text-align: right;
 }
 
+/* ── Slider Wrapper & Marker & Reset ── */
+.fchc-slider-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 40px;
+  min-width: 40px;
+  flex-shrink: 0;          /* prevent track from resizing when reset icon appears */
+  height: 100%;
+}
+
+.fchc-slider-default-marker {
+  position: absolute;
+  width: 1px;
+  height: 18px;
+  background-color: #d0d0d0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  top: 50%;
+  margin-top: -9px;
+  z-index: 1;
+}
+
+[data-theme="dark"] .fchc-slider-default-marker {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Reset button — conditionally rendered flex child, only in DOM when value ≠ default */
+.fchc-reset-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.5);
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.2s ease;
+}
+
+.fchc-reset-btn:hover {
+  color: #111;
+  transform: rotate(-45deg);
+}
+
+[data-theme="dark"] .fchc-reset-btn {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .fchc-reset-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 /* ── Slider ── */
 .fchc-slider {
   -webkit-appearance: none;
@@ -876,6 +1019,8 @@
   border: none;
   cursor: pointer;
   align-self: center;
+  position: relative;
+  z-index: 2;
 }
 
 /* Track */
@@ -899,17 +1044,28 @@
   width: 10px;
   height: 10px;
   background: #fff;
-  border: 1px solid #111;
+  border: 1.2px solid #111;
   border-radius: 50%;
-  margin-top: -4px; /* (Track height 1px / 2) - (Thumb height 10px / 2) */
+  box-sizing: border-box;
+  margin-top: -4.5px;      /* exact: -(thumb_h/2 - track_h/2) = -(10/2 - 1/2) = -4.5px */
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Lock thumb size and shadow during drag — prevents browser active-state glow/resize jitter */
+.fchc-slider:active::-webkit-slider-thumb {
+  width: 10px;
+  height: 10px;
+  border: 1.2px solid #111;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  transform: none;
+  outline: none;
 }
 
 .fchc-slider::-moz-range-thumb {
   width: 10px;
   height: 10px;
   background: #fff;
-  border: 1px solid #111;
+  border: 1.2px solid #111;
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
@@ -917,13 +1073,13 @@
 /* ── Value label ── */
 .fchc-value {
   font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
-  font-size: 16px;        /* increased to match label size */
+  font-size: 16px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.7);
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 32px;        /* increased for larger font */
   text-align: right;
+  min-width: 38px;         /* widest value: "-0.50" (5 chars at 16px) — prevents reflow as text changes */
 }
 
 /* ── Dark mode overrides ── */
@@ -1253,11 +1409,13 @@
   padding: 24px;
   height: 400px;
   background: #efefef;
-  border-radius: 8px;
+  border-radius: 26px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
   position: relative;
-  transition: all 0.3s ease;
-  overflow: hidden; /* Changed from visible to hidden */
-  justify-content: space-between;
+  transition: background 0.3s ease, color 0.3s ease;
+  overflow: hidden;
+  justify-content: flex-start;
   border: none;
   max-width: 100%;
 }
@@ -1341,65 +1499,84 @@
   color: #fff;
 }
 
-/* Adjust Preview Area */
+/* ── Grid View: Preview Container ──
+   Dimensions: 238px width × 151px height
+   Position: top: 225px, left: 50% (centered via translate-x)
+   Bottom gap: 24px (from 400px height - 151px height - 225px top = 24px) */
 .grid-view .font-card-preview {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin-top: 24px;
-  position: static;
-  overflow: hidden;
-  min-height: 180px;
+  position: absolute !important;
+  top: 225px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 238px !important;
+  height: 151px !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: inherit;
+  transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* ── Grid View: preview-default span ── */
 .grid-view .preview-default {
-  font-size: clamp(140px, 20vw, 220px);
-  line-height: 1;
-  text-align: center;
-  transition: opacity 0.3s ease;
-  overflow: hidden;
-  max-height: 100%;
-  white-space: nowrap;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: inherit !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  transition: none !important;
+  overflow: visible !important;
 }
 
+/* ── Grid View: SVG Element ── */
+.grid-view .font-card-preview svg {
+  width: 238px !important;
+  height: 152px !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: block !important;
+}
+
+/* CRITICAL: The base .font-card:hover .preview-default sets visibility:hidden.
+   Override it here so the SVG Aa stays visible on card hover in grid view. */
 .grid-view .font-card:hover .preview-default {
-  opacity: 0;
-  display: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  display: flex !important;
 }
 
-.grid-view .preview-hover {
-  display: none;
-  font-size: 148px !important;
-  line-height: 1;
-  text-align: center;
-  align-self: center;
-  justify-content: center;
-  padding: 0 16px;
-  margin-bottom: 48px; /* Space for the absolute buttons */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  max-height: 240px;
-  overflow: hidden;
-  white-space: normal;
-  color: #111; /* default: readable on light card bg */
-  will-change: opacity;
+/* On hover: transition top coordinate to 143px to create equal gaps above buttons */
+.grid-view .font-card:hover .font-card-preview {
+  top: 143px !important;
 }
 
+/* Disable the long-sentence preview-hover in grid view entirely */
+.grid-view .preview-hover,
 .grid-view .font-card:hover .preview-hover {
-  display: flex;
-  opacity: 1;
-  color: #fff !important; /* always white on black hover bg — overrides swatch locks */
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
-/* Hover Buttons (Download & Save) */
+/* Hover Buttons — position: absolute at bottom */
 .grid-view .card-top-right {
   display: none;
   margin-left: 0;
 }
 
-/* Hide color swatches in grid hover — only pill buttons show */
 .grid-view .font-card:hover .font-card-color-swatches {
   display: none;
 }

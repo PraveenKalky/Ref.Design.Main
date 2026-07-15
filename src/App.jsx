@@ -13,6 +13,8 @@ import SearchResults from './pages/search-results/SearchResults';
 import Preloader from './components/preloader/Preloader';
 import NotFound from './pages/404/NotFound';
 import HoverTests from './pages/HoverTests';
+import ArcCarousel from './pages/sandbox/ArcCarousel';
+import SliderSandbox from './pages/sandbox/SliderSandbox';
 
 function App() {
   const [showLoader, setShowLoader] = useState(true);
@@ -73,6 +75,10 @@ function App() {
       {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
       
       <Routes>
+        {/* Isolated Sandbox Routes */}
+        <Route path="/sandbox/arc-carousel" element={<ArcCarousel />} />
+        <Route path="/sandbox/slider" element={<SliderSandbox />} />
+
         {/* Core Layout containing global Navbar and Footer */}
         <Route element={
           <>
@@ -92,10 +98,10 @@ function App() {
           <Route path="/fonts/:fontId" element={<FontDetails />} />
           <Route path="/search-results" element={<SearchResults savedItems={savedItems} toggleSave={toggleSave} />} />
           <Route path="/hover-tests" element={<HoverTests />} />
+          
+          {/* Fallback route for 404 page now INSIDE the layout */}
+          <Route path="*" element={<NotFound />} />
         </Route>
-
-        {/* Fallback route for 404 page */}
-        <Route path="*" element={<NotFound />} />
       </Routes>
       
       <Agentation />

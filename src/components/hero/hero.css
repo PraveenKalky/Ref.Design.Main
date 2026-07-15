@@ -1,22 +1,104 @@
 .hero {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, sans-serif;
+    background: var(--dv-bg);
+    min-height: calc(100dvh - 80px);
+    height: calc(100dvh - 80px);
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    min-height: auto;
-    padding: 40px 24px 80px 24px;
-    background-color: var(--dv-bg);
+    justify-content: center;
     position: relative;
     overflow: hidden;
 }
 
-.hero-container {
+.hero-mask {
+    overflow: hidden;
+    display: block;
+    padding: 4px 0;
+}
+
+.hero-carousel-container {
+    position: relative;
     width: 100%;
-    max-width: 1392px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    max-width: 100%;
+    height: 100%;
+    background: var(--dv-bg);
+    overflow: hidden;
+}
+
+.hero-center-content {
+    position: absolute;
+    top: calc(50% + 150px); /* Safely offsets the fixed radius to balance the hero vertically */
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hero-center-content > * {
+    pointer-events: auto;
+}
+
+.hero-arc-card {
+    position: absolute;
+    width: 120px;
+    height: 132px;
+    border-radius: 0px;
+    background: #333;
+    overflow: hidden;
+    left: 50%;
+    top: calc(50% + 120px); /* Dynamically offsets fixed 400px radius to prevent top clipping */
+    transform-origin: 50% 400px; 
+    /* Removed heavy shadows for a clean, flat, premium look */
+}
+
+.hero-arc-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .hero-carousel-container {
+        height: 100%;
+    }
+    .hero-arc-card {
+        width: 80px;
+        height: 120px;
+        transform-origin: 50% 250px;
+    }
+}
+
+/* Typography Overrides for Sandbox Integration */
+.hero-center-content .hero-content h1 {
+    color: var(--dv-text) !important;
+    font-size: 72px !important;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.hero-center-content .hero-description {
+    color: var(--dv-text-ghost) !important;
+    font-size: 16px !important;
+    max-width: 800px !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-center-content .hero-pill {
+    border-color: var(--dv-border);
+}
+
+.hero-center-content .hero-pill span {
+    color: var(--dv-text-ghost) !important;
 }
 
 .hero-content {
@@ -39,7 +121,7 @@
     text-transform: uppercase;
     color: var(--dv-text-ghost);
     margin-bottom: 0;
-    animation: fadeInDown 0.8s ease-out;
+    transform: translateY(100%);
 }
 
 /* H1 Headline */
@@ -53,7 +135,7 @@
     margin: 0;
     width: 100%;
     max-width: 1100px;
-    animation: fadeInUp 0.8s ease-out 0.2s both;
+    transform: translateY(100%);
 }
 
 /* Subtitle Styling */
@@ -68,7 +150,7 @@
     padding: 0;
     background: transparent;
     border: none;
-    animation: fadeInUp 0.8s ease-out 0.4s both;
+    opacity: 0;
 }
 
 /* Actions / Buttons */

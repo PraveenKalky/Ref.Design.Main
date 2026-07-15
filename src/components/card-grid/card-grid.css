@@ -16,7 +16,9 @@
   flex-direction: column;
   gap: 16px;
   background: transparent;
-  border-radius: 0;
+  border-radius: 26px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
   cursor: pointer;
   transition: transform 0.2s ease-in-out;
 }
@@ -31,7 +33,9 @@
   height: 300px;
   overflow: hidden;
   background-color: #1a1a1a;
-  border-radius: 0;
+  border-radius: 26px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
 }
 
 .card-image {
@@ -120,6 +124,8 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
   background-color: #222;
   object-fit: cover;
 }

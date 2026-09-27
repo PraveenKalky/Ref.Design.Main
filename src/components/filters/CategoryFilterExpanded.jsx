@@ -2,31 +2,14 @@ import React, { useState } from 'react';
 import { ChevronUp, X } from 'lucide-react';
 import './category-filter-expanded.css';
 
-const TABS = ['Popular Categories', 'Styles', 'Types', 'Subjects', 'Platforms'];
+import { FILTER_TABS, CATEGORIES, CATEGORY_COUNTS } from '../../data/categories';
 
-const CATEGORIES = [
-  'Agencies & Consultancies', 'Typographic', 'Design & Art Direction',
-  'Portfolio', 'Web & Interactive Design', 'E-Commerce', 'Fashion',
-  'Minimal', 'Grid Layout', 'Unusual Layout', 'Art', 'Use of Animation'
-];
-
-const CATEGORY_COUNTS = {
-  'Agencies & Consultancies': '324',
-  'Typographic': '842',
-  'Design & Art Direction': '561',
-  'Portfolio': '1,291',
-  'Web & Interactive Design': '732',
-  'E-Commerce': '418',
-  'Fashion': '290',
-  'Minimal': '645',
-  'Grid Layout': '312',
-  'Unusual Layout': '187',
-  'Art': '456',
-  'Use of Animation': '203'
-};
-
-const CategoryFilterExpanded = () => {
+const CategoryFilterExpanded = ({ activeTab, tabs }) => {
   const [selectedItems, setSelectedItems] = useState([]);
+
+  const currentTab = tabs ? tabs.find(t => t.id === activeTab) : null;
+  const tabLabel = currentTab ? currentTab.label : (activeTab === 'popular' ? 'Popular Categories' : activeTab);
+  const items = CATEGORIES[tabLabel] || CATEGORIES['Popular Categories'] || [];
 
   const toggleItem = (item) => {
     setSelectedItems(prev =>
@@ -50,14 +33,14 @@ const CategoryFilterExpanded = () => {
     <div className="category-filter-expanded">
       {/* Row 2: Category Tags */}
       <div className="cfe-tags-grid">
-        {CATEGORIES.map(cat => (
+        {items.map(cat => (
           <button
             key={cat}
             className={`cfe-tag ${selectedItems.includes(cat) ? 'selected' : ''}`}
             onClick={() => toggleItem(cat)}
           >
             {cat}
-            <span className="cfe-tag-count">{CATEGORY_COUNTS[cat]}</span>
+            {CATEGORY_COUNTS[cat] && <span className="cfe-tag-count">{CATEGORY_COUNTS[cat]}</span>}
           </button>
         ))}
       </div>

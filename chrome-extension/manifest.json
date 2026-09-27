@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Ref Design Scraper Helper",
+  "version": "2.0",
+  "description": "Bypasses WAF by running Dribbble loads in background tabs natively.",
+  "permissions": [
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.dribbble.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

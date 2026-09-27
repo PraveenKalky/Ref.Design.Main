@@ -6,7 +6,7 @@ const getFontMetadata = (font) => {
   const fontName = font?.name || 'Founders Grotesk';
 
   // 1. Credits & Awards Data
-  let design = ["Mathieu Desjardins"];
+  let design = font?.designer ? [font.designer] : ["Mathieu Desjardins"];
   let engineering = ["Mathieu Desjardins", "Valerio Monopoli"];
   let awards = [
     { title: "Hiiibrand International Brand & Communication Design Awards", year: 2020 }
@@ -26,7 +26,7 @@ const getFontMetadata = (font) => {
       { title: "AGDA Design Award, Finalist", year: 2021 }
     ];
   } else if (fontName.includes("Right")) {
-    design = ["Alexander Slobzheninov"];
+    design = font?.designer ? [font.designer] : ["Alexander Slobzheninov"];
     engineering = ["Alexander Slobzheninov", "Noe Blanco"];
     awards = [
       { title: "Best Awards, Design Craft, Finalist", year: 2020 },
@@ -90,6 +90,7 @@ const getFontMetadata = (font) => {
   }));
 
   const creditsRows = [
+    ...(font?.foundry ? [{ label: "Foundry", value: font.foundry }] : []),
     ...design.map((name, idx) => ({ label: idx === 0 ? "Design" : "", value: name })),
     ...engineering.map((name, idx) => ({ label: idx === 0 ? "Engineering" : "", value: name })),
     ...awards.map((award, idx) => ({ label: idx === 0 ? "Awards" : "", value: award.title, meta: award.year.toString() }))
@@ -99,10 +100,12 @@ const getFontMetadata = (font) => {
     ...releaseDates.map((rd, idx) => ({ label: idx === 0 ? "Release dates" : "", value: rd.name, meta: rd.year.toString() })),
     ...currentVersions.map((cv, idx) => ({ label: idx === 0 ? "Current versions" : "", value: cv.name, meta: cv.version })),
     ...classifications.map((cl, idx) => ({ label: idx === 0 ? "Classifications" : "", value: cl.name, meta: cl.value })),
+    ...(font?.variableAxes ? [{ label: "Variable axes", value: font.variableAxes }] : []),
     {
       label: "Font formats",
-      isMultiColumn: true,
-      columns: [
+      isMultiColumn: font?.formats ? false : true,
+      value: font?.formats || undefined,
+      columns: font?.formats ? undefined : [
         { label: "OTF", desc: "Desktop" },
         { label: "WOFF2", desc: "Web" },
         { label: "TTF", desc: "App" }

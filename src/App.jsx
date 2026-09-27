@@ -9,12 +9,13 @@ import { Agentation } from 'agentation';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import Fonts from './pages/Fonts';
 import FontDetails from './pages/font-details/FontDetails';
+import UITastesPage from './pages/ui-tastes/UITastesPage';
 import SearchResults from './pages/search-results/SearchResults';
+import Websites from './pages/Websites';
+import SubmitPage from './pages/submit/SubmitPage';
 import Preloader from './components/preloader/Preloader';
 import NotFound from './pages/404/NotFound';
-import HoverTests from './pages/HoverTests';
-import ArcCarousel from './pages/sandbox/ArcCarousel';
-import SliderSandbox from './pages/sandbox/SliderSandbox';
+import Changelog from './pages/changelog/Changelog';
 
 function App() {
   const [showLoader, setShowLoader] = useState(true);
@@ -75,10 +76,6 @@ function App() {
       {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
       
       <Routes>
-        {/* Isolated Sandbox Routes */}
-        <Route path="/sandbox/arc-carousel" element={<ArcCarousel />} />
-        <Route path="/sandbox/slider" element={<SliderSandbox />} />
-
         {/* Core Layout containing global Navbar and Footer */}
         <Route element={
           <>
@@ -96,8 +93,11 @@ function App() {
           } />
           <Route path="/fonts" element={<Fonts />} />
           <Route path="/fonts/:fontId" element={<FontDetails />} />
+          <Route path="/websites" element={<Websites />} />
+          <Route path="/submit" element={<SubmitPage />} />
+          <Route path="/ui-tastes" element={<UITastesPage savedItems={savedItems} toggleSave={toggleSave} />} />
           <Route path="/search-results" element={<SearchResults savedItems={savedItems} toggleSave={toggleSave} />} />
-          <Route path="/hover-tests" element={<HoverTests />} />
+          <Route path="/changelog" element={<Changelog />} />
           
           {/* Fallback route for 404 page now INSIDE the layout */}
           <Route path="*" element={<NotFound />} />

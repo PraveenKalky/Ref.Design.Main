@@ -5,8 +5,19 @@ import './filter-bar.css';
 
 
 
-const FilterBar = () => {
-    const [activeTab, setActiveTab] = useState('popular');
+const FilterBar = ({ 
+    tabs = [
+        { id: 'latest', label: 'Latest' },
+        { id: 'popular', label: 'Most popular' }
+    ],
+    defaultActiveTab = 'popular',
+    rightElement = (
+        <button className="filter-btn">
+            <span>Filter</span>
+        </button>
+    )
+}) => {
+    const [activeTab, setActiveTab] = useState(defaultActiveTab);
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
@@ -20,29 +31,27 @@ const FilterBar = () => {
                     >
                         <ChevronDown size={16} strokeWidth={3} className="arrow-icon" />
                     </button>
-                    <button 
-                        className={`filter-tab ${activeTab === 'latest' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('latest')}
-                    >
-                        Latest
-                    </button>
-                    <button 
-                        className={`filter-tab ${activeTab === 'popular' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('popular')}
-                    >
-                        Most popular
-                    </button>
+                    {tabs.map(tab => (
+                        <button 
+                            key={tab.id}
+                            className={`filter-tab ${activeTab === tab.id ? 'active' : ''}`}
+                            onClick={() => {
+                                setActiveTab(tab.id);
+                                if (!isExpanded) setIsExpanded(true);
+                            }}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
                 <div className="filter-actions">
-                    <button className="filter-btn">
-                        <span>Filter</span>
-                    </button>
+                    {rightElement}
                 </div>
             </div>
             
             <div className={`filter-categories-wrapper ${isExpanded ? 'expanded' : ''}`}>
                 <div className="filter-categories-inner">
-                    <CategoryFilterExpanded />
+                    <CategoryFilterExpanded activeTab={activeTab} tabs={tabs} />
                 </div>
             </div>
         </div>

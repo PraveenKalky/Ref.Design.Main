@@ -3,9 +3,9 @@
    ═══════════════════════════════════════════ */
 
 .info-section {
-  background-color: #000000;
-  color: #ffffff;
-  padding: 120px 0 160px 0;
+  background-color: #ffffff;
+  color: #111111;
+  padding: 40px 0 160px 0;
   font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
   box-sizing: border-box;
 }
@@ -21,8 +21,8 @@
 .info-title {
   font-size: 28px;
   font-weight: 500;
-  color: #ffffff;
-  margin: 0 0 64px 0;
+  color: #0d0d0d;
+  margin: 0 0 32px 0;
   letter-spacing: -0.01em;
 }
 
@@ -44,7 +44,7 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 1.5;
-  color: #ffffff;
+  color: #444444;
   margin: 0 0 56px 0;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
@@ -53,12 +53,12 @@
 /* ── Accordion System ── */
 .info-accordion-container {
   width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15); /* Thin line below last item */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15); /* Thin line below last item */
   margin-bottom: 40px;
 }
 
 .info-accordion-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.15); /* Thin line above each item */
+  border-top: 1px solid rgba(0, 0, 0, 0.15); /* Thin line above each item */
   width: 100%;
 }
 
@@ -69,7 +69,7 @@
   width: 100%;
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: #0d0d0d;
   padding: 22px 0;
   cursor: pointer;
   font-family: inherit;
@@ -85,7 +85,7 @@
 
 .info-accordion-icon {
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #ffffff;
+  color: #0d0d0d;
   flex-shrink: 0;
 }
 
@@ -112,7 +112,7 @@
 
 /* ── Expanded Content Panel (Tabular & Editorial) ── */
 .accordion-panel-wrapper {
-  background-color: #121212; /* Dark gray content panel background */
+  background-color: #f5f5f5; /* Dark gray content panel background */
   padding: 32px 40px;
   box-sizing: border-box;
   margin-bottom: 24px; /* Space between open panel and next row */
@@ -126,7 +126,7 @@
 }
 
 .accordion-table-row {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Thin lines between table rows */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08); /* Thin lines between table rows */
 }
 
 .accordion-table-row:last-child {
@@ -151,7 +151,7 @@
 
 /* Column 2: Values */
 .accordion-table td.table-value {
-  color: #ffffff; /* White text for value contents */
+  color: #0d0d0d; /* White text for value contents */
   font-weight: 400;
   text-align: left;
 }
@@ -181,7 +181,7 @@
 }
 
 .table-multicol-value {
-  color: #ffffff;
+  color: #0d0d0d;
   font-weight: 500;
 }
 
@@ -198,7 +198,8 @@
   background-color: var(--dv-brand-yellow, #ffe500);
   color: #000000;
   border: none;
-  border-radius: 0; /* Keep sharp corners */
+  border-radius: 9999px;
+  overflow: hidden;
   width: 100%;
   height: 52px;
   font-family: inherit;
@@ -219,7 +220,7 @@
 }
 
 .info-download-test-btn:hover {
-  background-color: #ffffff; /* White background for hover effect */
+  background-color: #0d0d0d; /* White background for hover effect */
   transform: scale(1.01); /* Subtle scale hover effect */
 }
 

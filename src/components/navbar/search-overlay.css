@@ -757,7 +757,7 @@
 
 .so-result-count {
   font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 400;
   color: #bbb;
   flex-shrink: 0;
@@ -808,7 +808,7 @@
 }
 
 .so-rp-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 600;
   color: #111;
   margin: 0;

@@ -1,0 +1,62 @@
+.font-family-overview-section {
+  padding: 80px 20px;
+  background-color: #ffffff;
+  color: #000000;
+  border-bottom: 1px solid #eaeaea;
+}
+
+[data-theme='dark'] .font-family-overview-section {
+  background-color: #000000;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.overview-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.overview-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  letter-spacing: -0.02em;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.overview-card {
+  background: #f9f9f9;
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid #eaeaea;
+}
+
+[data-theme='dark'] .overview-card {
+  background: #111111;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.overview-subtitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.overview-style-count {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1;
+}
+
+.overview-desc {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  opacity: 0.8;
+}

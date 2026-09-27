@@ -84,7 +84,15 @@ export const initialFontsData = [
       { name: "Wide Regular", weight: 400, italic: false },
       { name: "Wide Bold", weight: 700, italic: false },
       { name: "Wide Black", weight: 900, italic: false }
-    ]
+    ],
+    designer: "Alexander Slobzheninov",
+    foundry: "Pangram Pangram",
+    variableAxes: "Weight (100-900), Width (25-151), Slant (-10-0)",
+    formats: ".otf, .woff, .woff2, Variable TTF",
+    displayVsText: {
+      display: { styles: 98, description: "Tight spacing, high contrast, perfect for large headlines and posters." },
+      text: { styles: 32, description: "Looser spacing, wider proportions, optimized for reading paragraphs at small sizes." }
+    }
   },
   { 
     id: 4, 

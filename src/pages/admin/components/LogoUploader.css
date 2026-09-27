@@ -1,0 +1,147 @@
+.logo-uploader-wrapper {
+  margin-bottom: 24px;
+}
+
+.lu-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.lu-left {
+  flex-shrink: 0;
+}
+
+.lu-preview-box {
+  width: 120px;
+  height: 120px;
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  background-color: var(--dv-bg);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--dv-border);
+}
+
+.lu-preview-box.empty {
+  border: 1px dashed var(--dv-text-ghost);
+}
+
+.lu-placeholder-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--dv-text-ghost);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.lu-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 20px;
+  padding: 12px;
+}
+
+.lu-remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--dv-surface-dark);
+  border: 1px solid var(--dv-border);
+  color: var(--dv-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.lu-remove-btn:hover {
+  background: var(--dv-border);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.lu-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 120px; /* match left side */
+}
+
+.lu-dropzone {
+  width: 100%;
+  padding: 24px;
+  background-color: var(--dv-bg);
+  border: 1px solid var(--color-primary);
+  border-radius: 16px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+
+.lu-dropzone:hover {
+  background-color: var(--dv-surface-dark);
+}
+
+.lu-dropzone.drag-active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+.lu-dropzone.drag-active .lu-btn-text {
+  color: white;
+}
+
+.lu-btn-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-primary); /* Uses the purple accent */
+}
+
+.lu-uploading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.lu-spin {
+  animation: lu-spin 1s linear infinite;
+}
+
+.lu-help-text {
+  font-size: 13px;
+  color: var(--dv-text-ghost);
+  line-height: 1.5;
+}
+
+.lu-error-msg {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 8px;
+  background-color: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+@keyframes lu-spin {
+  100% { transform: rotate(360deg); }
+}

@@ -33,8 +33,8 @@ export default function SubmitPage() {
         .from('submissions')
         .select('id, status')
         .eq('normalised_url', normUrl)
-        .maybeSingle();
-      return data;
+        .limit(1);
+      return data && data.length > 0 ? data[0] : null;
     } catch {
       return null; // Ignore errors if table doesn't exist yet as requested
     }

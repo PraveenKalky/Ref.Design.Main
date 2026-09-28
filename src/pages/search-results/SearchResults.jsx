@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { X, Lock, Search } from 'lucide-react';
 import { Card } from '../../components/card-grid/CardGrid';
-import { cardsData } from '../../components/card-grid/cards-data';
+import { cardsData } from './mock-data';
 import { TAB_CONTENT } from '../../components/navbar/SearchOverlay';
 import './search-results.css';
 import '../../components/card-grid/card-grid.css';

@@ -3,6 +3,144 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.5.2',
+    date: 'Saturday, September 12, 2026',
+    description: 'Updated project rules and added new preview assets.',
+    groups: [
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Updated project RULES.md to introduce strict UI preservation protocols to prevent accidental feature regressions.',
+          'Added dummy preview image assets for mock data rendering.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.5.1',
+    date: 'Thursday, September 10, 2026',
+    description: 'Refactored the Skills section into a modular, feature-based architecture.',
+    groups: [
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Refactored the new Skills feature into a highly scalable, modular directory structure (src/skills).',
+          'Separated components, hooks, styles, and utilities for better maintainability and code organization.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.5.0',
+    date: 'Wednesday, September 9, 2026',
+    description: 'Launched a dedicated Skills page to track and showcase technical capabilities.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Added a comprehensive new Skills page to display technical expertise and capabilities.',
+          'Implemented the underlying data structure and bespoke styling for the new Skills section.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.4.1',
+    date: 'Tuesday, September 8, 2026',
+    description: 'Polished Search Overlay interactions and UI animations.',
+    groups: [
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Added an interactive staggered letter hover animation to the Search Overlay grid items.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.4.0',
+    date: 'Monday, September 7, 2026',
+    description: 'Introduced Admin dashboard, advanced authentication, and an animated Mega Menu navigation.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Integrated an Admin dashboard for platform management.',
+          'Added robust Authentication components and linked them to the Supabase backend.',
+          'Implemented comprehensive database schema migrations for website sections and pages.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Redesigned the Navbar to feature a highly interactive animated Mega Menu with shuffle animations.',
+          'Added a flexible Sections Grid component to dynamically display content categories.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.3.0',
+    date: 'Saturday, August 15, 2026',
+    description: 'Massive backend integration, new Websites submission pipeline, and global UI enhancements.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Built Supabase backend integration featuring a Telegram bot, browser capture extension, and SQL seeding migrations.',
+          'Added dedicated Website Detail page and a robust Submissions Grid component.',
+          'Introduced a global System Banner component for site-wide announcements.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Enhanced UI/UX Tastes page layout and expanded hero section configurations with new assets.',
+          'Upgraded Search Overlay and Results page with refined mock data and layout adjustments.',
+          'Updated Category Filters and Filter Bar logic to support dynamic categories.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.2.0',
+    date: 'Thursday, August 6, 2026',
+    description: 'Transitioned to robust client-side routing and introduced new submission page features.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: ['Added new features for the Websites submission page.']
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Transitioned from BrowserRouter to HashRouter for improved routing stability on static Vercel hosts.',
+          'Configured comprehensive vercel.json rewrite rules to ensure seamless SPA navigation and asset delivery.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.1.2',
     date: 'Thursday, July 30, 2026',
     description: 'Removed sandbox environments and prepared for production release.',

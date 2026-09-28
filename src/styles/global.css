@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap');
 
 @font-face {
   font-family: 'PolySans Trial';
@@ -37,6 +38,15 @@
   font-display: swap;
 }
 :root {
+  /* ── Design Variables (light mode defaults) ───────────────────────────────
+     These MUST be defined or any consumer of var(--dv-*) sees transparent
+     which on macOS dark mode appears as black through the OS Canvas.        */
+  --dv-bg:           #ffffff;
+  --dv-text:         #111111;
+  --dv-text-ghost:   #888888;
+  --dv-surface-dark: #f0f0f0;
+  --dv-border:       rgba(0, 0, 0, 0.08);
+
   /* Colors */
   --color-primary: #4F46E5;
   --color-on-primary: #FFFFFF;
@@ -69,7 +79,16 @@
   --font-body: 'PolySans Neutral', 'PolySans Trial', sans-serif;
 }
 
-* {
+[data-theme="dark"] {
+  --dv-bg:           #111111;
+  --dv-text:         #f0f0f0;
+  --dv-text-ghost:   #888888;
+  --dv-surface-dark: #1c1c1c;
+  --dv-border:       rgba(255, 255, 255, 0.08);
+}
+
+*  {
+
   box-sizing: border-box;
   margin: 0;
   padding: 0;

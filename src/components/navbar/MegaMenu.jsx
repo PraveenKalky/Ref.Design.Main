@@ -1,13 +1,27 @@
 import React, { useState, useCallback } from 'react';
 import './mega-menu.css';
 
+const AnimatedText = ({ text }) => (
+  <span>
+    {[...text].map((char, i) => (
+      <span
+        className="char"
+        style={{ "--i": i }}
+        key={i}
+      >
+        {char === " " ? "\u00A0" : char}
+      </span>
+    ))}
+  </span>
+);
+
 const MenuItem = ({ label, count, isHovered, isDimmed, onEnter, onLeave }) => (
   <div
     className={`mega-menu__item ${isHovered ? 'mega-menu__item--hovered' : ''} ${isDimmed ? 'mega-menu__item--dimmed' : ''}`}
     onMouseEnter={onEnter}
     onMouseLeave={onLeave}
   >
-    {label}<sup className="mega-menu__sup">{count}</sup>
+    <AnimatedText text={label} /><sup className="mega-menu__sup">{count}</sup>
   </div>
 );
 

@@ -4,7 +4,7 @@ export const CATEGORIES = {
   'Popular Categories': [
     'Agencies & Consultancies', 'Typographic', 'Design & Art Direction',
     'Portfolio', 'Web & Interactive Design', 'E-Commerce', 'Fashion',
-    'Minimal', 'Grid Layout', 'Unusual Layout', 'Art', 'Use of Animation'
+    'Minimal', 'Grid Layout', 'Unusual Layout', 'Art', 'Use of Animation', 'Trading'
   ],
   'Styles': [
     'Clean', 'Dark', 'Colorful', 'Brutalism', 'Glassmorphism', 'Neumorphism', 'Retro', 'Minimalist'
@@ -20,7 +20,7 @@ export const CATEGORIES = {
   ],
   'Categories': [
     'Agencies & Consultancies', 'Typographic', 'Design & Art Direction',
-    'Portfolio', 'Web & Interactive Design', 'E-Commerce', 'Fashion'
+    'Portfolio', 'Web & Interactive Design', 'E-Commerce', 'Fashion', 'Trading'
   ],
   'Tags': [
     'Minimal', 'Grid Layout', 'Unusual Layout', 'Art', 'Use of Animation', 'Dark Mode'

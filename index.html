@@ -71,63 +71,9 @@
             overflow-x: hidden;
         }
 
-        /* --- Header Shell --- */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: var(--nav-height);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            transition: all var(--transition-smooth);
-        }
 
-        header.is-scrolled {
-            height: 64px;
-            background: rgba(13, 13, 13, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--dv-border);
-        }
 
-        [data-theme="light"] header.is-scrolled {
-            background: rgba(255, 255, 255, 0.8);
-        }
 
-        nav {
-            width: 100%;
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 0 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-        }
-
-        /* --- Nav Sections --- */
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            z-index: 10;
-        }
-
-        .nav-center {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            z-index: 10;
-        }
 
         /* Logo Component */
         .brand-logo {
@@ -981,7 +927,7 @@
         }
 
         .label {
-          font-family: "Urbanist", Inter, Arial, sans-serif;
+          font-family: 'PolySans Neutral', 'PolySans Trial', Inter, Arial, sans-serif;
           font-size: clamp(36px, 4.5vw, 84px);
           font-weight: 500;
           letter-spacing: -0.02em;
@@ -996,7 +942,7 @@
         }
 
         .counter {
-          font-family: "Urbanist", Inter, Arial, sans-serif;
+          font-family: 'PolySans Neutral', 'PolySans Trial', Inter, Arial, sans-serif;
           font-size: clamp(86px, 12vw, 210px);
           font-weight: 500;
           letter-spacing: -0.02em;

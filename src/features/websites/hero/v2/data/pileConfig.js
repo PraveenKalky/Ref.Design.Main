@@ -1,16 +1,16 @@
-const imgImage98 = "http://localhost:3845/assets/2c8dfa0cfa01b7561ddbb170042e80ebd231ee3f.png";
-const imgImage99 = "http://localhost:3845/assets/31bed10e67ceba608744e989d18878f7335c4f57.png";
-const imgImage100 = "http://localhost:3845/assets/c0232725e6658ca25108e6630c0043f95dd3ff92.png";
-const imgImage101 = "http://localhost:3845/assets/bd850ac0f942303c69bd545cf1bbe95ee90fd0f1.png";
-const imgImage102 = "http://localhost:3845/assets/837e1666e59764a905dd1298a2c82d2196b63c24.png";
-const imgImage103 = "http://localhost:3845/assets/37f516a31af99763b9cbb7d8e02d3d68a479965d.png";
-const imgImage104 = "http://localhost:3845/assets/d50855146dc55981fcabc54a91a71f644ee3ee0b.png";
-const imgImage105 = "http://localhost:3845/assets/3d713cbf167a002a4325970fef6e7517915b9f39.png";
-const imgImage106 = "http://localhost:3845/assets/16a67ea597184e07297a0e617fff7900ad106cb2.png";
-const imgImage107 = "http://localhost:3845/assets/d9200f4e8fbe1399285ba78ff1883753ea66d3f9.png";
-const imgImage108 = "http://localhost:3845/assets/8fa997f3825037bb38c8ad178f851d5b431e86da.png";
-const imgImage109 = "http://localhost:3845/assets/409e2e9727af470bc2b0832cd77b11025de0e8db.png";
-const imgImage110 = "http://localhost:3845/assets/6bc47ad9e7c69eba9b253ae748f6f0e20c074e69.png";
+import imgImage98 from '../../../../../assets/hero-images/BTC.png';
+import imgImage99 from '../../../../../assets/hero-images/BTC-1.png';
+import imgImage100 from '../../../../../assets/hero-images/BTC-2.png';
+import imgImage101 from '../../../../../assets/hero-images/BTC-3.png';
+import imgImage102 from '../../../../../assets/hero-images/BTC-4.png';
+import imgImage103 from '../../../../../assets/hero-images/BTC-5.png';
+import imgImage104 from '../../../../../assets/hero-images/BTC-6.png';
+import imgImage105 from '../../../../../assets/hero-images/BTC-7.png';
+import imgImage106 from '../../../../../assets/hero-images/BTC-8.png';
+import imgImage107 from '../../../../../assets/hero-images/BTC-9.png';
+import imgImage108 from '../../../../../assets/hero-images/BTC-10.png';
+import imgImage109 from '../../../../../assets/hero-images/BTC-11.png';
+import imgImage110 from '../../../../../assets/hero-images/BTC-12.png';
 
 export const PILE_ITEMS = [
   { id: 'pill_0', type: 'pill', content: 'Portfilio & Agency', bgClass: 'bg-[#ffa970]', delay: 0, desktop: { left: 201.0, top: 914.93, rotate: 0 }, mobile: { left: 201.0, top: 914.93, rotate: 0 } },

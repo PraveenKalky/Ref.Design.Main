@@ -624,6 +624,31 @@
 }
 [data-theme="dark"] .so-item-name { color: #ddd; }
 
+/* Stagger Letters Hover Effect */
+.so-item-name .char {
+  display: inline-block;
+}
+
+.so-grid-item.hovered .so-item-name .char,
+.so-grid-item:hover .so-item-name .char {
+  animation: staggerUp 0.48s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: calc(var(--i) * 26ms);
+}
+
+@keyframes staggerUp {
+  0% { transform: translateY(0); opacity: 1; }
+  45% { transform: translateY(-8px); opacity: 0.2; }
+  46% { transform: translateY(8px); opacity: 0.2; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .so-grid-item.hovered .so-item-name .char,
+  .so-grid-item:hover .so-item-name .char {
+    animation: none;
+  }
+}
+
 .so-item-count {
   font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
   font-size: 18px;

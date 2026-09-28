@@ -1,0 +1,69 @@
+@import './cta-animations.css';
+
+.admin-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--dv-text);
+}
+
+.admin-input {
+  width: 100%;
+  background: var(--dv-surface-dark);
+  border: 1px solid transparent;
+  color: var(--dv-text);
+  padding: 14px 16px;
+  border-radius: 12px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-family: inherit;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.admin-input::placeholder {
+  color: var(--dv-text-ghost);
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: var(--dv-text-ghost);
+}
+
+.admin-btn {
+  padding: 10px 20px;
+  border-radius: 100px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  border: none;
+  font-size: 15px;
+}
+
+.admin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-btn-primary {
+  background-color: var(--dv-text);
+  color: var(--dv-bg);
+}
+
+.admin-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.admin-btn-secondary {
+  background-color: var(--dv-surface-dark);
+  color: var(--dv-text);
+  border: 1px solid var(--dv-border);
+}
+
+.admin-btn-secondary:hover {
+  background-color: var(--dv-border);
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }

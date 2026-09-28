@@ -1,0 +1,113 @@
+.website-detail-page {
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 100px; /* Account for fixed navbar */
+  background-color: var(--bg-main, #fafafa);
+  color: var(--text-primary, #111827);
+}
+
+[data-theme='dark'] .website-detail-page {
+  background-color: #111111;
+}
+
+.website-detail-content {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 32px 80px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.website-detail-content.split-layout {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+@media (max-width: 1280px) {
+  .website-detail-content {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .website-detail-content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Website Detail Body Layouts */
+.website-detail-body {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* Preview Mode Layout */
+.preview-mode-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 48px;
+  width: 100%;
+}
+
+.preview-mode-layout .primary-preview-container {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .preview-mode-layout {
+    flex-direction: column;
+    gap: 32px;
+  }
+}
+
+/* Primary Preview */
+.primary-preview-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.primary-preview-media {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background-color: var(--bg-surface-secondary, #f3f4f6);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+[data-theme='dark'] .primary-preview-media {
+  background-color: #1a1b1e;
+  border-color: #2e2f33;
+}
+
+/* Empty States */
+.empty-preview,
+.empty-sections-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+  color: var(--text-tertiary, #9ca3af);
+  padding: 40px;
+}
+
+/* Sections Grid */
+.sections-grid-container {
+  width: 100%;
+}

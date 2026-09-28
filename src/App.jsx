@@ -16,6 +16,7 @@ import SubmitPage from './pages/submit/SubmitPage';
 import Preloader from './components/preloader/Preloader';
 import NotFound from './pages/404/NotFound';
 import Changelog from './pages/changelog/Changelog';
+import SkillsPage from './skills/pages/SkillsPage';
 
 function App() {
   const [showLoader, setShowLoader] = useState(true);
@@ -98,6 +99,7 @@ function App() {
           <Route path="/ui-tastes" element={<UITastesPage savedItems={savedItems} toggleSave={toggleSave} />} />
           <Route path="/search-results" element={<SearchResults savedItems={savedItems} toggleSave={toggleSave} />} />
           <Route path="/changelog" element={<Changelog />} />
+          <Route path="/skills" element={<SkillsPage />} />
           
           {/* Fallback route for 404 page now INSIDE the layout */}
           <Route path="*" element={<NotFound />} />

@@ -1,0 +1,719 @@
+/* ═══════════════════════════════════════════════════════════════
+   Skills Page  —  /skills
+   All class names scoped with .skills-* prefix.
+   Uses only Ref.Design design tokens (--dv-*).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page Shell ──────────────────────────────────────────────── */
+.skills-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--dv-bg);
+  color: var(--dv-text);
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  padding-top: 0; /* navbar is already sticky in document flow */
+}
+
+/* ── Header Section (Exact 40px vertical gap from navbar) ────── */
+.skills-header {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skills-title {
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: var(--dv-text);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  animation: skills-fade-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.skills-subtitle {
+  font-size: 1rem;
+  color: var(--dv-text-ghost);
+  line-height: 1.6;
+  max-width: 480px;
+  animation: skills-fade-rise 0.42s 0.06s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Sticky Controls Strip (Filters + Search on same horizontal row) ─ */
+.skills-controls-sticky {
+  position: sticky;
+  top: 80px; /* hugs the bottom of the 80px navbar */
+  z-index: 100;
+  background: var(--dv-bg);
+  border-bottom: 1px solid var(--dv-border);
+  transition: background var(--transition-smooth, 0.25s ease);
+}
+
+/* Subtle backdrop shadow when scrolled */
+.skills-controls-sticky.is-stuck {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .skills-controls-sticky.is-stuck {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.skills-controls-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  animation: skills-fade-rise 0.42s 0.14s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.skills-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-shrink: 0;
+}
+
+.skills-controls-left::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Category Pill (36px height) ─────────────────────────────── */
+.skills-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid var(--dv-border);
+  background: transparent;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dv-text-ghost);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.skills-cat-pill:hover {
+  color: var(--dv-text);
+  background: var(--dv-surface-dark);
+}
+
+.skills-cat-pill.active {
+  background: var(--dv-text);
+  border-color: var(--dv-text);
+  color: var(--dv-bg);
+}
+
+/* ── Search Field (36px height, aligned with filters) ────────── */
+.skills-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid var(--dv-border);
+  border-radius: 9999px;
+  padding: 0 14px;
+  height: 36px;
+  min-width: 240px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.skills-search-wrapper:focus-within {
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .skills-search-wrapper:focus-within {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+.skills-search-icon {
+  color: var(--dv-text-ghost);
+  flex-shrink: 0;
+}
+
+.skills-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 14px;
+  color: var(--dv-text);
+  outline: none;
+  min-width: 0;
+}
+
+.skills-search-input::placeholder {
+  color: var(--dv-text-ghost);
+}
+
+/* ── Stagger Letters for Pills & Copy CTA ────────────────────── */
+.skills-pill-label {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.skills-pill-char {
+  display: inline-block;
+}
+
+/* All filter pills stagger letters on hover */
+.skills-cat-pill:hover .skills-pill-char {
+  animation: navShuffle 0.58s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 32ms);
+}
+
+/* Copy CTA text stagger letters on hover */
+.skills-copy-btn:hover:not(.is-copied) .skills-pill-char {
+  animation: navShuffle 0.58s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 32ms);
+}
+
+/* ── Main Content Area ───────────────────────────────────────── */
+.skills-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 32px 120px;
+}
+
+/* ── Category Group (Equal 28px spacing from horizontal divider) ─── */
+.skills-group {
+  padding-top: 28px;
+}
+
+/* ── Category Heading ────────────────────────────────────────── */
+.skills-group-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+}
+
+.skills-group-name {
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--dv-text);
+}
+
+.skills-group-count {
+  font-size: 16px;
+  color: var(--dv-text-ghost);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+/* ── Skill Row (Clean list with horizontal dividers only) ────── */
+.skills-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--dv-border);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: visible;
+  background: transparent;
+}
+
+.skills-row:hover {
+  background: transparent;
+}
+
+/* ── Animated Divider Sweep (left → right on hover) ─────────── */
+.skills-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.skills-row:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── Avatar ──────────────────────────────────────────────────── */
+.skills-avatar-wrap {
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
+.skills-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+  background: var(--dv-surface-dark);
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.skills-row:hover .skills-avatar {
+  transform: translateX(-6px);
+}
+
+/* Initials fallback avatar */
+.skills-avatar-initials {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.skills-row:hover .skills-avatar-initials {
+  transform: translateX(-6px);
+}
+
+/* ── Skill Info (name + description) ─────────────────────────── */
+.skills-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.skills-name {
+  display: inline-flex;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--dv-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.skills-description {
+  font-size: 0.8125rem;
+  color: var(--dv-text-ghost);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Row Right-side Actions: [ GitHub ]  161.4K    [ Copy ] ───────── */
+.skills-row-actions {
+  display: grid;
+  grid-template-columns: 36px 10px 50px 14px 96px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── GitHub Action Button (36px height) ──────────────────────── */
+.skills-github-btn {
+  grid-column: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid var(--dv-border);
+  background: transparent;
+  color: var(--dv-text-ghost);
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.skills-github-btn:hover {
+  color: var(--dv-text);
+  background: var(--dv-surface-dark);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .skills-github-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Count (Visually grouped with GitHub: 10px gap track, left-aligned in 56px column) ── */
+.skills-count {
+  grid-column: 3;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dv-text-ghost);
+  white-space: nowrap;
+  text-align: left;
+  transition: color 0.18s ease, opacity 0.18s ease;
+  opacity: 0.8;
+}
+
+.skills-row:hover .skills-count {
+  opacity: 1;
+  color: var(--dv-text);
+}
+
+/* ── Copy CTA Button (28px gap track, fixed 96px width, inside divider bounds) ── */
+.skills-copy-btn {
+  grid-column: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  min-width: 96px;
+  max-width: 96px;
+  height: 36px;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border: 1px solid var(--dv-border);
+  background: transparent;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dv-text);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0.8;
+}
+
+.skills-row:hover .skills-copy-btn {
+  opacity: 1;
+}
+
+.skills-copy-btn:hover:not(.is-copied) {
+  background: var(--dv-text);
+  border-color: var(--dv-text);
+  color: var(--dv-bg);
+}
+
+/* Light sweep on hover */
+.skills-copy-btn::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 30%;
+  left: -45%;
+  transform: skewX(-18deg);
+  background: rgba(255, 255, 255, 0.22);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.skills-copy-btn:hover:not(.is-copied)::before {
+  animation: skills-sweep 0.65s ease forwards;
+}
+
+@keyframes skills-sweep {
+  to { left: 125%; }
+}
+
+/* Copy State Content Animation (150-250ms smooth fade/slide) */
+.copy-state-content {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.copy-state-content.copied {
+  animation: copyFadeIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.copy-state-content.idle {
+  animation: copyFadeIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes copyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Copied confirmation state */
+.skills-copy-btn.is-copied {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.4);
+  color: #16a34a;
+  opacity: 1;
+}
+
+[data-theme="dark"] .skills-copy-btn.is-copied {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+
+/* ── Empty / No Results ──────────────────────────────────────── */
+.skills-empty {
+  padding: 80px 0;
+  text-align: center;
+  color: var(--dv-text-ghost);
+  font-size: 0.9375rem;
+}
+
+/* ── Animation Keyframes ─────────────────────────────────────── */
+@keyframes skills-fade-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes navShuffle {
+  0%   { transform: translateY(0);    opacity: 1; }
+  42%  { transform: translateY(12px); opacity: 0; }
+  43%  { transform: translateY(-12px);opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Reduced Motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .skills-title,
+  .skills-subtitle,
+  .skills-search-wrapper,
+  .skills-controls-inner {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .skills-scroll-left,
+  .skills-scroll-right {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .skills-cat-pill:hover .skills-pill-char,
+  .skills-copy-btn:hover .skills-pill-char,
+  .skills-row:hover .skills-name-char {
+    animation: none !important;
+  }
+
+  .skills-copy-btn:hover::before {
+    animation: none !important;
+  }
+
+  .copy-state-content.copied,
+  .copy-state-content.idle {
+    animation: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (768px – 1279px) ─────────────────────────────────── */
+@media (max-width: 1279px) {
+  .skills-header {
+    padding: 40px 24px 28px;
+  }
+
+  .skills-search-wrapper {
+    min-width: 200px;
+  }
+
+  .skills-controls-inner {
+    padding: 0 24px;
+  }
+
+  .skills-content {
+    padding: 0 24px 100px;
+  }
+
+  .skills-row {
+    grid-template-columns: 40px 1fr auto;
+    gap: 0 16px;
+  }
+}
+
+/* ── Mobile (< 768px) ────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .skills-page {
+    padding-top: 0;
+  }
+
+  .skills-header {
+    padding: 40px 16px 20px;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .skills-title {
+    font-size: 1.75rem;
+  }
+
+  .skills-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .skills-controls-sticky {
+    top: 80px;
+  }
+
+  .skills-controls-inner {
+    padding: 8px 16px 20px;
+    gap: 10px;
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .skills-controls-left {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .skills-search-wrapper {
+    min-width: unset;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .skills-content {
+    padding: 0 16px 80px;
+  }
+
+  .skills-group {
+    padding-top: 20px;
+  }
+
+  /* Mobile: stack layout — avatar + name / description / actions */
+  .skills-row {
+    grid-template-columns: 36px 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "avatar name"
+      "avatar desc"
+      ". meta";
+    gap: 2px 12px;
+    align-items: start;
+    padding: 14px 0;
+    border: none;
+    border-bottom: 1px solid var(--dv-border);
+    border-radius: 0;
+    margin-bottom: 0;
+    background: transparent;
+  }
+
+  .skills-avatar-wrap {
+    grid-area: avatar;
+    align-self: center;
+  }
+
+  .skills-avatar,
+  .skills-avatar-initials {
+    width: 36px;
+    height: 36px;
+  }
+
+  .skills-info {
+    grid-area: name;
+  }
+
+  .skills-description {
+    grid-area: desc;
+    white-space: normal;
+    -webkit-line-clamp: unset;
+  }
+
+  .skills-row-actions {
+    grid-area: meta;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .skills-github-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .skills-count {
+    opacity: 1;
+    font-size: 0.875rem;
+  }
+
+  .skills-copy-btn {
+    opacity: 1;
+    transform: none !important;
+    height: 32px;
+    width: 88px;
+    min-width: 88px;
+    max-width: 88px;
+    padding: 0;
+    font-size: 13px;
+  }
+
+  .skills-copy-btn:hover::before {
+    animation: none;
+  }
+}
+
+/* ── Accessibility: Prefers Reduced Motion ───────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .skills-row::after,
+  .skills-avatar,
+  .skills-avatar-initials {
+    transition: none !important;
+  }
+
+  .skills-row:hover::after {
+    transform: scaleX(1);
+  }
+
+  .skills-row:hover .skills-avatar,
+  .skills-row:hover .skills-avatar-initials {
+    transform: none;
+  }
+}

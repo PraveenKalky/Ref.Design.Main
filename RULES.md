@@ -39,3 +39,9 @@ Never assume that replacing or restructuring a nearby area gives permission to r
 
 Before completing any change, compare the page before vs after and verify that unrelated UI/functionality is still present.
 
+## Rule 7 — Git Branch Workflow & No Direct Push to Main
+- **Never push directly to `main`**: All work must be conducted on dedicated feature or fix branches (`feature/*` or `fix/*`).
+- **Local Verification First**: Run and verify all changes on local development (`npm run dev` / `npm run build`) before pushing.
+- **Pull Requests**: Changes must be pushed on their respective feature branch and merged via Pull Request into `main`.
+- **Preserve Work**: Stashes and backups must be checked before creating new branches to avoid losing uncommitted progress.
+

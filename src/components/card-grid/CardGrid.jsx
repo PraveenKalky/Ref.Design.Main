@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { ArrowUpRight, Bookmark } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { cardsData } from './cards-data';
 import Pagination from '../pagination/Pagination';
 import './card-grid.css';
 
 export const Card = ({ id, name, title, subtitle, image, logo, link, isSaved, toggleSave }) => {
   return (
-    <div className="card-container">
+    <Link to={`/websites/${name}`} className="card-container" style={{ textDecoration: 'none' }}>
       <div className="card-image-wrapper">
         <img src={image} alt={title} className="card-image" />
         <div className="card-overlay">
@@ -38,7 +39,7 @@ export const Card = ({ id, name, title, subtitle, image, logo, link, isSaved, to
           <div className="card-subtitle">{subtitle}</div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

@@ -7,14 +7,15 @@
   min-height: 100vh;
   background-color: var(--background, #ffffff);
   color: var(--text-color, #111111);
-  padding-top: 120px; /* Account for navbar */
+  padding-top: 80px; /* Account for navbar only, status bar takes next 40px */
   padding-bottom: 120px;
 }
+
 
 .ui-tastes-container {
   width: 100%;
   max-width: 1440px;
-  margin: 0 auto;
+  margin: 24px auto 0 auto;
   padding: 0 32px;
   box-sizing: border-box;
 }

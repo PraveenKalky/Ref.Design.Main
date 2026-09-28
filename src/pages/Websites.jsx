@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import WebsitesHeroV2 from '../features/websites/hero/v2/WebsitesHeroV2';
 import FilterBar from '../components/filter-bar/FilterBar';
+import SubmissionsGrid from '../components/card-grid/SubmissionsGrid';
+import SectionsGrid from '../components/card-grid/SectionsGrid';
 
 export default function Websites() {
   const [viewType, setViewType] = useState('websites'); // websites or sections
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   const websitesTabs = [
     { id: 'categories', label: 'Categories' },
@@ -39,7 +42,15 @@ export default function Websites() {
         tabs={websitesTabs} 
         defaultActiveTab="categories" 
         rightElement={websitesToggle} 
+        selectedCategories={selectedCategories}
+        setSelectedCategories={setSelectedCategories}
       />
+      {viewType === 'sections' ? (
+        <SectionsGrid selectedCategory={selectedCategories[0]} />
+      ) : (
+        <SubmissionsGrid selectedCategory={selectedCategories[0]} />
+      )}
     </div>
   );
 }
+

@@ -1,0 +1,83 @@
+/* Shuffle Letters Hover Animation */
+.nav-label {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.nav-char {
+  display: inline-block;
+}
+
+.nav-link:hover .nav-char {
+  animation: navShuffle 0.58s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: calc(var(--i) * 32ms);
+}
+
+@keyframes navShuffle {
+  0% { transform: translateY(0); opacity: 1; }
+  42% { transform: translateY(12px); opacity: 0; }
+  43% { transform: translateY(-12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-link:hover .nav-char {
+    animation: none;
+  }
+}
+
+/* Submit CTA Sweep & Shuffle */
+.submit-pill {
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-pill .btn-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.submit-pill .animated-text {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.submit-pill .char {
+  display: inline-block;
+}
+
+.submit-pill:hover .char {
+  animation: navShuffle .58s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: calc(var(--i) * 32ms);
+}
+
+.submit-pill::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 34%;
+  left: -45%;
+  transform: skewX(-20deg);
+  background: rgba(255,255,255,.3); /* Light highlight for yellow button */
+  z-index: 1;
+  pointer-events: none;
+}
+
+.submit-pill:hover::before {
+  animation: sweep .72s ease forwards;
+}
+
+@keyframes sweep {
+  to { left: 125%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit-pill:hover .char, .submit-pill:hover::before {
+    animation: none;
+  }
+}

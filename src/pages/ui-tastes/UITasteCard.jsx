@@ -3,6 +3,42 @@ import { Bookmark, Play } from 'lucide-react';
 
 export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) {
   const [imageError, setImageError] = React.useState(false);
+  const [localMediaUrl, setLocalMediaUrl] = React.useState(post.media_url);
+  const [isReResolving, setIsReResolving] = React.useState(false);
+
+  const isEphemeralInstagram = post.media_url && post.media_url.includes('cdninstagram.com');
+
+  React.useEffect(() => {
+    setLocalMediaUrl(post.media_url);
+  }, [post.media_url]);
+
+  React.useEffect(() => {
+    if (isEphemeralInstagram) {
+      let isMounted = true;
+      const resolveUrl = async () => {
+        setIsReResolving(true);
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ciquazqdnbwsxuomdmci.supabase.co';
+          const res = await fetch(`${supabaseUrl}/functions/v1/telegram-bot`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reprocess', id: post.id, url: post.url })
+          });
+          const json = await res.json();
+          if (isMounted && json.status === 'success' && json.data.mediaUrl) {
+            setLocalMediaUrl(json.data.mediaUrl);
+            setImageError(false);
+          }
+        } catch (e) {
+          console.error("Failed to re-resolve media", e);
+        } finally {
+          if (isMounted) setIsReResolving(false);
+        }
+      };
+      resolveUrl();
+      return () => { isMounted = false; };
+    }
+  }, [isEphemeralInstagram, post.id, post.url]);
 
   const getDisplayImageUrl = (url) => {
     if (!url) return url;
@@ -12,7 +48,7 @@ export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) 
     return `${supabaseUrl}/functions/v1/telegram-bot?proxy=${encodeURIComponent(url)}`;
   };
 
-  if (isResolving) {
+  if (isResolving || isReResolving) {
     return (
       <div className="taste-card taste-card-skeleton">
         <div className="taste-card-media-wrapper skeleton-media" style={{ height: '220px', background: 'var(--input-bg, #f5f5f5)' }}>
@@ -29,7 +65,7 @@ export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) 
     );
   }
 
-  const isScreenshot = post.media_url && post.media_url.includes('thum.io');
+  const isScreenshot = localMediaUrl && localMediaUrl.includes('thum.io');
 
   return (
     <div className="taste-card">
@@ -37,18 +73,18 @@ export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) 
         className={`taste-card-media-wrapper ${isScreenshot ? 'screenshot-mode' : ''}`}
         onClick={() => window.open(post.url, '_blank')}
       >
-        {!post.media_url || imageError ? (
+        {!localMediaUrl || imageError ? (
           <div className="taste-card-fallback-media">
             <span>{post.platform ? post.platform[0] : '?'}</span>
             <small>
               {post.fetch_error
                 ? `Thumbnail unavailable: ${post.fetch_error.split('|')[0].trim()}`
-                : (!post.media_url ? 'Thumbnail unavailable' : 'Media failed to load')}
+                : (!localMediaUrl ? 'Thumbnail unavailable' : 'Media failed to load')}
             </small>
           </div>
         ) : (
           <img 
-            src={getDisplayImageUrl(post.media_url)} 
+            src={getDisplayImageUrl(localMediaUrl)} 
             alt={post.description || post.username} 
             className="taste-card-image" 
             onError={() => setImageError(true)}

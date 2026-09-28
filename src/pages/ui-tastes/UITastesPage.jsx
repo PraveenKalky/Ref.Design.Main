@@ -6,6 +6,7 @@ import UITasteCard from './UITasteCard';
 import '../../components/card-grid/card-grid.css'; // For reusing card hover states
 import './ui-tastes.css';
 import '../../components/navbar/login-modal.css'; // Reuse existing toast styles
+import SystemBanner from '../../components/system-banner/SystemBanner';
 import { supabase } from '../../lib/supabase';
 
 export default function UITastesPage({ savedItems, toggleSave }) {
@@ -215,16 +216,12 @@ export default function UITastesPage({ savedItems, toggleSave }) {
 
   return (
     <div className="ui-tastes-page">
+      <SystemBanner 
+        status={isExtensionConnected ? 'success' : 'warning'}
+        message={`Extension Helper: ${isExtensionConnected ? 'Active (WAF Bypassed)' : 'Offline (Cloud Scraper Fallback)'}`}
+      />
+
       <div className="ui-tastes-container">
-        
-        <div style={{ display: 'flex', justifyContent: 'center', width: '100%', maxWidth: '800px', margin: '0 auto 1.5rem auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', background: 'var(--input-bg, #f5f5f5)', padding: '0.5rem 1.1rem', borderRadius: '20px', border: '1px solid var(--border-color, #e5e5e5)' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isExtensionConnected ? '#22c55e' : '#eab308', boxShadow: isExtensionConnected ? '0 0 8px #22c55e' : 'none' }}></span>
-            <span style={{ color: 'var(--text-color, #111111)', fontWeight: '500' }}>
-              Extension Helper: {isExtensionConnected ? 'Active (WAF Bypassed)' : 'Offline (Cloud Scraper Fallback)'}
-            </span>
-          </div>
-        </div>
 
         <UITasteInput onAddPost={handleAddPost} isFetching={isFetching} />
 

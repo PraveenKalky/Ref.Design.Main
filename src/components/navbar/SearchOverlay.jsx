@@ -1,10 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, ChevronRight, Layout, Activity, Component, Layers, Grid, Type } from 'lucide-react';
+import { X, Search, Clock, ArrowRight, CornerDownLeft, Lock, Layout, Activity, Component, Layers, Grid, Type, ChevronRight } from 'lucide-react';
 import { megaMenuData } from './mega-menu-data';
-import { cardsData } from '../card-grid/cards-data';
+import { cardsData } from '../../pages/search-results/mock-data';
 import './search-overlay.css';
+
+const AnimatedText = ({ text }) => (
+  <span>
+    {[...text].map((char, i) => (
+      <span
+        className="char"
+        style={{ "--i": i }}
+        key={i}
+      >
+        {char === " " ? "\u00A0" : char}
+      </span>
+    ))}
+  </span>
+);
 
 /* ── Flatten megaMenuData into searchable items per navbar tab ── */
 const NAVBAR_SEARCH_SOURCES = Object.entries(megaMenuData).flatMap(([navLabel, data]) =>
@@ -116,8 +130,8 @@ export const TAB_CONTENT = {
     {
       title: 'Commerce',
       items: [
-        { name: 'Paywall & Subscription', count: 657 }, { name: 'Product Details', count: 823 }, { name: 'Catalog Page', count: 536 },
-        { name: 'Carts & Bags', count: 287 }, { name: 'Checkout', count: 687 }, { name: 'Order History', count: 125 },
+        { name: 'Paywall & Subscription', count: 657 }, { name: 'Product Details', count: 823 },
+        { name: 'Carts & Bags', count: 287 }, { name: 'Checkout', count: 687 },
         { name: 'Wallet & Balance', count: 175 },
       ],
     },
@@ -472,6 +486,29 @@ const SearchOverlay = ({ isOpen, onClose }) => {
         dynamicResults.push({ type, title: navCat, category: navCat, items });
       });
 
+      // 3. Mock Annotation Search
+      const mockAnnotations = [
+        { id: 'ann1', text: 'Good pricing card hierarchy', website: 'Stripe', image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=800&auto=format&fit=crop' },
+        { id: 'ann2', text: 'Middle plan highlighted well', website: 'Linear', image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=800&auto=format&fit=crop' },
+        { id: 'ann3', text: 'Pricing CTA pattern worth using', website: 'Vercel', image: 'https://images.unsplash.com/photo-1618477388954-7852f32655ec?q=80&w=800&auto=format&fit=crop' }
+      ];
+      
+      const matchedAnns = mockAnnotations.filter(a => a.text.toLowerCase().includes(q));
+      if (matchedAnns.length > 0) {
+        dynamicResults.push({
+          type: 'annotation',
+          title: 'Annotations',
+          category: 'Annotations',
+          items: matchedAnns.map(ann => ({
+            id: ann.id,
+            name: ann.text,
+            tagline: `On ${ann.website}`,
+            image: ann.image,
+            logo: `https://www.google.com/s2/favicons?domain=${ann.website.toLowerCase()}.com&sz=64`
+          }))
+        });
+      }
+
       // Also match RICH_PREVIEW_DATA group titles
       const matchedRich = RICH_PREVIEW_DATA.filter(group =>
         group.title.toLowerCase().includes(q) ||
@@ -664,7 +701,9 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                               onMouseLeave={() => setHoveredItemName(null)}
                               onClick={(e) => e.preventDefault()}
                             >
-                              <span className="so-item-name">{item.name}</span>
+                              <span className="so-item-name">
+                                <AnimatedText text={item.name} />
+                              </span>
                               <span className="so-item-count">{item.count.toLocaleString()}</span>
                             </a>
                           );

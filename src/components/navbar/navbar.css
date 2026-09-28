@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+@import './nav-shuffle.css';
 
 /* NEW Navbar Design */
 .navbar-header {
@@ -37,14 +38,14 @@ body.search-open .navbar-header {
     padding: 0 32px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
 }
 
-/* Left Section */
+/* Left Section — fixed width, never grows or shrinks */
 .nav-left {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: 0 0 auto;
 }
 
 .rf-avatar {
@@ -131,7 +132,20 @@ body.search-open .navbar-header {
     display: none;
 }
 
-/* Center Section */
+/* ─── CENTER GROUP ───────────────────────────────────────────
+   90px breathing room on BOTH sides.
+   flex: 0 0 auto → sized to its own content, never grows or shrinks.
+   margin: 0 90px → the equal left and right gap the user requires.
+   MegaMenu is position:fixed inside so it doesn't affect layout width.
+────────────────────────────────────────────────────────────── */
+.nav-center-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin: 0 90px;
+    overflow: visible;
+}
+
 .nav-center {
     display: flex;
     align-items: center;
@@ -148,6 +162,14 @@ body.search-open .navbar-header {
     height: 44px;
     gap: 2px;
     transition: all 0.3s ease;
+    /* Prevent internal overflow bleeding out */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.nav-links-container::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-active-pill {
@@ -186,6 +208,7 @@ body.search-open .navbar-header {
     position: relative;
     z-index: 1;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-link.active {
@@ -222,11 +245,13 @@ body.search-open .navbar-header {
     opacity: 1;
 }
 
-/* Right Section */
+/* Right Section — fills all remaining space, icons right-anchored */
 .nav-right {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex: 1;
+    justify-content: flex-end;
 }
 
 .icon-btn {
@@ -296,12 +321,39 @@ body.search-open .navbar-header {
     display: none;
 }
 
-/* Mobile Responsiveness */
+/* Responsive — reduce the 90px margins before collapsing nav entirely */
+@media (max-width: 1280px) {
+    .navbar-nav {
+        padding: 0 24px;
+    }
+    .nav-center-wrapper {
+        margin: 0 60px;
+    }
+    .nav-link {
+        padding: 0 12px;
+    }
+    .nav-right {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .nav-center-wrapper {
+        margin: 0 40px;
+    }
+    .nav-link {
+        padding: 0 10px;
+    }
+    .nav-right {
+        gap: 10px;
+    }
+}
+
+/* Mobile — hide center nav */
 @media (max-width: 1024px) {
-    .nav-center {
+    .nav-center-wrapper {
         display: none;
     }
-    
     .navbar-nav {
         padding: 0 16px;
     }

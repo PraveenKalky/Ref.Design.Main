@@ -4,6 +4,20 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import MegaMenu from './MegaMenu';
 import { megaMenuData, MEGA_MENU_LINKS } from './mega-menu-data';
 
+const ShuffleLabel = ({ text }) => (
+  <span className="nav-label">
+    {[...text].map((char, index) => (
+      <span
+        key={`${char}-${index}`}
+        className="nav-char"
+        style={{ "--i": index }}
+      >
+        {char === " " ? "\u00A0" : char}
+      </span>
+    ))}
+  </span>
+);
+
 const NavbarTabs = () => {
     const [activeLink, setActiveLink] = useState('Home');
     const [pillStyle, setPillStyle] = useState({});
@@ -19,6 +33,7 @@ const NavbarTabs = () => {
         { name: 'Resources',   path: '/'      },
         { name: 'Fonts',       path: '/fonts' },
         { name: 'UI/UX Tastes',path: '/ui-tastes' },
+        { name: 'Skills',      path: '/skills' },
     ];
 
     const containerRef = useRef(null);
@@ -74,6 +89,8 @@ const NavbarTabs = () => {
             setActiveLink('Websites');
         } else if (location.pathname === '/ui-tastes') {
             setActiveLink('UI/UX Tastes');
+        } else if (location.pathname === '/skills') {
+            setActiveLink('Skills');
         } else if (location.pathname === '/') {
             const homeLinks = ['Home', 'Apps', 'Resources'];
             if (!homeLinks.includes(activeLink)) {
@@ -108,7 +125,7 @@ const NavbarTabs = () => {
     const currentMenuData = activeMenu ? megaMenuData[activeMenu] : null;
 
     return (
-        <>
+        <div className="nav-center-wrapper">
             <div className="nav-center">
                 <div className="nav-links-container" ref={containerRef}>
                     <div className="nav-active-pill" style={pillStyle} />
@@ -137,7 +154,7 @@ const NavbarTabs = () => {
                                 }}
                             >
                                 {item.name === 'Search' && <Search size={16} />}
-                                {item.name}
+                                <ShuffleLabel text={item.name} />
                             </button>
                         );
                     })}
@@ -151,7 +168,7 @@ const NavbarTabs = () => {
                 onMouseEnter={handleMegaMenuEnter}
                 onMouseLeave={handleMegaMenuLeave}
             />
-        </>
+        </div>
     );
 };
 

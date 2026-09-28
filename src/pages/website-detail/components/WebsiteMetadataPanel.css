@@ -1,0 +1,123 @@
+/* Metadata Panel for Preview Mode */
+.preview-metadata-panel {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 100px;
+  padding-top: 4px;
+}
+
+.metadata-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metadata-group-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-tertiary, #888888);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+[data-theme='dark'] .metadata-group-title {
+  color: #888888;
+}
+
+.metadata-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 16px Metadata Value Items (Pill Style) */
+.metadata-item-btn {
+  background: var(--bg-surface-secondary, #f3f4f6);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.metadata-item-btn:hover {
+  background: var(--bg-surface-hover, #e5e7eb);
+}
+
+[data-theme='dark'] .metadata-item-btn {
+  background: #1a1b1e;
+  color: #e5e7eb;
+}
+
+[data-theme='dark'] .metadata-item-btn:hover {
+  background: #2e2f33;
+}
+
+.metadata-item-static {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .metadata-item-static {
+  color: #e5e7eb;
+}
+
+/* Colors Section */
+.metadata-color-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metadata-color-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='dark'] .metadata-color-swatch {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.metadata-color-hex {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Responsive behavior */
+@media (max-width: 960px) {
+  .preview-metadata-panel {
+    width: 100%;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 24px 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  [data-theme='dark'] .preview-metadata-panel {
+    border-color: #2e2f33;
+  }
+}

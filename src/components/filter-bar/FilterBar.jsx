@@ -15,7 +15,9 @@ const FilterBar = ({
         <button className="filter-btn">
             <span>Filter</span>
         </button>
-    )
+    ),
+    selectedCategories = [],
+    setSelectedCategories = () => {}
 }) => {
     const [activeTab, setActiveTab] = useState(defaultActiveTab);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -51,7 +53,12 @@ const FilterBar = ({
             
             <div className={`filter-categories-wrapper ${isExpanded ? 'expanded' : ''}`}>
                 <div className="filter-categories-inner">
-                    <CategoryFilterExpanded activeTab={activeTab} tabs={tabs} />
+                    <CategoryFilterExpanded 
+                        activeTab={activeTab} 
+                        tabs={tabs} 
+                        selectedCategories={selectedCategories}
+                        setSelectedCategories={setSelectedCategories}
+                    />
                 </div>
             </div>
         </div>

@@ -222,7 +222,39 @@ function decodeHTMLEntities(str: string): string {
     .replace(/&#39;/g, "'");
 }
 
-// ─── Master metadata fetcher ─────────────────────────────────────────────────
+async function uploadToStorage(mediaUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(mediaUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      }
+    });
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    const buffer = await res.arrayBuffer();
+    if (buffer.byteLength === 0) return null;
+
+    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+    const fileName = `instagram/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { data, error } = await supabase.storage.from('post-media').upload(fileName, buffer, {
+      contentType,
+      upsert: false
+    });
+
+    if (error) {
+      console.error('[storage] Upload error:', error.message);
+      return null;
+    }
+
+    const { data: publicData } = supabase.storage.from('post-media').getPublicUrl(fileName);
+    return publicData.publicUrl;
+  } catch (e) {
+    console.error('[storage] Fetch/Upload exception:', e);
+    return null;
+  }
+}
+
 async function fetchMetadata(url: string): Promise<{
   mediaUrl: string | null;
   description: string;
@@ -338,6 +370,18 @@ async function fetchMetadata(url: string): Promise<{
 
   if (errorSummary) {
     console.warn(`[fetchMetadata] Error for ${url}: ${errorSummary}`);
+  }
+
+  // ── NEW: Resolve ephemeral Instagram CDN URLs to permanent storage ──
+  if (mediaUrl && (mediaUrl.includes('cdninstagram.com') || url.includes('instagram.com'))) {
+    console.log(`[fetchMetadata] Uploading ephemeral Instagram URL to Storage: ${mediaUrl}`);
+    const permanentUrl = await uploadToStorage(mediaUrl);
+    if (permanentUrl) {
+      mediaUrl = permanentUrl;
+      console.log(`[fetchMetadata] Successfully resolved permanent URL: ${mediaUrl}`);
+    } else {
+      console.warn(`[fetchMetadata] Failed to upload Instagram media to storage, falling back to ephemeral URL.`);
+    }
   }
 
   return { mediaUrl, description, title, isVideo, fetchMethod, error: errorSummary };
@@ -473,6 +517,28 @@ serve(async (req) => {
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // ── Scenario 3: Reprocess existing post (Backfill) ──
+    if (body.action === 'reprocess' && body.id && body.url) {
+      console.log(`[backend] Reprocessing post ${body.id} URL: ${body.url}`);
+      const meta = await fetchMetadata(body.url);
+      
+      const { error } = await supabase
+        .from('ui_tastes')
+        .update({
+          media_url: meta.mediaUrl,
+          username: meta.title,
+          description: meta.description,
+          is_video: meta.isVideo
+        })
+        .eq('id', body.id);
+
+      if (error) {
+        console.error(`[backend] Reprocess update failed:`, error.message);
+        return new Response(JSON.stringify({ status: 'error', message: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({ status: 'success', data: meta }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // ── Scenario 2: Telegram webhook message ──

@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronUp, X } from 'lucide-react';
 import './category-filter-expanded.css';
 
 import { FILTER_TABS, CATEGORIES, CATEGORY_COUNTS } from '../../data/categories';
 
-const CategoryFilterExpanded = ({ activeTab, tabs }) => {
-  const [selectedItems, setSelectedItems] = useState([]);
+const CategoryFilterExpanded = ({ activeTab, tabs, selectedCategories = [], setSelectedCategories = () => {} }) => {
 
   const currentTab = tabs ? tabs.find(t => t.id === activeTab) : null;
   const tabLabel = currentTab ? currentTab.label : (activeTab === 'popular' ? 'Popular Categories' : activeTab);
   const items = CATEGORIES[tabLabel] || CATEGORIES['Popular Categories'] || [];
 
   const toggleItem = (item) => {
-    setSelectedItems(prev =>
+    setSelectedCategories(prev =>
       prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
     );
   };
@@ -22,7 +21,7 @@ const CategoryFilterExpanded = ({ activeTab, tabs }) => {
     if (el) {
       el.classList.add('chip-exit');
       setTimeout(() => {
-        setSelectedItems(prev => prev.filter(i => i !== item));
+        setSelectedCategories(prev => prev.filter(i => i !== item));
       }, 200);
     } else {
       toggleItem(item);
@@ -36,7 +35,7 @@ const CategoryFilterExpanded = ({ activeTab, tabs }) => {
         {items.map(cat => (
           <button
             key={cat}
-            className={`cfe-tag ${selectedItems.includes(cat) ? 'selected' : ''}`}
+            className={`cfe-tag ${selectedCategories.includes(cat) ? 'selected' : ''}`}
             onClick={() => toggleItem(cat)}
           >
             {cat}
@@ -46,9 +45,9 @@ const CategoryFilterExpanded = ({ activeTab, tabs }) => {
       </div>
 
       {/* Row 3: Active Selection Chips */}
-      {selectedItems.length > 0 && (
+      {selectedCategories.length > 0 && (
         <div className="cfe-chips-container">
-          {selectedItems.map(item => (
+          {selectedCategories.map(item => (
             <div key={item} id={`chip-${item}`} className="cfe-chip selected-chip">
               <span>{item}</span>
               <button

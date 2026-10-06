@@ -12,30 +12,32 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl } = await req.json();
-    if (!imageUrl) {
-      throw new Error("imageUrl is required");
-    }
+    const { imageUrl, imageBase64, mimeType: clientMimeType } = await req.json();
 
     const geminiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiKey) {
       throw new Error("GEMINI_API_KEY is not set");
     }
 
-    // 1. Fetch the image from the provided public URL
-    const imageResp = await fetch(imageUrl);
-    if (!imageResp.ok) {
-      throw new Error(`Failed to fetch image: ${imageResp.statusText}`);
-    }
-    const arrayBuffer = await imageResp.arrayBuffer();
-    const base64Image = encode(arrayBuffer);
-    const mimeType = imageResp.headers.get('content-type') || 'image/jpeg';
+    let base64Data = "";
+    let mimeType = clientMimeType || "image/png";
 
-    // 2. Call Gemini API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`;
-    
-    // Improved prompt to specifically identify UI components
-    const prompt = "You are an expert UI/UX designer. Look at this screenshot and identify the specific UI component shown. Is it a full-page, a modal popup, a pricing card, a form, a hero section, etc? Return a 3-5 word descriptive semantic label for this image, such as 'Deposit Perpetual Modal', 'Pricing Tier Card', or 'Crypto Trading Dashboard'. Return ONLY the label. Do not include quotes, markdown, or any extra text.";
+    if (imageBase64) {
+      // Robustly strip data URL prefix regardless of mime extension or headers
+      base64Data = imageBase64.includes(",") ? imageBase64.split(",")[1] : imageBase64;
+    } else if (imageUrl) {
+      const imageResp = await fetch(imageUrl);
+      if (!imageResp.ok) {
+        throw new Error(`Failed to fetch image: ${imageResp.statusText}`);
+      }
+      const arrayBuffer = await imageResp.arrayBuffer();
+      base64Data = encode(arrayBuffer);
+      mimeType = imageResp.headers.get('content-type') || mimeType;
+    } else {
+      throw new Error("Either imageBase64 or imageUrl is required");
+    }
+
+    const prompt = "You are an expert UI/UX designer. Look at this screenshot and identify the specific UI component or page shown. Is it a crypto trading terminal, BTC perpetual contract modal, deposit modal, pricing tier card, login form, etc? Return a 3-5 word descriptive semantic title for this image, such as 'BTC Perpetual Trading Screen' or 'Deposit Perpetual Modal'. Return ONLY the title. Do not include quotes, markdown, or any extra text.";
 
     const payload = {
       contents: [
@@ -45,33 +47,96 @@ serve(async (req) => {
             {
               inline_data: {
                 mime_type: mimeType,
-                data: base64Image
+                data: base64Data
               }
             }
           ]
         }
       ],
       generationConfig: {
-        temperature: 0.2
+        temperature: 0.1,
+        maxOutputTokens: 30
       }
     };
 
-    const geminiResp = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    // Preferred fast vision models
+    const primaryModels = [
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash-exp"
+    ];
 
-    if (!geminiResp.ok) {
-      const errText = await geminiResp.text();
-      throw new Error(`Gemini API error: ${errText}`);
+    let geminiResp: Response | null = null;
+    let lastError = "";
+
+    // 1. Quick attempt with fast known models
+    for (const modelName of primaryModels) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+      try {
+        const resp = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (resp.ok) {
+          geminiResp = resp;
+          break;
+        } else {
+          lastError = await resp.text();
+        }
+      } catch (err) {
+        lastError = err.message;
+      }
+    }
+
+    // 2. If primary models failed, dynamically fetch account's supported models list as fallback
+    if (!geminiResp) {
+      try {
+        const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          const availableModels = (listData.models || [])
+            .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
+            .map((m: any) => m.name.replace(/^models\//, ""));
+
+          for (const modelName of availableModels) {
+            if (primaryModels.includes(modelName)) continue;
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+            try {
+              const resp = await fetch(geminiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
+              if (resp.ok) {
+                geminiResp = resp;
+                break;
+              }
+            } catch (e) {
+              // ignore and try next
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to fetch model list:", e);
+      }
+    }
+
+    if (!geminiResp) {
+      throw new Error(`Gemini API error: ${lastError}`);
     }
 
     const data = await geminiResp.json();
     let label = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Clean up label (remove any surrounding quotes or newlines)
-    label = label.replace(/['"]/g, '').trim();
+    // Clean up response: if multiline, extract final clean line
+    const lines = label.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length > 0) {
+      label = lines[lines.length - 1];
+    }
+
+    label = label.replace(/['"`]/g, '').trim();
 
     return new Response(JSON.stringify({ label }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

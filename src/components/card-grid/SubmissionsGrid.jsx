@@ -10,6 +10,10 @@ export default function SubmissionsGrid({ selectedCategory }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [fetchError, setFetchError] = useState(null);
 
+  // Bulk action states
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+
   const cardsPerPage = 24;
 
   const fetchSubmissions = async () => {
@@ -61,7 +65,7 @@ export default function SubmissionsGrid({ selectedCategory }) {
             );
           } else if (payload.eventType === 'DELETE') {
             setSubmissions((prev) =>
-              prev.filter((item) => item.id === payload.old.id)
+              prev.filter((item) => item.id !== payload.old.id)
             );
           }
         }
@@ -72,6 +76,119 @@ export default function SubmissionsGrid({ selectedCategory }) {
       supabase.removeChannel(channel);
     };
   }, [selectedCategory]);
+
+  const handleDeleteSubmission = async (websiteId) => {
+    try {
+      const target = submissions.find(s => s.id === websiteId);
+
+      const { data, error } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('id', websiteId)
+        .select();
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        throw new Error("You do not have permission to delete this submission (RLS blocked the action).");
+      }
+
+      // Clean up associated storage files
+      if (target) {
+        const pathsToDelete = [];
+        const extractPath = (url) => {
+          if (!url) return null;
+          const parts = url.split('/submissions/');
+          return parts.length > 1 ? parts[1] : null;
+        };
+        
+        [target.image_url, target.logo_url, target.thumbnail_url, target.fullpage_image_url].forEach(url => {
+          const path = extractPath(url);
+          if (path) pathsToDelete.push(path);
+        });
+        
+        if (target.media && Array.isArray(target.media)) {
+          target.media.forEach(url => {
+            const path = extractPath(url);
+            if (path) pathsToDelete.push(path);
+          });
+        }
+
+        if (pathsToDelete.length > 0) {
+          await supabase.storage.from('submissions').remove(pathsToDelete);
+        }
+      }
+
+      setSubmissions((prev) => prev.filter((item) => item.id !== websiteId));
+      setSelectedIds((prev) => prev.filter((id) => id !== websiteId));
+    } catch (err) {
+      console.error('Failed to delete submission:', err);
+      alert(`Failed to delete website: ${err.message}`);
+    }
+  };
+
+  const handleToggleSelect = (websiteId) => {
+    setSelectedIds((prev) => 
+      prev.includes(websiteId)
+        ? prev.filter((id) => id !== websiteId)
+        : [...prev, websiteId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} selected website cards permanently?`)) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .delete()
+        .in('id', selectedIds)
+        .select();
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        throw new Error("You do not have permission to delete these submissions (RLS blocked the action).");
+      }
+
+      const pathsToDelete = [];
+      const extractPath = (url) => {
+        if (!url) return null;
+        const parts = url.split('/submissions/');
+        return parts.length > 1 ? parts[1] : null;
+      };
+
+      data.forEach(target => {
+        [target.image_url, target.logo_url, target.thumbnail_url, target.fullpage_image_url].forEach(url => {
+          const path = extractPath(url);
+          if (path) pathsToDelete.push(path);
+        });
+        if (target.media && Array.isArray(target.media)) {
+          target.media.forEach(url => {
+            const path = extractPath(url);
+            if (path) pathsToDelete.push(path);
+          });
+        }
+      });
+
+      if (pathsToDelete.length > 0) {
+        await supabase.storage.from('submissions').remove(pathsToDelete);
+      }
+
+      const deletedIds = data.map(row => row.id);
+      setSubmissions((prev) => prev.filter((item) => !deletedIds.includes(item.id)));
+      setSelectedIds([]);
+      setIsSelectMode(false);
+      
+      if (deletedIds.length < selectedIds.length) {
+         alert(`Only ${deletedIds.length} of ${selectedIds.length} were deleted due to permissions.`);
+      }
+    } catch (err) {
+      console.error('Failed bulk delete:', err);
+      alert(`Failed to delete selected websites: ${err.message}`);
+    }
+  };
 
   const totalPages = Math.ceil(submissions.length / cardsPerPage);
   const indexOfLastCard = currentPage * cardsPerPage;
@@ -110,6 +227,20 @@ export default function SubmissionsGrid({ selectedCategory }) {
 
   return (
     <section className="card-grid-section">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <button 
+          type="button"
+          onClick={() => {
+            setIsSelectMode(!isSelectMode);
+            if (isSelectMode) setSelectedIds([]);
+          }}
+          className="admin-modal-btn admin-modal-btn-cancel"
+          style={{ fontSize: '13px', padding: '6px 14px' }}
+        >
+          {isSelectMode ? 'Cancel Bulk Select' : 'Manage / Bulk Select'}
+        </button>
+      </div>
+
       <div className="card-grid">
         {currentCards.map((sub) => (
           <Card 
@@ -123,9 +254,36 @@ export default function SubmissionsGrid({ selectedCategory }) {
             link={sub.url}
             isSaved={false}
             toggleSave={() => {}}
+            onDelete={handleDeleteSubmission}
+            isSelectMode={isSelectMode}
+            isSelected={selectedIds.includes(sub.id)}
+            onToggleSelect={handleToggleSelect}
           />
         ))}
       </div>
+
+      {isSelectMode && selectedIds.length > 0 && (
+        <div className="bulk-actions-floating-bar">
+          <span><strong>{selectedIds.length}</strong> website{selectedIds.length > 1 ? 's' : ''} selected</span>
+          <button 
+            type="button" 
+            onClick={() => setSelectedIds([])}
+            className="admin-modal-btn admin-modal-btn-cancel"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
+          >
+            Clear Selection
+          </button>
+          <button 
+            type="button" 
+            onClick={handleBulkDelete}
+            className="admin-modal-btn admin-modal-btn-danger"
+            style={{ padding: '6px 16px', fontSize: '13px' }}
+          >
+            Delete Selected ({selectedIds.length})
+          </button>
+        </div>
+      )}
+
       {totalPages > 1 && (
         <Pagination 
           currentPage={currentPage} 

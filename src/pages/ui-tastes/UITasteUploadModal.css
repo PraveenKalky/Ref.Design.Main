@@ -1,0 +1,559 @@
+/* ============================================================
+   UI/UX Tastes — Right-Side Inspiration Upload Drawer (360px)
+   Starts directly below fixed navbar with Figma squircle smoothing
+   ============================================================ */
+
+/* ── Backdrop Overlay (Starts directly below navbar) ── */
+.ui-drawer-backdrop {
+  position: fixed;
+  top: 80px; /* Begins directly below fixed 80px navbar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100vh - 80px);
+  height: calc(100dvh - 80px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  justify-content: flex-end;
+  animation: uiDrawerFadeIn 0.22s ease-out;
+}
+
+@keyframes uiDrawerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Sliding Panel (Exact 360px width on desktop) ── */
+.ui-drawer-panel {
+  position: relative;
+  width: 360px;
+  max-width: 100vw;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  background: var(--background, #ffffff);
+  color: var(--text-color, #111111);
+  border-left: 1px solid var(--border-color, #e5e5e5);
+  box-shadow: -10px 0 36px rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  animation: uiDrawerSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes uiDrawerSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-drawer-backdrop {
+    top: 70px;
+    height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+  }
+  .ui-drawer-panel {
+    width: 100vw;
+    border-left: none;
+  }
+}
+
+/* ── Fixed Header — Strictly Left Aligned ── */
+.ui-drawer-header {
+  padding: 16px 18px 14px 18px;
+  border-bottom: 1px solid var(--border-color, #ebebeb);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  background: var(--background, #ffffff);
+  text-align: left;
+}
+
+.ui-drawer-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 3px;
+}
+
+.ui-drawer-title {
+  margin: 0;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--text-color, #111111);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.ui-drawer-subtitle {
+  margin: 0;
+  font-size: 11.5px;
+  color: #777777;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.ui-drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: #777777;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ui-drawer-close-btn:hover {
+  background: var(--input-bg, #f0f0f0);
+  color: var(--text-color, #111111);
+}
+
+/* ── Scrollable Form Body ── */
+.ui-drawer-body {
+  padding: 16px 18px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.ui-drawer-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ui-drawer-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ui-drawer-body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.ui-drawer-error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  padding: 9px 12px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.ui-drawer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 6px;
+  width: 100%;
+}
+
+.ui-drawer-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color, #222222);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+
+.ui-drawer-required {
+  color: #ef4444;
+}
+
+.ui-drawer-optional {
+  font-size: 10.5px;
+  font-weight: 400;
+  color: #888888;
+}
+
+/* ── Screenshot Dropzone (Matching Create Website Submission style) ── */
+.ui-drawer-dropzone {
+  width: 100%;
+  min-height: 148px;
+  border: 2px dashed var(--border-color, #d6d6d6);
+  background: var(--input-bg, #fafafa);
+  border-radius: 12px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 26px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  text-align: center;
+}
+
+.ui-drawer-dropzone:hover,
+.ui-drawer-dropzone.is-drag-over {
+  border-color: var(--text-color, #111111);
+  background-color: var(--hover-bg, #f2f2f2);
+}
+
+.pmu-icon-circle-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--text-color, #111111);
+  color: var(--background, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px auto;
+  transition: transform 0.2s ease;
+}
+
+.ui-drawer-dropzone:hover .pmu-icon-circle-wrapper {
+  transform: translateY(-2px);
+}
+
+.pmu-main-text {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color, #111111);
+  margin: 0 0 4px 0;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.pmu-sub-text {
+  font-family: inherit;
+  font-size: 12px;
+  color: #888888;
+  margin: 0;
+  text-align: center;
+  line-height: 1.35;
+}
+
+/* ── Preview Card (Figma Squircle) ── */
+.ui-drawer-preview-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 12px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 9px;
+  background: var(--input-bg, #fafafa);
+  box-sizing: border-box;
+}
+
+.ui-drawer-preview-media {
+  width: 100%;
+  max-height: 165px;
+  overflow: hidden;
+  border-radius: 9px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-drawer-preview-img {
+  width: 100%;
+  height: auto;
+  max-height: 165px;
+  object-fit: contain;
+  display: block;
+}
+
+.ui-drawer-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.ui-drawer-filename {
+  font-size: 11px;
+  color: #666666;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-drawer-replace-btn {
+  background: transparent;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-color, #111111);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 2px 4px;
+}
+
+/* ── Category Select with Balanced Phosphor Caret ── */
+.ui-drawer-select-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.ui-drawer-select {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: 1px solid var(--border-color, #e5e5e5);
+  background: var(--input-bg, #f5f5f5);
+  color: var(--text-color, #111111);
+  padding: 0 36px 0 14px; /* Balanced left and right padding */
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
+}
+
+.ui-drawer-select:focus {
+  border-color: var(--text-color, #111111);
+}
+
+.ui-drawer-select-caret {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-color, #111111);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Platform Chips (Figma Squircle Pills with Logos) ── */
+.ui-drawer-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.ui-drawer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color, #e5e5e5);
+  background: var(--input-bg, #f7f7f7);
+  color: var(--text-color, #444444);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ui-drawer-chip:hover {
+  border-color: #bbbbbb;
+  color: var(--text-color, #111111);
+}
+
+.ui-drawer-chip.active {
+  background: var(--text-color, #111111);
+  color: var(--background, #ffffff);
+  border-color: var(--text-color, #111111);
+}
+
+/* ── Input Wrappers with Phosphor Icons (Figma Squircle) ── */
+.ui-drawer-input-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: 1px solid var(--border-color, #e5e5e5);
+  background: var(--input-bg, #f5f5f5);
+  padding: 0 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.ui-drawer-input-wrap.plain {
+  padding: 0 12px;
+}
+
+.ui-drawer-input-wrap:focus-within {
+  border-color: var(--text-color, #111111);
+}
+
+.ui-drawer-input-icon {
+  flex-shrink: 0;
+  color: #888888;
+}
+
+.ui-drawer-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-color, #111111);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.ui-drawer-input::placeholder {
+  color: #999999;
+}
+
+/* ── Textarea (Figma Squircle) ── */
+.ui-drawer-textarea {
+  width: 100%;
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: 1px solid var(--border-color, #e5e5e5);
+  background: var(--input-bg, #f5f5f5);
+  color: var(--text-color, #111111);
+  padding: 9px 12px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.4;
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s ease;
+}
+
+.ui-drawer-textarea:focus {
+  border-color: var(--text-color, #111111);
+}
+
+.ui-drawer-textarea::placeholder {
+  color: #999999;
+}
+
+/* ── Sticky Fixed Footer (Always in view) ── */
+.ui-drawer-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border-color, #ebebeb);
+  flex-shrink: 0;
+  background: var(--background, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ui-drawer-cancel-btn {
+  flex: 1 1 0;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: 1px solid var(--border-color, #e5e5e5);
+  background: transparent;
+  color: var(--text-color, #444444);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ui-drawer-cancel-btn:hover {
+  background: var(--input-bg, #f5f5f5);
+  color: var(--text-color, #111111);
+}
+
+.ui-drawer-submit-btn {
+  flex: 1 1 0;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none;
+  background: var(--dv-brand-yellow, #ffe500);
+  color: #000000;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.ui-drawer-submit-btn:hover {
+  transform: scale(1.02);
+}
+
+.ui-drawer-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}

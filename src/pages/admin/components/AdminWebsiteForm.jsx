@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import MediaUploader from './MediaUploader';
 import PrimaryThumbnailUploader from './PrimaryThumbnailUploader';
 import LogoUploader from './LogoUploader';
+import CompanyCombobox from './CompanyCombobox';
 import { Trash2, RefreshCw, Sun, Moon, Monitor, Smartphone, Tablet, Maximize, X, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { CATEGORIES } from '../../../data/categories';
@@ -311,6 +312,7 @@ const AdminWebsiteForm = ({ website, updateWebsite }) => {
       }
 
       const { title, description, image, logo } = json.data;
+      const cleanLogoCandidate = logo?.url && !logo.url.includes('opengraph') && !logo.url.includes('social') ? logo.url : '';
 
       // Auto-fill. If forceOverwrite, ignore current fields.
       updateWebsite({
@@ -318,7 +320,7 @@ const AdminWebsiteForm = ({ website, updateWebsite }) => {
         url: urlToFetch,
         title: (forceOverwrite ? '' : website.title) || title || '',
         description: (forceOverwrite ? '' : website.description) || description || '',
-        logo_url: (forceOverwrite ? '' : website.logo_url) || (logo?.url || ''),
+        logo_url: (forceOverwrite ? '' : website.logo_url) || cleanLogoCandidate,
         thumbnail_url: (forceOverwrite ? '' : website.thumbnail_url) || (image?.url || '')
       });
     } catch (err) {
@@ -376,29 +378,38 @@ const AdminWebsiteForm = ({ website, updateWebsite }) => {
       </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-        <div style={{ position: 'relative' }}>
-          <label className="admin-label">Website Name<span style={{ color: '#ef4444', fontSize: '1.2em' }}>*</span></label>
-          <input type="text" name="title" value={website.title || ''} onChange={handleChange} className="admin-input" placeholder="e.g. Stripe" required />
-          
-          {suggestions.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: 'var(--dv-surface)', border: '1px solid var(--dv-border)', borderRadius: '8px', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-              {suggestions.map((sugg, i) => (
-                <div 
-                  key={i} 
-                  onClick={() => handleSuggestionClick(sugg)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', cursor: 'pointer', borderBottom: i < suggestions.length - 1 ? '1px solid var(--dv-border)' : 'none' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--dv-border)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  {sugg.logo ? <img src={sugg.logo} width="20" height="20" style={{ borderRadius: '4px' }} alt="" /> : <div style={{width: 20, height: 20, background: '#eee', borderRadius: 4}}></div>}
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--dv-text)' }}>{sugg.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--dv-text-ghost)' }}>{sugg.domain}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <div>
+          <CompanyCombobox
+            value={website.title}
+            selectedCompany={website.selectedCompany}
+            onSelectCompany={(comp) => {
+              updateWebsite({
+                ...website,
+                selectedCompany: comp,
+                title: comp.title,
+                url: comp.url || website.url,
+                description: comp.description || website.description,
+                categories: Array.isArray(comp.categories) ? comp.categories.join(', ') : (comp.categories || website.categories),
+                styles: Array.isArray(comp.styles) ? comp.styles.join(', ') : (comp.styles || website.styles),
+                logo_url: comp.logo_url || website.logo_url,
+                thumbnail_url: comp.image_url || comp.thumbnail_url || website.thumbnail_url
+              });
+            }}
+            onClearCompany={() => {
+              updateWebsite({
+                ...website,
+                selectedCompany: null
+              });
+            }}
+            onChangeTitle={(newTitle) => {
+              updateWebsite({
+                ...website,
+                title: newTitle,
+                selectedCompany: null
+              });
+            }}
+            url={website.url}
+          />
         </div>
         <div>
           <label className="admin-label">URL<span style={{ color: '#ef4444', fontSize: '1.2em' }}>*</span></label>
@@ -582,10 +593,13 @@ const AdminWebsiteForm = ({ website, updateWebsite }) => {
       </div>
 
       <div>
-        <label className="admin-label">Primary Thumbnail (Card Image)<span style={{ color: '#ef4444', fontSize: '1.2em' }}>*</span></label>
         <PrimaryThumbnailUploader 
           value={website.thumbnail_url} 
-          onChange={handleThumbnailUpload} 
+          fullpageValue={website.fullpage_image_url}
+          useSeparateMedia={website.use_separate_media}
+          onChange={(url) => updateWebsite({ ...website, thumbnail_url: url, image_url: url })} 
+          onFullpageChange={(url) => updateWebsite({ ...website, fullpage_image_url: url })}
+          onToggleChange={(val) => updateWebsite({ ...website, use_separate_media: val })}
         />
       </div>
     </div>

@@ -111,6 +111,11 @@ function App() {
               <AddWebsite />
             </AdminRoute>
           } />
+          <Route path="/admin/websites/edit/:id" element={
+            <AdminRoute>
+              <AddWebsite />
+            </AdminRoute>
+          } />
 
           {/* Fallback route for 404 page now INSIDE the layout */}
           <Route path="*" element={<NotFound />} />

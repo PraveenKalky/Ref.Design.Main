@@ -392,3 +392,39 @@
 [data-theme='dark'] .lm-toast-close {
   color: #111111;
 }
+
+.lm-toast-copy {
+  background: transparent;
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  opacity: 0.85;
+  font-size: 12px;
+  font-family: inherit;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  margin-left: 8px;
+}
+
+.lm-toast-copy:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.lm-toast-copied-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .lm-toast-copy {
+  color: #111111;
+}
+
+[data-theme='dark'] .lm-toast-copy:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}

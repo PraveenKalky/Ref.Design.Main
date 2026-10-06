@@ -7,7 +7,6 @@
   min-height: 100vh;
   background-color: var(--background, #ffffff);
   color: var(--text-color, #111111);
-  padding-top: 80px; /* Account for navbar only, status bar takes next 40px */
   padding-bottom: 120px;
 }
 
@@ -145,6 +144,65 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* ── Companion Upload Button ── */
+.ui-tastes-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--input-bg, #f5f5f5);
+  color: var(--text-color, #111111);
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 9999px;
+  padding: 0 20px;
+  height: 48px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.ui-tastes-upload-btn:hover {
+  transform: scale(1.02);
+  border-color: var(--text-color, #111111);
+  background-color: var(--hover-bg, #eeeeee);
+}
+
+.ui-tastes-upload-btn:active {
+  transform: scale(0.98);
+}
+
+/* Drag & Drop Feedback over the bar */
+.ui-tastes-input-section.is-drag-over .ui-tastes-input-wrapper {
+  border-color: var(--dv-brand-yellow, #ffe500);
+  background-color: rgba(255, 229, 0, 0.08);
+  box-shadow: 0 0 0 3px rgba(255, 229, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .ui-tastes-upload-btn {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-tastes-input-row {
+    flex-wrap: wrap;
+  }
+  .ui-tastes-input-wrapper {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .ui-tastes-add-btn,
+  .ui-tastes-upload-btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 /* ── Masonry Grid ── */

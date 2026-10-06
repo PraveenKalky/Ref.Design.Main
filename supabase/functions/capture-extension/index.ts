@@ -297,6 +297,7 @@ serve(async (req) => {
                 website_id: parentWebsite.id,
                 url: metadata.pageUrl,
                 slug: slug,
+                path: slug,
                 page_title: pageTitle,
                 page_type: metadata.pageType || 'page'
               }])

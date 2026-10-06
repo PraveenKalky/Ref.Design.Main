@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, MoreHorizontal, Bookmark, FileImage, LayoutTemplate, ChevronDown, SlidersHorizontal, Search, Share, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { Star, MoreHorizontal, Bookmark, FileImage, LayoutTemplate, ChevronDown, SlidersHorizontal, Search, Share, Monitor, Tablet, Smartphone, ArrowUpRight } from 'lucide-react';
 import './WebsiteOverview.css';
 
 const SECTION_FILTERS = [
@@ -37,8 +37,16 @@ export default function WebsiteOverview({
   // If website is not provided, return nothing or a skeleton
   if (!website) return null;
 
-  // Extract domain from link
-  const domain = website.link !== '#' ? new URL(website.link).hostname.replace('www.', '') : 'website.com';
+  // Extract domain from link safely
+  let domain = 'website.com';
+  if (website.link && website.link !== '#') {
+    try {
+      domain = new URL(website.link).hostname.replace('www.', '');
+    } catch (e) {
+      // If URL parsing fails, fallback to the string or default
+      domain = website.link.replace('www.', '') || 'website.com';
+    }
+  }
 
   return (
     <div className="website-overview">
@@ -51,6 +59,18 @@ export default function WebsiteOverview({
             <h1 className="detail-hero-title">{website.title}</h1>
             
             <div className="detail-hero-actions">
+              {website.link && website.link !== '#' && (
+                <a 
+                  href={website.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="action-btn"
+                  title="Visit Website"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <ArrowUpRight size={16} /> Visit {domain}
+                </a>
+              )}
               <button 
                 className={`action-btn ${isSaved ? 'primary' : ''}`}
                 onClick={() => toggleSave(website.id)}

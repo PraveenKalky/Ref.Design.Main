@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import UITasteInput from './UITasteInput';
 import UITasteCard from './UITasteCard';
+import UITasteHero from './UITasteHero';
 import '../../components/card-grid/card-grid.css'; // For reusing card hover states
 import './ui-tastes.css';
 import '../../components/navbar/login-modal.css'; // Reuse existing toast styles
-import SystemBanner from '../../components/system-banner/SystemBanner';
 import { supabase } from '../../lib/supabase';
 
 export default function UITastesPage({ savedItems, toggleSave }) {
@@ -15,6 +15,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   const [resolvingIds, setResolvingIds] = useState(new Set());
   const [toasts, setToasts] = useState([]);
   const [isExtensionConnected, setIsExtensionConnected] = useState(false);
+  const hasNotifiedConnectedRef = useRef(false);
 
   const addToast = (message, type = 'success') => {
     const id = Date.now();
@@ -27,13 +28,30 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   useEffect(() => {
     const handleConnected = () => {
       setIsExtensionConnected(true);
+      if (!hasNotifiedConnectedRef.current) {
+        hasNotifiedConnectedRef.current = true;
+        addToast('Extension Helper active', 'success');
+      }
+    };
+
+    const handleDisconnected = () => {
+      setIsExtensionConnected(false);
+      if (hasNotifiedConnectedRef.current) {
+        hasNotifiedConnectedRef.current = false;
+        addToast('Extension Helper disconnected', 'error');
+      }
     };
 
     window.addEventListener("REF_DESIGN_EXT_CONNECTED", handleConnected);
+    window.addEventListener("REF_DESIGN_EXT_DISCONNECTED", handleDisconnected);
     
     // Synced immediate detection check
     if (document.documentElement.dataset.refDesignExtension === "connected") {
       setIsExtensionConnected(true);
+      if (!hasNotifiedConnectedRef.current) {
+        hasNotifiedConnectedRef.current = true;
+        addToast('Extension Helper active', 'success');
+      }
     }
 
     // Initial fetch
@@ -50,6 +68,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
 
     return () => {
       window.removeEventListener("REF_DESIGN_EXT_CONNECTED", handleConnected);
+      window.removeEventListener("REF_DESIGN_EXT_DISCONNECTED", handleDisconnected);
       supabase.removeChannel(subscription);
     };
   }, []);
@@ -216,15 +235,19 @@ export default function UITastesPage({ savedItems, toggleSave }) {
 
   return (
     <div className="ui-tastes-page">
-      <SystemBanner 
-        status={isExtensionConnected ? 'success' : 'warning'}
-        message={`Extension Helper: ${isExtensionConnected ? 'Active (WAF Bypassed)' : 'Offline (Cloud Scraper Fallback)'}`}
-      />
+      {/* 3D Curved Perspective Ribbon Hero - Inspired by Melius Reference */}
+      <UITasteHero posts={posts}>
+        <UITasteInput 
+          onAddPost={handleAddPost} 
+          isFetching={isFetching}
+          onUploadSuccess={(item) => {
+            addToast(`Screenshot inspiration added to ${item?.category || 'feed'}!`, 'success');
+            fetchPosts();
+          }}
+        />
+      </UITasteHero>
 
       <div className="ui-tastes-container">
-
-        <UITasteInput onAddPost={handleAddPost} isFetching={isFetching} />
-
         {/* Future Architecture Placeholder for Filters/Sorting */}
         {/* <FilterBar /> */}
 

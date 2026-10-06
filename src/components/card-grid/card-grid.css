@@ -156,3 +156,210 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Admin Menu Dropdown styles */
+.card-admin-more-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 25;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.card-container:hover .card-admin-more-btn,
+.card-admin-more-btn.active {
+  opacity: 1;
+}
+
+.card-admin-more-btn:hover {
+  background: white;
+  color: black;
+}
+
+.card-admin-menu {
+  position: absolute;
+  top: 52px;
+  right: 12px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.card-admin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s ease;
+}
+
+.card-admin-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.card-admin-menu-item.danger {
+  color: #f87171;
+}
+
+.card-admin-menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Checkbox overlay for multi-select mode */
+.card-select-checkbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 25;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--dv-brand-yellow, #ffc800);
+}
+
+/* Modal styles */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.admin-modal-content {
+  background: var(--dv-bg, #ffffff);
+  border: 1px solid var(--dv-border, rgba(0,0,0,0.08));
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  color: var(--dv-text, #111111);
+}
+
+[data-theme='dark'] .admin-modal-content {
+  background: #18181b;
+  border-color: #27272a;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  color: #f4f4f5;
+}
+
+.admin-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--dv-text, #111111);
+}
+
+[data-theme='dark'] .admin-modal-title {
+  color: #ffffff;
+}
+
+.admin-modal-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dv-text-ghost, #888888);
+  margin-bottom: 24px;
+}
+
+[data-theme='dark'] .admin-modal-body {
+  color: #a1a1aa;
+}
+
+.admin-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-modal-btn {
+  padding: 10px 18px;
+  border-radius: 14px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.admin-modal-btn-cancel {
+  background: var(--dv-surface-dark, #f0f0f0);
+  color: var(--dv-text, #111111);
+}
+
+.admin-modal-btn-cancel:hover {
+  opacity: 0.8;
+}
+
+[data-theme='dark'] .admin-modal-btn-cancel {
+  background: #27272a;
+  color: #e4e4e7;
+}
+
+[data-theme='dark'] .admin-modal-btn-cancel:hover {
+  background: #3f3f46;
+  opacity: 1;
+}
+
+.admin-modal-btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.admin-modal-btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Floating Bulk Action Bar */
+.bulk-actions-floating-bar {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+  z-index: 1000;
+  color: #f4f4f5;
+}

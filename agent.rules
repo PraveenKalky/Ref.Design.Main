@@ -1,0 +1,12 @@
+**Corner Smoothing Rule**
+
+Every card, modal, button, CTA, input, dropdown, pill, panel, tooltip, popover, and interactive surface must use **smooth Figma-style corners**, not basic/default browser rounding.
+
+Requirements:
+- Use the same corner-smoothing approach already approved in this project.
+- Do not use harsh/default `border-radius` alone where the component supports smoother treatment.
+- Maintain consistent visual softness across cards and nested controls.
+- Inner buttons/CTAs inside rounded cards must also follow the same smoothing language.
+- New components must inherit this rule by default.
+- Existing components should be updated when touched.
+- Do not change component size, spacing, color, or layout just to apply smoothing.

@@ -2,8 +2,9 @@ import ActiveUploadItem from "./ActiveUploadItem";
 import { uploadWithProgress } from "../../../utils/uploadXHR";
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { UploadCloud, Loader, Trash2, Play, Eye, Pencil, Check, X, LayoutList, LayoutGrid } from 'lucide-react';
+import { UploadCloud, Loader, Trash2, Play, Eye, Pencil, Check, X, LayoutList, LayoutGrid, Crop, Image as ImageIcon } from 'lucide-react';
 import { SquaresFour, List } from "@phosphor-icons/react";
+import ThumbnailCropModal from './ThumbnailCropModal';
 
 import './PageMediaUploader.css';
 
@@ -15,19 +16,128 @@ const UI_KEYWORDS = [
   'Navigation', 'Footer', 'Checkout', 'Cart', 'Profile', 'Activity'
 ];
 
+// Helper to auto-generate a 16:10 top-fold thumbnail from a full screenshot
+const generateAutoThumbnail = (file, targetRatio = 16 / 10) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('svg')) {
+      return resolve(null);
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const naturalW = img.naturalWidth || img.width;
+      const naturalH = img.naturalHeight || img.height;
+
+      const cropW = naturalW;
+      const cropH = Math.min(naturalH, Math.round(naturalW / targetRatio));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = Math.round(1280 / targetRatio);
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, cropW, cropH, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const thumbFile = new File([blob], `thumb-${file.name}`, { type: 'image/jpeg' });
+          resolve({
+            file: thumbFile,
+            cropData: { yPercent: 0, heightPercent: (cropH / naturalH) * 100 }
+          });
+        } else {
+          resolve(null);
+        }
+      }, 'image/jpeg', 0.85);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+
+    img.src = url;
+  });
+};
+
+// Helper to compress image for AI processing to reduce base64 size and speed up Gemini response
+const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('svg')) {
+      return resolve(file);
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width <= maxDimension && height <= maxDimension && file.size < 600 * 1024) {
+        return resolve(file);
+      }
+      if (width > height) {
+        if (width > maxDimension) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        }
+      } else {
+        if (height > maxDimension) {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+          resolve(compressedFile);
+        } else {
+          resolve(file);
+        }
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+};
+
 // Call Supabase Edge Function to analyze the image with Gemini 1.5 Flash
-const analyzeImageWithAI = async (publicUrl) => {
+const analyzeImageWithAI = async (fileOrUrl) => {
   try {
+    let payload = {};
+    if (typeof fileOrUrl === 'string') {
+      payload = { imageUrl: fileOrUrl };
+    } else if (fileOrUrl instanceof File) {
+      console.log(`[AI Rename] Preparing image "${fileOrUrl.name}" for Gemini AI analysis...`);
+      const targetFile = await compressImageForAI(fileOrUrl);
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(targetFile);
+      });
+      payload = { imageBase64: base64, mimeType: targetFile.type };
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-media-label', {
-      body: { imageUrl: publicUrl }
+      body: payload
     });
     if (error) throw error;
     if (data && data.label) {
+      console.log(`[AI Rename] Gemini successfully generated label: "${data.label}"`);
       return data.label;
     }
     return null;
   } catch (err) {
-    console.error('AI Labelling Error:', err);
+    console.error('[AI Rename] AI Labelling Error:', err);
     return null;
   }
 };
@@ -58,12 +168,13 @@ const generateCleanTitle = (filename) => {
   return clean.replace(/\b\w/g, l => l.toUpperCase());
 };
 
-const MediaListItem = ({ item, index, onRemove, onUpdate, onPreview, viewMode }) => {
+const MediaListItem = ({ item, index, onRemove, onUpdate, onPreview, onAdjustCrop, viewMode }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(item.title);
   const inputRef = useRef(null);
 
-  const isVideo = item.url.match(/\.(mp4|mov|webm)$/i);
+  const isVideo = (item.url || '').match(/\.(mp4|mov|webm)$/i);
+  const displayThumbUrl = item.thumbnailUrl || item.url;
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -75,7 +186,7 @@ const MediaListItem = ({ item, index, onRemove, onUpdate, onPreview, viewMode })
     if (editTitle.trim()) {
       onUpdate(index, { ...item, title: editTitle.trim() });
     } else {
-      setEditTitle(item.title); // revert if empty
+      setEditTitle(item.title);
     }
     setIsEditing(false);
   };
@@ -102,7 +213,13 @@ const MediaListItem = ({ item, index, onRemove, onUpdate, onPreview, viewMode })
             </div>
           </>
         ) : (
-          <img src={item.url} alt={item.title} className="pmu-thumb-media" />
+          <img src={displayThumbUrl} alt={item.title} className="pmu-thumb-media" />
+        )}
+        
+        {!isVideo && (
+          <div className="pmu-thumb-badge" title="Card Thumbnail (16:10)">
+            <Crop size={10} /> 16:10
+          </div>
         )}
       </div>
 
@@ -132,6 +249,11 @@ const MediaListItem = ({ item, index, onRemove, onUpdate, onPreview, viewMode })
       </div>
 
       <div className={isCard ? "pmu-item-actions" : "pmu-list-actions"}>
+        {!isVideo && (
+          <button type="button" onClick={() => onAdjustCrop(item, index)} className="pmu-list-btn crop-btn" title="Adjust Thumbnail Crop">
+            <Crop size={15} /> {!isCard && <span>Adjust Crop</span>}
+          </button>
+        )}
         <button type="button" onClick={() => onPreview(item)} className="pmu-list-btn" title="Preview">
           <Eye size={16} /> {!isCard && <span>Preview</span>}
         </button>
@@ -250,22 +372,11 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
     mediaRef.current = media;
   }, [media]);
 
-  const flushQueue = useRef([]);
-  const flushTimeout = useRef(null);
-
   const handleUploadComplete = (newItem) => {
-    flushQueue.current.push(newItem);
-    if (!flushTimeout.current) {
-      flushTimeout.current = setTimeout(() => {
-        // Ensure we handle legacy string normalization properly before merging
-        const normalizedBase = mediaRef.current.map(m => 
-          typeof m === 'string' ? { url: m, title: 'Uploaded Media', filename: 'Unknown File' } : m
-        );
-        onChange([...normalizedBase, ...flushQueue.current]);
-        flushQueue.current = [];
-        flushTimeout.current = null;
-      }, 50);
-    }
+    const normalizedBase = mediaRef.current.map(m => 
+      typeof m === 'string' ? { url: m, title: 'Uploaded Media', filename: 'Unknown File' } : m
+    );
+    onChange([...normalizedBase, newItem]);
   };
 
   const cancelUpload = (id) => {
@@ -296,12 +407,23 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
     }
   };
 
-  const validateAndUpload = (files) => {
+  const computeFileHash = async (file) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (err) {
+      return `${file.name}-${file.size}`;
+    }
+  };
+
+  const validateAndUpload = async (files) => {
     setErrorMsg('');
     if (!files || files.length === 0) return;
 
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'video/mp4', 'video/quicktime'];
-    const filesToUpload = Array.from(files).filter(file => {
+    const candidates = Array.from(files).filter(file => {
       if (!validTypes.includes(file.type)) {
         setErrorMsg('Some files were skipped. Unsupported type. Please upload PNG, JPG, JPEG, WEBP, MP4, or MOV.');
         return false;
@@ -313,16 +435,42 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
       return true;
     });
 
+    if (candidates.length === 0) return;
+
+    // Calculate hashes and filter duplicates
+    const existingFilenames = new Set(normalizedMedia.map(m => m.filename));
+    const filesToUpload = [];
+    let duplicatesFound = 0;
+
+    for (const file of candidates) {
+      const hash = await computeFileHash(file);
+      // Check duplicate hash or filename
+      const isDuplicateInMedia = normalizedMedia.some(m => m.hash === hash || m.filename === file.name);
+      const isDuplicateInActive = activeUploads.some(u => u.hash === hash);
+
+      if (isDuplicateInMedia || isDuplicateInActive) {
+        duplicatesFound++;
+        continue;
+      }
+
+      filesToUpload.push({ file, hash });
+    }
+
+    if (duplicatesFound > 0) {
+      setErrorMsg(`Already uploaded. (${duplicatesFound} duplicate file${duplicatesFound > 1 ? 's' : ''} skipped)`);
+    }
+
     if (filesToUpload.length === 0) return;
 
-    const newUploads = filesToUpload.map(file => ({
+    const newUploads = filesToUpload.map(({ file, hash }) => ({
       id: Math.random().toString(36).substring(7),
       file,
+      hash,
       filename: file.name,
       size: file.size,
       previewUrl: URL.createObjectURL(file),
-      status: 'uploading',
-      progressText: 'Uploading...',
+      status: 'preparing',
+      progressText: 'Preparing...',
       progress: 0,
     }));
 
@@ -331,66 +479,87 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
     newUploads.forEach(async (uploadItem) => {
       try {
         const fileExt = uploadItem.file.name.split('.').pop();
-        const tempFileName = `temp-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const tempFilePath = `${folder}/${tempFileName}`;
+        const uniqueHash = Math.random().toString(36).substring(7, 11);
+        
+        setActiveUploads(prev => prev.map(u => 
+          u.id === uploadItem.id ? { ...u, status: 'uploading', progressText: 'Analyzing media...', progress: 10 } : u
+        ));
 
-        const uploadResult = await uploadWithProgress(uploadItem.file, 'submissions', tempFilePath, (percent) => {
+        // 1. First run Gemini AI analysis (or fall back to clean title) to determine semantic title
+        const aiResult = uploadItem.file.type.startsWith('image/')
+          ? await analyzeImageWithAI(uploadItem.file)
+          : null;
+
+        const finalTitle = aiResult || generateCleanTitle(uploadItem.file.name);
+        
+        // 2. Format a clean, semantic slug for storage
+        let semanticBaseName = finalTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+
+        if (!semanticBaseName || semanticBaseName === 'uploaded-media') {
+          const rawClean = generateCleanTitle(uploadItem.file.name)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+          semanticBaseName = rawClean || `media-${Date.now()}`;
+        }
+
+        const finalCleanFileName = `${semanticBaseName}-${uniqueHash}.${fileExt}`;
+        const filePath = `${folder}/${finalCleanFileName}`;
+
+        setActiveUploads(prev => prev.map(u => 
+          u.id === uploadItem.id ? { ...u, status: 'uploading', progressText: 'Uploading...', progress: 30 } : u
+        ));
+
+        // 3. Upload full page screenshot file directly to the semantic file path in Supabase Storage (UNCROPPED)
+        const uploadResult = await uploadWithProgress(uploadItem.file, 'submissions', filePath, (percent) => {
           setActiveUploads(prev => prev.map(u => 
-            u.id === uploadItem.id ? { ...u, progress: percent } : u
+            u.id === uploadItem.id ? { ...u, status: 'uploading', progress: Math.max(30, percent) } : u
           ));
         });
 
         if (cancelledUploads.current.has(uploadItem.id)) return;
         if (uploadResult.error) throw uploadResult.error;
 
-        const { data: { publicUrl: tempPublicUrl } } = supabase.storage
+        const { data: { publicUrl } } = supabase.storage
           .from('submissions')
-          .getPublicUrl(tempFilePath);
-          
-        let aiResult = null;
+          .getPublicUrl(filePath);
+
+        // 4. Auto-generate 16:10 top-fold thumbnail for card preview
+        let thumbnailUrl = publicUrl;
+        let thumbnailSource = 'none';
+        let cropData = null;
+
         if (uploadItem.file.type.startsWith('image/')) {
           setActiveUploads(prev => prev.map(u => 
-            u.id === uploadItem.id ? { ...u, progressText: 'AI Analyzing...' } : u
+            u.id === uploadItem.id ? { ...u, progressText: 'Generating card thumbnail...', progress: 85 } : u
           ));
-          aiResult = await analyzeImageWithAI(tempPublicUrl);
+          
+          const autoThumbResult = await generateAutoThumbnail(uploadItem.file);
+          if (autoThumbResult) {
+            const thumbPath = `thumbnails/thumb-${semanticBaseName}-${uniqueHash}.jpg`;
+            const thumbUploadResult = await uploadWithProgress(autoThumbResult.file, 'submissions', thumbPath, () => {});
+            if (!thumbUploadResult.error) {
+              const { data: { publicUrl: thumbPublicUrl } } = supabase.storage
+                .from('submissions')
+                .getPublicUrl(thumbPath);
+              thumbnailUrl = thumbPublicUrl;
+              thumbnailSource = 'auto_crop';
+              cropData = autoThumbResult.cropData;
+            }
+          }
         }
 
-        const finalTitle = aiResult || generateCleanTitle(uploadItem.file.name);
-        
-        // Sanitize the AI title into a clean filename
-        let baseCleanName = finalTitle
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '');
-        if (!baseCleanName) baseCleanName = `media-${Date.now()}`;
-        
-        // Append a tiny random hash to guarantee uniqueness and avoid overwrite errors
-        const uniqueHash = Math.random().toString(36).substring(7, 11);
-        let finalCleanFileName = `${baseCleanName}-${uniqueHash}.${fileExt}`;
-        const finalFilePath = `${folder}/${finalCleanFileName}`;
-
-        // Move the file in Supabase from temp to semantic name
-        const { error: moveError } = await supabase.storage
-          .from('submissions')
-          .move(tempFilePath, finalFilePath);
-
-        let actualFilePath = finalFilePath;
-        let finalFileName = finalCleanFileName;
-
-        if (moveError) {
-           console.error("Move failed, falling back to temp file:", moveError);
-           actualFilePath = tempFilePath; // Just keep the temp one if it fails
-           finalFileName = tempFileName;
-        }
-
-        const { data: { publicUrl: finalPublicUrl } } = supabase.storage
-          .from('submissions')
-          .getPublicUrl(actualFilePath);
-        
         const finalItem = {
-          url: finalPublicUrl,
+          url: publicUrl,
+          thumbnailUrl: thumbnailUrl,
+          thumbnailSource: thumbnailSource,
+          cropData: cropData,
           title: finalTitle,
-          filename: finalFileName
+          filename: finalCleanFileName,
+          hash: uploadItem.hash
         };
 
         handleUploadComplete(finalItem);
@@ -452,6 +621,8 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
     setPreviewItem({ item, index });
   };
 
+  const [cropItem, setCropItem] = useState(null);
+
   return (
     <div className="page-media-uploader">
       <input
@@ -481,15 +652,8 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
             Choose a file or drag & drop it here.
           </p>
           <p className="pmu-sub-text">
-            PNG, JPG, JPEG, WEBP, MP4, MOV
+            PNG, JPG, JPEG, WEBP, MP4, MOV (Auto 16:10 card thumbnails generated)
           </p>
-          <button 
-            type="button"
-            className="pmu-browse-btn"
-            onClick={(e) => { e.stopPropagation(); onButtonClick(); }}
-          >
-            Browse File
-          </button>
         </div>
       </div>
 
@@ -534,6 +698,7 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
                 onRemove={handleRemove}
                 onUpdate={handleUpdate}
                 onPreview={(i) => handlePreview(i, index)}
+                onAdjustCrop={(i, idx) => setCropItem({ item: i, index: idx })}
                 viewMode={viewMode}
               />
             ))}
@@ -551,6 +716,15 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
              handleRemove(idx);
              setPreviewItem(null);
           }}
+        />
+      )}
+
+      {cropItem && (
+        <ThumbnailCropModal
+          item={cropItem.item}
+          index={cropItem.index}
+          onClose={() => setCropItem(null)}
+          onSave={handleUpdate}
         />
       )}
     </div>

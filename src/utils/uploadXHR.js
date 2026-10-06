@@ -10,8 +10,9 @@ export const uploadWithProgress = async (file, bucket, path, onProgress) => {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/${bucket}/${path}`;
 
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const percent = Math.round((e.loaded / e.total) * 100);
+      if (e.lengthComputable && e.total > 0) {
+        // Cap real byte upload progress at 99% max so 100% is only shown at completion
+        const percent = Math.min(99, Math.round((e.loaded / e.total) * 99));
         onProgress(percent);
       }
     };

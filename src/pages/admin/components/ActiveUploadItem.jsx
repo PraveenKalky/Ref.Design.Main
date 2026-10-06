@@ -4,6 +4,7 @@ import './ActiveUploadItem.css';
 
 const ActiveUploadItem = ({ upload, onCancel }) => {
   const sizeMB = (upload.size / (1024 * 1024)).toFixed(1);
+
   return (
     <div className="pmu-active-upload-item">
       <div className="pmu-au-thumb">
@@ -20,7 +21,7 @@ const ActiveUploadItem = ({ upload, onCancel }) => {
         </div>
         <div className="pmu-au-status">
           <span className={`pmu-au-text ${upload.status}`}>
-            {upload.status === 'uploading' ? `Uploading... ${upload.progress}%` : upload.progressText}
+            {upload.status === 'error' ? (upload.progressText || 'Failed to upload') : `Uploading... ${upload.progress || 0}%`}
           </span>
           <span className="pmu-au-size">&nbsp;&bull;&nbsp; Total: {sizeMB} MB</span>
         </div>

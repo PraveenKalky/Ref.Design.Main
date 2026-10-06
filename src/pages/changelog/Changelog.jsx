@@ -3,6 +3,69 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.7.0',
+    date: 'Tuesday, October 6, 2026',
+    description: 'Major UI/UX improvements to the Admin upload flow, Website Details, and UI Tastes submission pipelines.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Added a Thumbnail Crop Modal for precise image cropping and alignment during upload.',
+          'Introduced a Company Combobox for smarter website/company grouping and selection.',
+          'Built new Hero and Upload Modal components to streamline the UI/UX Tastes submission flow.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Overhauled the Website Details layout with improved preview panels and sidebar/drawer navigation.',
+          'Refined the Admin Create New Website Submission process with enhanced file upload flows.',
+          'Enhanced logo and company asset handling with a new automated asset pipeline utility.',
+          'Upgraded the Capture Extension Helper and toaster notifications for a smoother feedback loop.',
+          'Polished full landing-page screenshots and primary thumbnail preview functionality.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Resolved layout glitches in the upload preview item and detail panel components.',
+          'Fixed file upload issues to ensure more reliable preview generation.'
+        ]
+      }
+    ]
+  },
+  {
+    version: '1.6.0',
+    date: 'Tuesday, September 29, 2026',
+    description: 'Consolidated major feature branches and significantly improved the Admin upload workflow and Website Details view.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Deployed duplicate file detection in Admin media uploaders using SHA-256 hashing to prevent duplicate uploads to Supabase.',
+          'Implemented the advanced WebsitePreviewPanel component for the Website Details page.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Consolidated and merged multiple feature branches including the Skills System, Website Submissions Admin, and Websites Directory Hero.',
+          'Improved layout styles, missing preloader animations, and safe Supabase client initialization.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.5.2',
     date: 'Saturday, September 12, 2026',
     description: 'Updated project rules and added new preview assets.',

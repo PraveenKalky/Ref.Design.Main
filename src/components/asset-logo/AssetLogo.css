@@ -1,0 +1,35 @@
+.asset-logo-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.asset-logo-container:hover {
+  transform: scale(1.04);
+}
+
+.asset-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.asset-logo-badge {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dv-surface-dark, #1c1c1c);
+  color: var(--dv-text, #ffffff);
+  border: 1px solid var(--dv-border, rgba(255, 255, 255, 0.1));
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

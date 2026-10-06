@@ -1,22 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'lucide-react';
-import { CaretUpDown, Check } from '@phosphor-icons/react';
+import { CaretUpDown, Check, UploadSimple } from '@phosphor-icons/react';
+import UITasteUploadModal from './UITasteUploadModal';
 
-export default function UITasteInput({ onAddPost, isFetching }) {
+export default function UITasteInput({ onAddPost, isFetching, onUploadSuccess }) {
   const [url, setUrl] = useState('');
   const [category, setCategory] = useState('Landing Pages');
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [droppedFile, setDroppedFile] = useState(null);
+  const [isRowDragOver, setIsRowDragOver] = useState(false);
   const categoryDropdownRef = useRef(null);
 
   const categories = [
-    'Landing Pages', 'Dashboard', 'Mobile App', 'Forms',
-    'Authentication', 'E-commerce', 'Fintech', 'SaaS',
-    'Portfolio', 'Animation', 'Motion', 'Navigation',
-    'Components', 'Typography', 'AI', 'Design Systems',
-    'Design Inspiration', 'Icons', 'Illustrations', '3D',
-    'Branding', 'Marketing', 'Onboarding', 'Empty States',
-    'Data Visualization', 'Charts', 'Tables', 'Micro Interactions',
-    'Accessibility', 'Miscellaneous'
+    'Landing Pages', 'Hero', 'Testimonials', 'Pricing', 'Features',
+    'CTA', 'Navigation', 'Footer', 'FAQ', 'Cards', 'Forms',
+    'Dashboard', 'Tables', 'Charts', 'Authentication', 'Onboarding',
+    'Mobile UI', 'Animation', 'Typography', 'Components',
+    'Design Systems', 'E-commerce', 'Fintech', 'SaaS',
+    'Portfolio', 'Other'
   ];
 
   // Outside-click to close — same pattern as Fonts.jsx
@@ -37,15 +39,43 @@ export default function UITasteInput({ onAddPost, isFetching }) {
     setUrl('');
   };
 
+  // Drag & drop handlers for the submission bar
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsRowDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsRowDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsRowDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        setDroppedFile(file);
+        setIsUploadModalOpen(true);
+      }
+    }
+  };
+
   return (
-    <div className="ui-tastes-input-section">
+    <div 
+      className={`ui-tastes-input-section ${isRowDragOver ? 'is-drag-over' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="ui-tastes-input-row">
         <form onSubmit={handleSubmit} className="ui-tastes-input-wrapper" id="ui-tastes-form">
           <Link size={20} color="#888888" />
           <input
             type="url"
             className="ui-tastes-url-input"
-            placeholder="Paste post URL (Dribbble, X, Behance, etc.)"
+            placeholder={isRowDragOver ? 'Drop image here to upload...' : 'Paste post URL (Dribbble, X, Behance, etc.)'}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
@@ -107,7 +137,33 @@ export default function UITasteInput({ onAddPost, isFetching }) {
             </span>
           ) : '+ Add Post'}
         </button>
+
+        {/* Companion Upload Image Button */}
+        <button
+          type="button"
+          className="ui-tastes-upload-btn"
+          onClick={() => {
+            setDroppedFile(null);
+            setIsUploadModalOpen(true);
+          }}
+          title="Upload Screenshot / Inspiration image"
+        >
+          <UploadSimple size={18} weight="bold" />
+          <span className="ui-tastes-upload-btn-label">Upload Image</span>
+        </button>
       </div>
+
+      {/* Manual Upload Modal */}
+      <UITasteUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => {
+          setIsUploadModalOpen(false);
+          setDroppedFile(null);
+        }}
+        initialFile={droppedFile}
+        initialCategory={category}
+        onUploadSuccess={onUploadSuccess}
+      />
     </div>
   );
 }

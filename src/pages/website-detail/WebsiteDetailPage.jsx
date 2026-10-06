@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { cardsData } from '../../components/card-grid/cards-data';
 import WebsiteOverview from './components/WebsiteOverview';
+import WebsitePreviewPanel from './components/WebsitePreviewPanel';
 import { SectionCard } from '../../components/card-grid/SectionsGrid';
 import WebsiteMetadataPanel from './components/WebsiteMetadataPanel';
 import './WebsiteDetailPage.css';
@@ -125,14 +126,11 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
         <div className="website-detail-body">
           {viewMode === 'preview' ? (
             <div className="preview-mode-layout">
-              <div className="primary-preview-container">
-                <img 
-                  src={website.image || dummyImage} 
-                  alt={website.title} 
-                  className="primary-preview-media" 
-                />
-              </div>
-              <WebsiteMetadataPanel website={website} />
+              <WebsitePreviewPanel 
+                website={website} 
+                isSaved={!!(savedItems && savedItems[website.id])}
+                toggleSave={toggleSave}
+              />
             </div>
           ) : (
             <div className="sections-grid-container">

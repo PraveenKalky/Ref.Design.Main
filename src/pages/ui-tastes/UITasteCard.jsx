@@ -67,11 +67,20 @@ export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) 
 
   const isScreenshot = localMediaUrl && localMediaUrl.includes('thum.io');
 
+  const handleCardClick = () => {
+    if (post.url && !post.url.includes('/manual-upload/')) {
+      window.open(post.url, '_blank', 'noopener,noreferrer');
+    } else if (localMediaUrl) {
+      // If it's a manual screenshot without external link, open the full-res image
+      window.open(getDisplayImageUrl(localMediaUrl), '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="taste-card">
       <div 
         className={`taste-card-media-wrapper ${isScreenshot ? 'screenshot-mode' : ''}`}
-        onClick={() => window.open(post.url, '_blank')}
+        onClick={handleCardClick}
       >
         {!localMediaUrl || imageError ? (
           <div className="taste-card-fallback-media">
@@ -120,8 +129,10 @@ export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) 
       
       <div className="taste-card-meta">
         <div className="taste-card-header">
-          <span className="taste-card-username">@{post.username}</span>
-          <span className="taste-card-platform">{post.platform}</span>
+          <span className="taste-card-username">
+            {post.username ? (post.username.startsWith('@') ? post.username : `@${post.username}`) : '@inspiration'}
+          </span>
+          <span className="taste-card-platform">{post.platform || 'Inspiration'}</span>
         </div>
         {post.description && (
           <p className="taste-card-description">{post.description}</p>

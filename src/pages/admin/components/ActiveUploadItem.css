@@ -111,7 +111,10 @@
   color: #9ca3af;
 }
 
-.pmu-au-text.uploading {
+.pmu-au-text.uploading,
+.pmu-au-text.preparing,
+.pmu-au-text.processing,
+.pmu-au-text.moving {
   color: #3b82f6; /* Blueish for uploading */
   font-weight: 500;
 }
@@ -160,8 +163,8 @@
   font-weight: 600;
   color: var(--text-secondary, #4b5563);
   margin: 0 0 12px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none !important;
+  letter-spacing: 0.01em;
 }
 [data-theme='dark'] .pmu-active-uploads-title {
   color: #9ca3af;

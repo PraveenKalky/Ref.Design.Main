@@ -1,0 +1,558 @@
+/* ═══════════════════════════════════════════════════════════════
+   UI/UX TASTES FILTER BAR (Ref.Design Fonts Design Language)
+   - Layout: Approved 3-tier structure
+   - Styling: Ref.Design Fonts page tokens (no outlines, ~16px text, soft surfaces)
+   ═══════════════════════════════════════════════════════════════ */
+
+.ui-taste-filter-bar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  box-sizing: border-box;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ROW 1: Single Consolidated Bar (Tabs on Left · Search + Filters on Right)
+   ───────────────────────────────────────────────────────────── */
+.ui-taste-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Left Side: Source Tabs Track */
+.ui-taste-tabs-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.ui-taste-tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tab Button: Subtle background, no border outline, filled when selected */
+.ui-taste-tab-btn {
+  background: transparent;
+  border: none !important;
+  outline: none;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  height: 36px;
+  padding: 0 15px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #777777;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.ui-taste-tab-btn:hover {
+  background: #efefef;
+  color: #111111;
+}
+
+.ui-taste-tab-btn.is-active {
+  background: #111111;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ui-taste-tab-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e0e0e0;
+  color: #111111;
+}
+
+.ui-taste-tab-btn.is-active .ui-taste-tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Right Side: Search + Filters */
+.ui-taste-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Search Pill: Soft background, no outline */
+.ui-taste-search-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  background: #efefef;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none !important;
+  padding: 0 14px;
+  box-sizing: border-box;
+  width: 210px;
+  transition: all 0.2s ease;
+}
+
+.ui-taste-search-pill:focus-within {
+  width: 250px;
+  background: #e5e5e5;
+}
+
+.ui-taste-search-icon {
+  color: #777777;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.ui-taste-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: #111111;
+  width: 100%;
+  min-width: 0;
+}
+
+.ui-taste-search-input::placeholder {
+  color: #888888;
+}
+
+.ui-taste-search-clear {
+  background: transparent;
+  border: none;
+  color: #777777;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.ui-taste-search-clear:hover {
+  color: #111111;
+}
+
+/* Filters Button: Soft background, no outline, flips caret */
+.ui-taste-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  background: #efefef;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none !important;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111111;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.ui-taste-filters-btn:hover {
+  background: #e0e0e0;
+}
+
+.ui-taste-filters-btn.is-open,
+.ui-taste-filters-btn.has-active {
+  background: #111111;
+  color: #ffffff;
+}
+
+.ui-taste-caret {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ui-taste-caret.is-open {
+  transform: rotate(180deg);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ROW 2: When Filters Clicked (Expanded Smooth Panel)
+   Soft surface, visually light, NO harsh border outline
+   ───────────────────────────────────────────────────────────── */
+.ui-taste-expanded-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 24px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none !important;
+  box-sizing: border-box;
+  animation: uiTasteFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes uiTasteFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ui-taste-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ui-taste-panel-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555555;
+  width: 78px;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+.ui-taste-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Category / Type / Tag Pills: Exact Ref.Design Fonts surface treatment (white, no outline, solid black selected) */
+.ui-taste-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none !important;
+  outline: none;
+  background: #ffffff;
+  color: #111111;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ui-taste-pill:hover {
+  background: #e4e4e4;
+  color: #111111;
+}
+
+.ui-taste-pill.is-active {
+  background: #111111;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ROW 3: Left Result Count · Right Sort Dropdown
+   ───────────────────────────────────────────────────────────── */
+.ui-taste-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 4px;
+  box-sizing: border-box;
+}
+
+.ui-taste-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Left Result Count: Content-aligned, NOT centered */
+.ui-taste-count-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111111;
+  letter-spacing: -0.01em;
+}
+
+.ui-taste-reset-btn {
+  background: transparent;
+  border: none;
+  color: #e8323c;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.ui-taste-reset-btn:hover {
+  opacity: 0.8;
+}
+
+/* Sort Dropdown: matching Ref.Design Fonts page controls */
+.sort-container {
+  position: relative;
+  display: inline-block;
+}
+
+.fcb-action-btn.fcb-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  background: #efefef;
+  color: #111111;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none !important;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.fcb-action-btn.fcb-sort:hover {
+  background: #e0e0e0;
+}
+
+.sort-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  transform: none;
+  background: #f0f0f0;
+  border-radius: 18px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 8px;
+  min-width: 150px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: none !important;
+}
+
+.sort-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.sort-option {
+  width: 100%;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 9px 14px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none !important;
+  background: #ffffff;
+  color: #111111;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s ease;
+}
+
+.sort-option:hover {
+  background: #e4e4e4;
+}
+
+.sort-option.selected {
+  background: #111111;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Dark Theme Adjustments
+   ───────────────────────────────────────────────────────────── */
+[data-theme="dark"] .ui-taste-tab-btn:hover {
+  background: #222222;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-tab-btn.is-active {
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="dark"] .ui-taste-tab-count {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-tab-btn.is-active .ui-taste-tab-count {
+  background: rgba(0, 0, 0, 0.2);
+  color: #111111;
+}
+
+[data-theme="dark"] .ui-taste-search-pill {
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .ui-taste-search-pill:focus-within {
+  background: #242424;
+}
+
+[data-theme="dark"] .ui-taste-search-input {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-filters-btn {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-filters-btn:hover {
+  background: #282828;
+}
+
+[data-theme="dark"] .ui-taste-filters-btn.is-open,
+[data-theme="dark"] .ui-taste-filters-btn.has-active {
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="dark"] .ui-taste-expanded-panel {
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .ui-taste-panel-label {
+  color: #aaaaaa;
+}
+
+[data-theme="dark"] .ui-taste-pill {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-pill:hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-pill.is-active {
+  background: #ffffff;
+  color: #000000;
+}
+
+[data-theme="dark"] .ui-taste-count-text {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .fcb-action-btn.fcb-sort {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .fcb-action-btn.fcb-sort:hover {
+  background: #282828;
+}
+
+[data-theme="dark"] .sort-dropdown {
+  background: #1c1c1c;
+}
+
+[data-theme="dark"] .sort-option {
+  background: #282828;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .sort-option:hover {
+  background: #363636;
+}
+
+[data-theme="dark"] .sort-option.selected {
+  background: #ffffff;
+  color: #111111;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Responsive Adjustments
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .ui-taste-top-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ui-taste-top-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ui-taste-search-pill {
+    flex: 1;
+    width: auto;
+  }
+
+  .ui-taste-search-pill:focus-within {
+    width: auto;
+  }
+
+  .ui-taste-panel-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .ui-taste-panel-label {
+    width: 100%;
+  }
+}

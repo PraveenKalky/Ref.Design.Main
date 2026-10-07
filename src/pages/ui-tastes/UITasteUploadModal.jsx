@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   UploadSimple, 
@@ -75,7 +76,24 @@ export default function UITasteUploadModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const fileInputRef = useRef(null);
+  const categoryDropdownRef = useRef(null);
+
+  // Close custom category dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target)) {
+        setIsCategoryOpen(false);
+      }
+    };
+    if (isCategoryOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isCategoryOpen]);
 
   // Check if any form fields have been modified
   const isDirty = Boolean(file || sourceUrl.trim() || username.trim() || tags.trim() || notes.trim());
@@ -350,7 +368,7 @@ export default function UITasteUploadModal({
     }
   };
 
-  return (
+  const drawerContent = (
     <div className="ui-drawer-backdrop" onClick={handleBackdropClick}>
       <aside
         className="ui-drawer-panel"
@@ -420,14 +438,14 @@ export default function UITasteUploadModal({
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current && fileInputRef.current.click()}
               >
-                <div className="pmu-icon-circle-wrapper">
-                  <UploadSimple size={18} weight="bold" />
+                <div className="ui-drawer-dropzone-circle">
+                  <UploadSimple size={16} weight="bold" />
                 </div>
-                <p className="pmu-main-text">
-                  Click to browse or drag and drop
+                <p className="ui-drawer-dropzone-main-text" style={{ fontSize: '12px', lineHeight: '1.35', margin: '0 0 4px 0', fontWeight: '500' }}>
+                  Choose an image or drag & drop it here.
                 </p>
-                <p className="pmu-sub-text">
-                  PNG, JPG, JPEG, WEBP up to 25MB
+                <p className="ui-drawer-dropzone-sub-text" style={{ fontSize: '12px', lineHeight: '1.35', margin: '0', fontWeight: '400' }}>
+                  PNG, JPG, JPEG, WEBP • Max 50MB
                 </p>
               </div>
             )}
@@ -445,27 +463,54 @@ export default function UITasteUploadModal({
             />
           </div>
 
-          {/* Category Dropdown with Phosphor CaretDown and Balanced Spacing */}
+          {/* Category Dropdown — Using existing Ref.Design custom dropdown component pattern */}
           <div className="ui-drawer-section">
             <label className="ui-drawer-label">
               Category <span className="ui-drawer-required">*</span>
             </label>
-            <div className="ui-drawer-select-wrapper">
-              <select
-                className="ui-drawer-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
+            <div className="ui-drawer-dropdown-container" ref={categoryDropdownRef}>
+              <button
+                type="button"
+                className={`ui-drawer-dropdown-trigger ${isCategoryOpen ? 'is-open' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCategoryOpen(!isCategoryOpen);
+                }}
+                aria-haspopup="listbox"
+                aria-expanded={isCategoryOpen}
               >
-                {UI_TASTE_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <div className="ui-drawer-select-caret">
-                <CaretDown size={14} weight="bold" />
-              </div>
+                <span className="ui-drawer-dropdown-value">{category}</span>
+                <CaretDown
+                  size={14}
+                  weight="bold"
+                  className={`ui-drawer-dropdown-caret ${isCategoryOpen ? 'is-open' : ''}`}
+                />
+              </button>
+
+              {isCategoryOpen && (
+                <div className="ui-drawer-dropdown-menu" role="listbox">
+                  {UI_TASTE_CATEGORIES.map((cat) => {
+                    const isSelected = category === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        className={`ui-drawer-dropdown-item ${isSelected ? 'selected' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCategory(cat);
+                          setIsCategoryOpen(false);
+                        }}
+                      >
+                        <span>{cat}</span>
+                        {isSelected && <Check size={14} weight="bold" className="ui-drawer-dropdown-check" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -485,11 +530,7 @@ export default function UITasteUploadModal({
                     className={`ui-drawer-chip ${isSelected ? 'active' : ''}`}
                     onClick={() => setPlatform(p.id)}
                   >
-                    {isSelected ? (
-                      <Check size={13} weight="bold" />
-                    ) : (
-                      <IconComponent size={14} weight="bold" />
-                    )}
+                    <IconComponent size={14} weight="regular" />
                     <span>{p.name}</span>
                   </button>
                 );
@@ -497,13 +538,22 @@ export default function UITasteUploadModal({
             </div>
           </div>
 
-          {/* Source URL with Phosphor LinkSimple */}
+          {/* Source URL with Custom Chain Icon */}
           <div className="ui-drawer-section">
             <label className="ui-drawer-label">
               Source URL <span className="ui-drawer-optional">(Optional)</span>
             </label>
             <div className="ui-drawer-input-wrap">
-              <LinkSimple size={15} weight="bold" color="#888888" className="ui-drawer-input-icon" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                className="ui-drawer-input-icon"
+              >
+                <path d="M87.5,151.52l64-64a12,12,0,0,1,17,17l-64,64a12,12,0,0,1-17-17Zm131-114a60.08,60.08,0,0,0-84.87,0L103.51,67.61a12,12,0,0,0,17,17l30.07-30.06a36,36,0,0,1,50.93,50.92L171.4,135.52a12,12,0,1,0,17,17l30.08-30.06A60.09,60.09,0,0,0,218.45,37.55ZM135.52,171.4l-30.07,30.08a36,36,0,0,1-50.92-50.93l30.06-30.07a12,12,0,0,0-17-17L37.55,133.58a60,60,0,0,0,84.88,84.87l30.06-30.07a12,12,0,0,0-17-17Z"></path>
+              </svg>
               <input
                 type="url"
                 className="ui-drawer-input"
@@ -530,13 +580,22 @@ export default function UITasteUploadModal({
             </div>
           </div>
 
-          {/* Tags with Phosphor TagSimple */}
+          {/* Tags with Custom Tag Icon */}
           <div className="ui-drawer-section">
             <label className="ui-drawer-label">
               Tags <span className="ui-drawer-optional">(Optional, comma-separated)</span>
             </label>
             <div className="ui-drawer-input-wrap">
-              <TagSimple size={15} weight="bold" color="#888888" className="ui-drawer-input-icon" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+                className="ui-drawer-input-icon"
+              >
+                <path d="M246.15,133.18,146.83,33.86A19.85,19.85,0,0,0,132.69,28H40A12,12,0,0,0,28,40v92.69a19.85,19.85,0,0,0,5.86,14.14l99.32,99.32a20,20,0,0,0,28.28,0l84.69-84.69A20,20,0,0,0,246.15,133.18Zm-98.83,93.17L52,131V52h79l95.32,95.32ZM104,88A16,16,0,1,1,88,72,16,16,0,0,1,104,88Z"></path>
+              </svg>
               <input
                 type="text"
                 className="ui-drawer-input"
@@ -591,4 +650,8 @@ export default function UITasteUploadModal({
       </aside>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(drawerContent, document.body)
+    : drawerContent;
 }

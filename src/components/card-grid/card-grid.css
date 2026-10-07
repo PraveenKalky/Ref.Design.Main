@@ -65,54 +65,95 @@
   background-color: rgba(0, 0, 0, 0.35);
 }
 
-.card-actions {
-  display: flex;
-  gap: 12px;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: all 0.2s ease-in-out;
-}
-
-.card-container:hover .card-actions {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.card-action-btn {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 700;
+/* Bottom Center Hover Action Bar (4 Individual Circles Container) */
+.card-action-bar {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  opacity: 0;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 20;
+}
+
+.card-container:hover .card-action-bar {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Remove blue focus rings */
+.card-action-btn-icon:focus,
+.card-action-btn-icon:focus-visible,
+.card-action-btn-icon:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Default Dark / System Dark Theme */
+.card-action-btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.2s ease, 
+              border-color 0.2s ease, 
+              color 0.2s ease,
+              box-shadow 0.2s ease;
+  
+  background: rgba(24, 24, 27, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f4f4f5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
-.card-action-btn:hover {
-  background: white;
-  color: black;
-  border-color: white;
+/* Light Theme Override */
+[data-theme='light'] .card-action-btn-icon {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #111827;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.card-action-save.saved {
-  background: var(--dv-brand-yellow, #ffc800);
-  color: black;
-  border-color: var(--dv-brand-yellow, #ffc800);
+/* Subtle Theme-Adaptive Hover (No bright blue ring, no glow) */
+.card-action-btn-icon:hover {
+  transform: translateY(-2px) scale(1.06);
+  background: rgba(39, 39, 42, 0.98);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
-.card-action-save.saved:hover {
-  background: var(--dv-brand-yellow, #ffc800);
-  color: black;
+[data-theme='light'] .card-action-btn-icon:hover {
+  transform: translateY(-2px) scale(1.06);
+  background: rgba(244, 244, 245, 0.98);
+  border-color: rgba(0, 0, 0, 0.18);
+  color: #111827;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
-.save-icon-filled {
-  fill: currentColor;
+/* Saved state icon color */
+.card-action-btn-icon.is-saved {
+  color: var(--dv-brand-yellow, #ffc800);
+}
+
+[data-theme='light'] .card-action-btn-icon.is-saved {
+  color: #d97706;
 }
 
 .card-meta {
@@ -362,4 +403,240 @@
   box-shadow: 0 12px 30px rgba(0,0,0,0.7);
   z-index: 1000;
   color: #f4f4f5;
+}
+
+/* Card Action Menu & Dropdown */
+.card-menu-container {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+}
+
+.card-menu-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.card-container:hover .card-menu-btn {
+  opacity: 1;
+}
+
+.card-menu-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.card-dropdown-menu {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 100;
+  background: var(--dv-surface, #18181b);
+  border: 1px solid var(--dv-border, #27272a);
+  border-radius: 12px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 6px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  animation: cardDropdownFade 0.15s ease-out;
+}
+
+@keyframes cardDropdownFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dv-text, #f4f4f5);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+}
+
+.card-dropdown-item:hover {
+  background: var(--dv-border, #27272a);
+}
+
+.card-dropdown-item.delete-item {
+  color: #ef4444;
+}
+
+.card-dropdown-item.delete-item:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+/* Modals for Section Rename & Delete */
+.section-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: sectionModalFade 0.2s ease-out;
+}
+
+@keyframes sectionModalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.section-modal-card {
+  background: var(--dv-surface, #18181b);
+  border: 1px solid var(--dv-border, #27272a);
+  border-radius: 16px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  color: var(--dv-text, #ffffff);
+}
+
+.section-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--dv-border, #27272a);
+}
+
+.section-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.section-modal-close {
+  background: none;
+  border: none;
+  color: var(--dv-text-ghost, #9ca3af);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.section-modal-close:hover {
+  color: var(--dv-text, #ffffff);
+}
+
+.section-modal-body {
+  padding: 20px;
+}
+
+.section-modal-body label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--dv-text-ghost, #9ca3af);
+}
+
+.section-modal-body input {
+  width: 100%;
+  background: var(--dv-surface-dark, #09090b);
+  border: 1px solid var(--dv-border, #27272a);
+  color: var(--dv-text, #ffffff);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.section-modal-body input:focus {
+  border-color: #3b82f6;
+}
+
+.section-modal-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dv-text-ghost, #a1a1aa);
+}
+
+.section-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--dv-border, #27272a);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.section-modal-btn {
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.section-modal-btn-cancel {
+  background: transparent;
+  border-color: var(--dv-border, #27272a);
+  color: var(--dv-text, #f4f4f5);
+}
+
+.section-modal-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.section-modal-btn-primary {
+  background: var(--dv-text, #ffffff);
+  color: var(--dv-surface, #000000);
+}
+
+.section-modal-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.section-modal-btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.section-modal-btn-danger:hover {
+  background: #dc2626;
 }

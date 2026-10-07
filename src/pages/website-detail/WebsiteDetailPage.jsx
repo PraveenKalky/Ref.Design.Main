@@ -149,6 +149,12 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
                       image_url={sec.image_url}
                       page_url={sec.page_url}
                       parentWebsite={website}
+                      onUpdateSection={(id, updatedFields) => {
+                        setSections(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
+                      }}
+                      onDeleteSection={(id) => {
+                        setSections(prev => prev.filter(s => s.id !== id));
+                      }}
                     />
                   ))}
                 </div>

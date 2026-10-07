@@ -109,12 +109,125 @@ const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) => {
   });
 };
 
+const STANDARD_SECTIONS = [
+  'Hero',
+  'Features',
+  'Footer',
+  'Call to action',
+  'Testimonial',
+  'Sign In',
+  'Sign Up',
+  'Dashboard',
+  'Deposit',
+  'Withdraw',
+  'Order Book',
+  'Trading',
+  'Pricing',
+  'FAQ',
+  'Header',
+  'Navigation',
+  'Stats',
+  'Integrations',
+  'Blog',
+  'Contact Us',
+  'Analytics',
+  'Security',
+  'Overview',
+  'Settings',
+  'Swap',
+  'Exchange',
+  'Portfolio',
+  'Markets',
+  'Checkout',
+  'Profile'
+];
+
+export const sanitizeSectionName = (rawInput, companyName = '') => {
+  if (!rawInput || typeof rawInput !== 'string') return null;
+
+  let text = rawInput.trim();
+
+  // 1. Strip markdown formatting (*, #, `, _, ~, etc.)
+  text = text.replace(/[*#`_~]/g, '');
+
+  // 2. Strip common prompt / task echo prefixes & AI preamble phrases
+  const noisePhrases = [
+    /^Task:\s*/i,
+    /^Identify the specific UI component or page\.?/i,
+    /^Identify the specific UI component\.?/i,
+    /^Identify the UI section\.?/i,
+    /^This (appears to be|is|shows) (a|an|the)?\s*/i,
+    /^Section (name|type|label)?:\s*/i,
+    /^UI (Component|Section|Page)?:\s*/i,
+    /^Label:\s*/i,
+    /^Page:\s*/i,
+    /^Category:\s*/i,
+    /UI component or page\.?/i
+  ];
+
+  for (const pattern of noisePhrases) {
+    text = text.replace(pattern, '');
+  }
+
+  // Strip leading punctuation and spaces
+  text = text.replace(/^[:\s.\-*]+/, '').trim();
+
+  // 3. Remove company/brand name if present at start or inside text
+  if (companyName && companyName.trim()) {
+    const cleanCompany = companyName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const companyRegex = new RegExp(`\\b${cleanCompany}\\b`, 'gi');
+    text = text.replace(companyRegex, '').trim();
+  }
+
+  // Also strip common brand names if preceding section names
+  text = text.replace(/^(Coinbase|Binance|Kraken|Stripe|Figma|Apple|Google|Bybit|OKX|KuCoin|Dipcoin|Uniswap)\s+/i, '');
+
+  text = text.replace(/^[:\s.\-*]+/, '').trim();
+
+  // 4. Exact match against known standard UI sections
+  const textLower = text.toLowerCase();
+  for (const std of STANDARD_SECTIONS) {
+    if (std.toLowerCase() === textLower) {
+      return std;
+    }
+  }
+
+  // Substring match for canonical sections (e.g., "features section" -> "Features", "sign in screen" -> "Sign In")
+  for (const std of STANDARD_SECTIONS) {
+    const stdLower = std.toLowerCase();
+    if (textLower.includes(stdLower)) {
+      return std;
+    }
+  }
+
+  // 5. Final fallback cleanup: clean up casing and punctuation
+  text = text.replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const words = text.split(' ').filter(Boolean).slice(0, 4);
+  if (words.length === 0) return null;
+
+  const result = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+  // Canonical casing overrides
+  const resultLower = result.toLowerCase();
+  if (resultLower === 'call to action') return 'Call to action';
+  if (resultLower === 'sign in') return 'Sign In';
+  if (resultLower === 'sign up') return 'Sign Up';
+  if (resultLower === 'order book') return 'Order Book';
+  if (resultLower === 'contact us') return 'Contact Us';
+  if (resultLower === 'about us') return 'About Us';
+
+  return result;
+};
+
 // Call Supabase Edge Function to analyze the image with Gemini 1.5 Flash
-const analyzeImageWithAI = async (fileOrUrl) => {
+const analyzeImageWithAI = async (fileOrUrl, companyName = '') => {
   try {
-    let payload = {};
+    let payload = {
+      prompt: "Identify ONLY the standard UI section or page name shown in this screenshot (e.g. Hero, Features, Footer, Call to action, Testimonial, Sign In, Sign Up, Dashboard, Deposit, Withdraw, Order Book, Trading, Pricing, FAQ). Return ONLY the 1-3 word section name. Do NOT include task text, asterisks, brand names, or extra words."
+    };
     if (typeof fileOrUrl === 'string') {
-      payload = { imageUrl: fileOrUrl };
+      payload.imageUrl = fileOrUrl;
     } else if (fileOrUrl instanceof File) {
       console.log(`[AI Rename] Preparing image "${fileOrUrl.name}" for Gemini AI analysis...`);
       const targetFile = await compressImageForAI(fileOrUrl);
@@ -124,7 +237,8 @@ const analyzeImageWithAI = async (fileOrUrl) => {
         reader.onerror = reject;
         reader.readAsDataURL(targetFile);
       });
-      payload = { imageBase64: base64, mimeType: targetFile.type };
+      payload.imageBase64 = base64;
+      payload.mimeType = targetFile.type;
     }
 
     const { data, error } = await supabase.functions.invoke('generate-media-label', {
@@ -132,8 +246,10 @@ const analyzeImageWithAI = async (fileOrUrl) => {
     });
     if (error) throw error;
     if (data && data.label) {
-      console.log(`[AI Rename] Gemini successfully generated label: "${data.label}"`);
-      return data.label;
+      console.log(`[AI Rename] Raw Gemini label: "${data.label}"`);
+      const cleanLabel = sanitizeSectionName(data.label, companyName);
+      console.log(`[AI Rename] Sanitized label: "${cleanLabel}"`);
+      return cleanLabel;
     }
     return null;
   } catch (err) {
@@ -356,7 +472,7 @@ const PreviewModal = ({ item, index, onClose, onUpdate, onDelete }) => {
 };
 
 
-const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
+const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName = '' }) => {
   const [dragActive, setDragActive] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('pmu-view-mode') || 'card');
@@ -487,10 +603,11 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages' }) => {
 
         // 1. First run Gemini AI analysis (or fall back to clean title) to determine semantic title
         const aiResult = uploadItem.file.type.startsWith('image/')
-          ? await analyzeImageWithAI(uploadItem.file)
+          ? await analyzeImageWithAI(uploadItem.file, companyName)
           : null;
 
-        const finalTitle = aiResult || generateCleanTitle(uploadItem.file.name);
+        const fallbackTitle = sanitizeSectionName(generateCleanTitle(uploadItem.file.name), companyName) || generateCleanTitle(uploadItem.file.name);
+        const finalTitle = aiResult || fallbackTitle;
         
         // 2. Format a clean, semantic slug for storage
         let semanticBaseName = finalTitle

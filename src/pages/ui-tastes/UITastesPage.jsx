@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react';
 import UITasteInput from './UITasteInput';
 import UITasteCard from './UITasteCard';
 import UITasteHero from './UITasteHero';
+import UITasteFilterBar from './UITasteFilterBar';
 import '../../components/card-grid/card-grid.css'; // For reusing card hover states
 import './ui-tastes.css';
 import '../../components/navbar/login-modal.css'; // Reuse existing toast styles
@@ -16,6 +17,14 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   const [toasts, setToasts] = useState([]);
   const [isExtensionConnected, setIsExtensionConnected] = useState(false);
   const hasNotifiedConnectedRef = useRef(false);
+
+  // Discovery Filter State (Category, Type, Tag matching approved layout)
+  const [activePlatform, setActivePlatform] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest'
 
   const addToast = (message, type = 'success') => {
     const id = Date.now();
@@ -233,6 +242,78 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     }
   };
 
+  // Client-side multi-tier filter & sort calculation
+  const filteredPosts = React.useMemo(() => {
+    let list = [...posts];
+
+    // 1. Source Platform Tab Filter
+    if (activePlatform === 'saved') {
+      list = list.filter(p => savedItems && savedItems[p.id]);
+    } else if (activePlatform === 'upload') {
+      list = list.filter(p => p.url && p.url.includes('/manual-upload/'));
+    } else if (activePlatform !== 'all') {
+      list = list.filter(p => (p.platform || '').toLowerCase() === activePlatform.toLowerCase());
+    }
+
+    // 2. Category Filter
+    if (selectedCategory && selectedCategory !== 'All') {
+      list = list.filter(p => (p.category || '').toLowerCase() === selectedCategory.toLowerCase());
+    }
+
+    // 3. Media Type Filter
+    if (selectedType === 'video') {
+      list = list.filter(p => Boolean(p.is_video));
+    } else if (selectedType === 'image') {
+      list = list.filter(p => !p.is_video);
+    }
+
+    // 4. Tag Filter
+    if (selectedTag) {
+      const tagLower = selectedTag.toLowerCase();
+      list = list.filter(p => {
+        const desc = (p.description || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return desc.includes(tagLower) || cat.includes(tagLower);
+      });
+    }
+
+    // 5. Keyword Search (Designer / Username / Description / Category)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(p => {
+        const username = (p.username || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const platform = (p.platform || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return username.includes(q) || desc.includes(q) || platform.includes(q) || cat.includes(q);
+      });
+    }
+
+    // 6. Sort
+    list.sort((a, b) => {
+      if (sortBy === 'oldest') {
+        return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      }
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    });
+
+    return list;
+  }, [posts, activePlatform, selectedCategory, selectedType, selectedTag, searchQuery, sortBy, savedItems]);
+
+  const handleResetFilters = () => {
+    setActivePlatform('all');
+    setSelectedCategory('All');
+    setSelectedType('all');
+    setSelectedTag(null);
+    setSearchQuery('');
+    setSortBy('newest');
+  };
+
+  const savedCount = React.useMemo(() => {
+    if (!savedItems) return 0;
+    return Object.values(savedItems).filter(Boolean).length;
+  }, [savedItems]);
+
   return (
     <div className="ui-tastes-page">
       {/* 3D Curved Perspective Ribbon Hero - Inspired by Melius Reference */}
@@ -248,21 +329,53 @@ export default function UITastesPage({ savedItems, toggleSave }) {
       </UITasteHero>
 
       <div className="ui-tastes-container">
-        {/* Future Architecture Placeholder for Filters/Sorting */}
-        {/* <FilterBar /> */}
+        {/* Discovery Filter Bar (Exact Approved Layout + Fonts Style without Outlines) */}
+        <UITasteFilterBar
+          activePlatform={activePlatform}
+          setActivePlatform={setActivePlatform}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          selectedTag={selectedTag}
+          setSelectedTag={setSelectedTag}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          filteredCount={filteredPosts.length}
+          savedCount={savedCount}
+          onResetFilters={handleResetFilters}
+        />
 
-        <div className="ui-tastes-grid">
-          {posts.map(post => (
-            <div key={post.id} className="ui-tastes-grid-item">
-              <UITasteCard 
-                post={post} 
-                isSaved={savedItems ? savedItems[post.id] : false}
-                toggleSave={toggleSave}
-                isResolving={resolvingIds.has(post.id)}
-              />
-            </div>
-          ))}
-        </div>
+        {filteredPosts.length === 0 ? (
+          <div className="ui-tastes-empty-state">
+            <p className="ui-tastes-empty-title">No inspirations match your filters</p>
+            <p className="ui-tastes-empty-subtitle">
+              Try selecting a different platform tab, clearing the search query, or resetting filters.
+            </p>
+            <button 
+              type="button" 
+              className="ui-tastes-empty-reset-btn"
+              onClick={handleResetFilters}
+            >
+              Reset All Filters
+            </button>
+          </div>
+        ) : (
+          <div className="ui-tastes-grid">
+            {filteredPosts.map(post => (
+              <div key={post.id} className="ui-tastes-grid-item">
+                <UITasteCard 
+                  post={post} 
+                  isSaved={savedItems ? savedItems[post.id] : false}
+                  toggleSave={toggleSave}
+                  isResolving={resolvingIds.has(post.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
       </div>
       

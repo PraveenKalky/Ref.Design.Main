@@ -3,6 +3,40 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.8.0',
+    date: 'Thursday, October 8, 2026',
+    description: 'Finalized Website Directory, UI Tastes, and Admin Enhancements with powerful new filtering and feedback tools.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Built a comprehensive Discovery Filter Bar for UI/UX Tastes with multi-tier client-side filtering (platform, category, media type, tags, and search).',
+          'Introduced a Global Toaster Notification container to the Sections Grid for immediate user feedback.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Refined UI/UX Tastes Hero layout and Upload Modal styling.',
+          'Extracted section action utilities into a dedicated helper module for better state management.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Fixed page media upload edge cases and layout spacing in the Website Details page.',
+          'Resolved grid item hover states and CSS specificity issues across the card grid.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.7.0',
     date: 'Tuesday, October 6, 2026',
     description: 'Major UI/UX improvements to the Admin upload flow, Website Details, and UI Tastes submission pipelines.',

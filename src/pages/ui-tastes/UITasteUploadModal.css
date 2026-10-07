@@ -3,19 +3,18 @@
    Starts directly below fixed navbar with Figma squircle smoothing
    ============================================================ */
 
-/* ── Backdrop Overlay (Starts directly below navbar) ── */
+/* ── Backdrop Overlay (Covers full screen including navbar) ── */
 .ui-drawer-backdrop {
   position: fixed;
-  top: 80px; /* Begins directly below fixed 80px navbar */
+  top: 0; /* All the way up above the navbar */
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(100vh - 80px);
-  height: calc(100dvh - 80px);
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 999;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent dark overlay covering whole page and navbar */
+  z-index: 2000; /* Higher than navbar-header (z-index: 1000) */
   display: flex;
   justify-content: flex-end;
   animation: uiDrawerFadeIn 0.22s ease-out;
@@ -30,7 +29,7 @@
   }
 }
 
-/* ── Sliding Panel (Exact 360px width on desktop) ── */
+/* ── Sliding Panel (Exact 360px width on desktop, full height from top: 0) ── */
 .ui-drawer-panel {
   position: relative;
   width: 360px;
@@ -47,6 +46,7 @@
   box-sizing: border-box;
   animation: uiDrawerSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  z-index: 2001;
 }
 
 @keyframes uiDrawerSlideIn {
@@ -60,9 +60,9 @@
 
 @media (max-width: 640px) {
   .ui-drawer-backdrop {
-    top: 70px;
-    height: calc(100vh - 70px);
-    height: calc(100dvh - 70px);
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
   }
   .ui-drawer-panel {
     width: 100vw;
@@ -229,9 +229,9 @@
   background-color: var(--hover-bg, #f2f2f2);
 }
 
-.pmu-icon-circle-wrapper {
-  width: 40px;
-  height: 40px;
+.ui-drawer-dropzone-circle {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background-color: var(--text-color, #111111);
   color: var(--background, #ffffff);
@@ -242,13 +242,13 @@
   transition: transform 0.2s ease;
 }
 
-.ui-drawer-dropzone:hover .pmu-icon-circle-wrapper {
+.ui-drawer-dropzone:hover .ui-drawer-dropzone-circle {
   transform: translateY(-2px);
 }
 
-.pmu-main-text {
+.ui-drawer-dropzone-main-text {
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12px !important;
   font-weight: 500;
   color: var(--text-color, #111111);
   margin: 0 0 4px 0;
@@ -256,9 +256,10 @@
   line-height: 1.35;
 }
 
-.pmu-sub-text {
+.ui-drawer-dropzone-sub-text {
   font-family: inherit;
-  font-size: 12px;
+  font-size: 12px !important;
+  font-weight: 400;
   color: #888888;
   margin: 0;
   text-align: center;
@@ -328,89 +329,170 @@
   padding: 2px 4px;
 }
 
-/* ── Category Select with Balanced Phosphor Caret ── */
-.ui-drawer-select-wrapper {
+/* ── Category Custom Dropdown (Ref.Design Squircle Dropdown System) ── */
+.ui-drawer-dropdown-container {
   position: relative;
   width: 100%;
-  display: flex;
-  align-items: center;
 }
 
-.ui-drawer-select {
+.ui-drawer-dropdown-trigger {
   width: 100%;
   height: 40px;
   border-radius: 10px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
-  border: 1px solid var(--border-color, #e5e5e5);
+  border: none;
   background: var(--input-bg, #f5f5f5);
   color: var(--text-color, #111111);
-  padding: 0 36px 0 14px; /* Balanced left and right padding */
+  padding: 0 14px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
-  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   cursor: pointer;
-  transition: border-color 0.2s ease;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+  transition: background-color 0.2s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.ui-drawer-dropdown-trigger:hover,
+.ui-drawer-dropdown-trigger.is-open {
+  background: var(--hover-bg, #eeeeee);
+}
+
+.ui-drawer-dropdown-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.ui-drawer-dropdown-caret {
+  color: var(--text-color, #111111);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  margin-left: 8px;
+}
+
+.ui-drawer-dropdown-caret.is-open {
+  transform: rotate(180deg);
+}
+
+.ui-drawer-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--background, #ffffff);
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 14px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+}
+
+.ui-drawer-dropdown-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ui-drawer-dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+}
+
+.ui-drawer-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: none;
+  background: transparent;
+  color: var(--text-color, #222222);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
   box-sizing: border-box;
 }
 
-.ui-drawer-select:focus {
-  border-color: var(--text-color, #111111);
-}
-
-.ui-drawer-select-caret {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
+.ui-drawer-dropdown-item:hover {
+  background: var(--input-bg, #f5f5f5);
   color: var(--text-color, #111111);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* ── Platform Chips (Figma Squircle Pills with Logos) ── */
+.ui-drawer-dropdown-item.selected {
+  background: var(--text-color, #111111);
+  color: var(--background, #ffffff);
+  font-weight: 600;
+}
+
+.ui-drawer-dropdown-item.selected:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.ui-drawer-dropdown-check {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Platform Cards (Matching Inputs & Dropdown: 34px height, border: none) ── */
 .ui-drawer-chips-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   width: 100%;
 }
 
 .ui-drawer-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 5px 11px;
-  border-radius: 9999px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid var(--border-color, #e5e5e5);
-  background: var(--input-bg, #f7f7f7);
+  border: none;
+  background: var(--input-bg, #f5f5f5);
   color: var(--text-color, #444444);
   cursor: pointer;
   transition: all 0.15s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .ui-drawer-chip:hover {
-  border-color: #bbbbbb;
+  background: var(--hover-bg, #eeeeee);
   color: var(--text-color, #111111);
 }
 
 .ui-drawer-chip.active {
   background: var(--text-color, #111111);
   color: var(--background, #ffffff);
-  border-color: var(--text-color, #111111);
 }
 
-/* ── Input Wrappers with Phosphor Icons (Figma Squircle) ── */
+/* ── Input Wrappers with Phosphor Icons (Figma Squircle, border: none) ── */
 .ui-drawer-input-wrap {
   width: 100%;
   display: flex;
@@ -420,11 +502,11 @@
   border-radius: 10px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
-  border: 1px solid var(--border-color, #e5e5e5);
+  border: none;
   background: var(--input-bg, #f5f5f5);
   padding: 0 12px;
   box-sizing: border-box;
-  transition: border-color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .ui-drawer-input-wrap.plain {
@@ -432,7 +514,7 @@
 }
 
 .ui-drawer-input-wrap:focus-within {
-  border-color: var(--text-color, #111111);
+  background: var(--hover-bg, #eeeeee);
 }
 
 .ui-drawer-input-icon {
@@ -455,13 +537,13 @@
   color: #999999;
 }
 
-/* ── Textarea (Figma Squircle) ── */
+/* ── Textarea (Figma Squircle, border: none) ── */
 .ui-drawer-textarea {
   width: 100%;
   border-radius: 10px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
-  border: 1px solid var(--border-color, #e5e5e5);
+  border: none;
   background: var(--input-bg, #f5f5f5);
   color: var(--text-color, #111111);
   padding: 9px 12px;
@@ -472,11 +554,11 @@
   outline: none;
   resize: vertical;
   min-height: 60px;
-  transition: border-color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .ui-drawer-textarea:focus {
-  border-color: var(--text-color, #111111);
+  background: var(--hover-bg, #eeeeee);
 }
 
 .ui-drawer-textarea::placeholder {
@@ -502,13 +584,13 @@
 
 .ui-drawer-cancel-btn {
   flex: 1 1 0;
-  height: 38px;
+  height: 42px;
   padding: 0 16px;
-  border-radius: 9999px;
+  border-radius: 10px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
-  border: 1px solid var(--border-color, #e5e5e5);
-  background: transparent;
+  border: none;
+  background: var(--input-bg, #f5f5f5);
   color: var(--text-color, #444444);
   font-family: inherit;
   font-size: 13px;
@@ -522,15 +604,15 @@
 }
 
 .ui-drawer-cancel-btn:hover {
-  background: var(--input-bg, #f5f5f5);
+  background: var(--hover-bg, #eeeeee);
   color: var(--text-color, #111111);
 }
 
 .ui-drawer-submit-btn {
   flex: 1 1 0;
-  height: 38px;
+  height: 42px;
   padding: 0 16px;
-  border-radius: 9999px;
+  border-radius: 10px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   border: none;

@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { UploadCloud, Loader, Trash2, Play, Eye, Pencil, Check, X, LayoutList, LayoutGrid, Crop, Image as ImageIcon } from 'lucide-react';
 import { SquaresFour, List } from "@phosphor-icons/react";
 import ThumbnailCropModal from './ThumbnailCropModal';
+import { classifySection, extractDisplayTitle } from '../../../utils/sectionTaxonomy';
 
 import './PageMediaUploader.css';
 
@@ -258,30 +259,11 @@ const analyzeImageWithAI = async (fileOrUrl, companyName = '') => {
   }
 };
 
-// Helper to generate a human-readable title from filename
-const generateCleanTitle = (filename) => {
-  let clean = filename.replace(/\.[^/.]+$/, ""); // remove extension
-  
-  // Strip UUIDs
-  clean = clean.replace(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g, '');
-  
-  // Strip 32-char hex hashes (like md5)
-  clean = clean.replace(/[0-9a-fA-F]{32}/g, '');
-  
-  // Strip 13-digit timestamps at start (Date.now())
-  clean = clean.replace(/^[0-9]{13}-?/, '');
-
-  clean = clean
-    .replace(/[-_]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // If the string is empty or just numbers/symbols after cleaning, use a default
-  if (!clean || clean.match(/^[\s\(\)0-9]*$/)) {
-    return "Uploaded Media";
-  }
-
-  return clean.replace(/\b\w/g, l => l.toUpperCase());
+// Helper to preserve original filename (removing only trailing file extension)
+export const generateCleanTitle = (filename) => {
+  if (!filename || typeof filename !== 'string') return "Uploaded Media";
+  let clean = filename.replace(/\.[^/.]+$/, "").trim();
+  return clean || filename || "Uploaded Media";
 };
 
 const MediaListItem = ({ item, index, onRemove, onUpdate, onPreview, onAdjustCrop, viewMode }) => {
@@ -472,12 +454,17 @@ const PreviewModal = ({ item, index, onClose, onUpdate, onDelete }) => {
 };
 
 
-const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName = '' }) => {
+const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName = '', label = 'Page Media (Screenshots, Videos)' }) => {
   const [dragActive, setDragActive] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('pmu-view-mode') || 'card');
+  const [autoRename, setAutoRename] = useState(false);
   const [previewItem, setPreviewItem] = useState(null);
   const inputRef = useRef(null);
+
+  const handleAutoRenameToggle = () => {
+    setAutoRename(prev => !prev);
+  };
 
   const [activeUploads, setActiveUploads] = useState([]);
   const cancelledUploads = useRef(new Set());
@@ -601,13 +588,15 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName
           u.id === uploadItem.id ? { ...u, status: 'uploading', progressText: 'Analyzing media...', progress: 10 } : u
         ));
 
-        // 1. First run Gemini AI analysis (or fall back to clean title) to determine semantic title
-        const aiResult = uploadItem.file.type.startsWith('image/')
+        // 1. Run taxonomy classification from filename (and AI analysis if autoRename is ON)
+        const aiResult = (autoRename && uploadItem.file.type.startsWith('image/'))
           ? await analyzeImageWithAI(uploadItem.file, companyName)
           : null;
 
-        const fallbackTitle = sanitizeSectionName(generateCleanTitle(uploadItem.file.name), companyName) || generateCleanTitle(uploadItem.file.name);
-        const finalTitle = aiResult || fallbackTitle;
+        const classification = classifySection(uploadItem.file.name, aiResult);
+        const finalTitle = (autoRename && aiResult) ? aiResult : classification.title;
+        const sectionCategory = classification.category;
+        const sectionTags = classification.tags;
         
         // 2. Format a clean, semantic slug for storage
         let semanticBaseName = finalTitle
@@ -675,6 +664,8 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName
           thumbnailSource: thumbnailSource,
           cropData: cropData,
           title: finalTitle,
+          category: sectionCategory,
+          tags: sectionTags,
           filename: finalCleanFileName,
           hash: uploadItem.hash
         };
@@ -751,6 +742,27 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName
         style={{ display: "none" }}
       />
       
+      <div className="pmu-header-row">
+        {label && (
+          <label className="admin-label pmu-header-title">
+            {label}<span style={{ color: '#ef4444', fontSize: '1.2em' }}>*</span>
+          </label>
+        )}
+        <div className="pmu-toggle-group">
+          <span className="pmu-toggle-title">Auto-rename section screenshots</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoRename}
+            className={`pmu-switch ${autoRename ? 'active' : ''}`}
+            onClick={handleAutoRenameToggle}
+            title="Enable/disable automatic Gemini AI section renaming"
+          >
+            <span className="pmu-switch-thumb" />
+          </button>
+        </div>
+      </div>
+
       <div 
         className={`pmu-dropzone ${dragActive ? 'drag-active' : ''}`}
         onDragEnter={handleDrag}

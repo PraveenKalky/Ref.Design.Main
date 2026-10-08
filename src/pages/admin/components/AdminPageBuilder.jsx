@@ -70,8 +70,8 @@ const AdminPageBuilder = ({ page, updatePage, removePage, isLanding = false }) =
       )}
 
       <div style={{ marginBottom: '24px' }}>
-        <label className="admin-label">Page Media (Screenshots, Videos)<span style={{ color: '#ef4444', fontSize: '1.2em' }}>*</span></label>
         <PageMediaUploader 
+          label="Page Media (Screenshots, Videos)"
           media={page.media || []} 
           onChange={(newMedia) => updatePage({ ...page, media: newMedia })} 
           folder="pages" 

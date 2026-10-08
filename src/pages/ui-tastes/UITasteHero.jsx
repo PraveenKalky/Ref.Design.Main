@@ -170,6 +170,9 @@ export default function UITasteHero({ posts = [], children }) {
           {children}
         </div>
       </div>
+
+      {/* Full-width divider line */}
+      <div className="ui-taste-hero-divider" />
     </section>
   );
 }

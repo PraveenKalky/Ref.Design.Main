@@ -70,7 +70,7 @@
   position: absolute;
   bottom: 14px;
   left: 50%;
-  transform: translateX(-50%) translateY(6px);
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -78,17 +78,10 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  opacity: 0;
-  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 20;
 }
 
-.card-container:hover .card-action-bar {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Remove blue focus rings */
+/* Remove focus rings */
 .card-action-btn-icon:focus,
 .card-action-btn-icon:focus-visible,
 .card-action-btn-icon:active {
@@ -96,8 +89,9 @@
   box-shadow: none !important;
 }
 
-/* Default Dark / System Dark Theme */
-.card-action-btn-icon {
+/* Circular Action Buttons - Base / Light Theme */
+.card-action-btn-icon,
+[data-theme='light'] .card-action-btn-icon {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -108,52 +102,95 @@
   position: relative;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
-              background-color 0.2s ease, 
-              border-color 0.2s ease, 
-              color 0.2s ease,
-              box-shadow 0.2s ease;
-  
-  background: rgba(24, 24, 27, 0.88);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #f4f4f5;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-
-/* Light Theme Override */
-[data-theme='light'] .card-action-btn-icon {
-  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.08);
   color: #111827;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  
+  /* Initial hidden state with smooth reverse exit */
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+  pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity 0.18s ease, 
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.2s ease, 
+              color 0.2s ease, 
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0ms;
 }
 
-/* Subtle Theme-Adaptive Hover (No bright blue ring, no glow) */
-.card-action-btn-icon:hover {
-  transform: translateY(-2px) scale(1.06);
-  background: rgba(39, 39, 42, 0.98);
-  border-color: rgba(255, 255, 255, 0.28);
-  color: #ffffff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+/* Dark Theme Base */
+[data-theme='dark'] .card-action-btn-icon {
+  background: rgba(24, 24, 27, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f4f4f5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
+/* Staggered Entrance on Screenshot Hover */
+.card-container:hover .card-action-bar .card-action-btn-icon {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(1) {
+  transition-delay: 20ms;
+}
+.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(2) {
+  transition-delay: 50ms;
+}
+.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(3) {
+  transition-delay: 80ms;
+}
+.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(4) {
+  transition-delay: 110ms;
+}
+
+/* 1. Light Theme Hover: Circle turns BLACK with WHITE icon */
+.card-action-btn-icon:hover,
 [data-theme='light'] .card-action-btn-icon:hover {
-  transform: translateY(-2px) scale(1.06);
-  background: rgba(244, 244, 245, 0.98);
-  border-color: rgba(0, 0, 0, 0.18);
-  color: #111827;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2.5px) scale(1.08) !important;
+  background: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32) !important;
+  transition-delay: 0ms !important;
 }
 
-/* Saved state icon color */
+/* 2. Dark Theme Hover: Circle turns WHITE with BLACK icon */
+[data-theme='dark'] .card-action-btn-icon:hover {
+  transform: translateY(-2.5px) scale(1.08) !important;
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.38) !important;
+  transition-delay: 0ms !important;
+}
+
+/* Active / Click press */
+.card-action-btn-icon:active {
+  transform: translateY(0) scale(0.96) !important;
+}
+
+/* Saved state base icon colors */
 .card-action-btn-icon.is-saved {
-  color: var(--dv-brand-yellow, #ffc800);
+  color: #d97706;
+}
+[data-theme='dark'] .card-action-btn-icon.is-saved {
+  color: #ffc800;
 }
 
-[data-theme='light'] .card-action-btn-icon.is-saved {
-  color: #d97706;
+/* Saved state hover icon colors */
+.card-action-btn-icon.is-saved:hover,
+[data-theme='light'] .card-action-btn-icon.is-saved:hover {
+  color: #ffffff !important;
+}
+[data-theme='dark'] .card-action-btn-icon.is-saved:hover {
+  color: #000000 !important;
 }
 
 .card-meta {

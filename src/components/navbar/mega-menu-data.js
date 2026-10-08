@@ -115,6 +115,32 @@ export const megaMenuData = {
     ],
   },
 
+  Sections: {
+    leftItems: [
+      { label: 'Hero',             count: 312 },
+      { label: 'Features',         count: 280 },
+      { label: 'CTA',              count: 198 },
+      { label: 'Testimonials',     count: 187 },
+      { label: 'Pricing',          count: 164 },
+      { label: 'FAQs',             count: 143 },
+      { label: 'Footer',           count: 128 },
+      { label: 'Blog',             count: 115 },
+      { label: 'Navbar',           count: 98  },
+      { label: 'Logo Clouds',      count: 86  },
+    ],
+    rightItems: [
+      { label: 'Team',             count: 74  },
+      { label: 'Dashboard',        count: 156 },
+      { label: 'Bento Grid',       count: 112 },
+      { label: 'Stats & Numbers',  count: 89  },
+      { label: 'Integrations',     count: 94  },
+      { label: 'Comparisons',      count: 68  },
+      { label: 'Sign In / Sign Up',count: 85  },
+      { label: 'Timeline & Roadmap',count: 57 },
+      { label: 'Product Showcase', count: 124 },
+    ],
+  },
+
   Resources: {
     leftItems: [
       { label: 'UI Kits',          count: 634 },
@@ -195,4 +221,4 @@ export const megaMenuData = {
 };
 
 // Nav items that trigger the mega menu
-export const MEGA_MENU_LINKS = ['Websites', 'Apps', 'Resources', 'Fonts', 'UI/UX Tastes'];
+export const MEGA_MENU_LINKS = ['Websites', 'Apps', 'Sections', 'Resources', 'Fonts', 'UI/UX Tastes'];

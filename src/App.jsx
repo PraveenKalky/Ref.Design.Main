@@ -18,6 +18,8 @@ import Preloader from './components/preloader/Preloader';
 import NotFound from './pages/404/NotFound';
 import Changelog from './pages/changelog/Changelog';
 import SkillsPage from './skills/pages/SkillsPage';
+import SectionsPage from './pages/sections/SectionsPage';
+import SectionDetailPage from './pages/sections/SectionDetailPage';
 import AdminRoute from './components/auth/AdminRoute';
 import AddWebsite from './pages/admin/AddWebsite';
 
@@ -104,6 +106,8 @@ function App() {
           <Route path="/search-results" element={<SearchResults savedItems={savedItems} toggleSave={toggleSave} />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/skills" element={<SkillsPage />} />
+          <Route path="/sections" element={<SectionsPage />} />
+          <Route path="/sections/:id" element={<SectionDetailPage />} />
           
           {/* Admin Routes */}
           <Route path="/admin/websites/new" element={

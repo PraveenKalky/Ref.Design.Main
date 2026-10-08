@@ -3,6 +3,41 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.9.0',
+    date: 'Friday, October 9, 2026',
+    description: 'Introduced Standalone UI Sections, Dual-Media uploads, and AI auto-renaming.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Added a new taxonomy algorithm to automatically classify section categories (Hero, Footer, Navigation, etc.) directly from uploaded filenames.',
+          'Implemented a Standalone UI Sections directory and routing, separating them from full website pages.',
+          'Added dual-media support (Mobile + Desktop URLs) for responsive layout previews via new database migrations.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Refined the Admin media uploader with an explicit toggle for Gemini AI auto-renaming of screenshots.',
+          'Updated the global Navigation Tabs and Mega Menu to incorporate the new Sections architecture.',
+          'Made further UI/UX enhancements to the UI Tastes Filter Bar and Hero layout.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Cleaned up lingering CSS specificity issues in the Admin Page Builder and media uploader components.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.8.0',
     date: 'Thursday, October 8, 2026',
     description: 'Finalized Website Directory, UI Tastes, and Admin Enhancements with powerful new filtering and feedback tools.',

@@ -2,6 +2,83 @@
   width: 100%;
 }
 
+/* Header Row & Auto-rename Toggle Switch */
+.pmu-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 16px;
+}
+
+.pmu-header-title {
+  margin-bottom: 0 !important;
+}
+
+.pmu-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+  user-select: none;
+}
+
+.pmu-toggle-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--dv-text);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Sleek 40px x 24px Pill Toggle Switch (Matching Ref.Design standard) */
+.pmu-switch {
+  width: 40px;
+  height: 24px;
+  border-radius: 24px;
+  background-color: #e9e9ea;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="dark"] .pmu-switch {
+  background-color: #39393d;
+}
+
+.pmu-switch.active {
+  background-color: var(--dv-text, #000000);
+}
+
+[data-theme="dark"] .pmu-switch.active {
+  background-color: var(--dv-text, #ffffff);
+}
+
+.pmu-switch-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease;
+  transform: translateX(0);
+}
+
+[data-theme="dark"] .pmu-switch.active .pmu-switch-thumb {
+  background-color: #000000;
+}
+
+.pmu-switch.active .pmu-switch-thumb {
+  transform: translateX(16px);
+}
+
 .pmu-dropzone {
   width: 100%;
   border: 2px dashed var(--dv-border);

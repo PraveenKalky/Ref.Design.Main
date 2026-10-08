@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
+import { X, Check } from 'lucide-react';
 import { cardsData } from '../../components/card-grid/cards-data';
 import WebsiteOverview from './components/WebsiteOverview';
 import WebsitePreviewPanel from './components/WebsitePreviewPanel';
 import { SectionCard } from '../../components/card-grid/SectionsGrid';
 import WebsiteMetadataPanel from './components/WebsiteMetadataPanel';
+import { classifySection } from '../../utils/sectionTaxonomy';
 import './WebsiteDetailPage.css';
 import dummyImage from '../../assets/dummy-preview.jpg';
 
@@ -19,39 +22,54 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
   const [loading, setLoading] = useState(true);
   
   const [viewMode, setViewMode] = useState('preview'); // 'preview' | 'sections'
-  const [sectionFilter, setSectionFilter] = useState('All');
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'success') => {
+    const toastId = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id: toastId, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== toastId));
+    }, 3500);
+  };
 
   useEffect(() => {
     const fetchWebsiteData = async () => {
       setLoading(true);
       try {
-        // Try local mock data first
+        // 1. Try local mock data first
         const foundWebsite = cardsData.find(c => c.name === slug || String(c.id) === slug);
         let currentWebsite = foundWebsite;
         
         if (foundWebsite) {
           document.title = `${foundWebsite.title} | Ref.Design`;
-          setSections([]); // Mock data doesn't have sections
+          setSections([]);
         } else {
-          // Fetch from Supabase
-          const { data, error } = await supabase
-            .from('submissions')
-            .select('*')
-            .eq('id', slug)
-            .single();
+          // 2. Fetch from Supabase (Supporting both UUID id and normalised_url slug)
+          const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(slug);
+          let query = supabase.from('submissions').select('*');
+          if (isUuid) {
+            query = query.eq('id', slug);
+          } else {
+            query = query.or(`normalised_url.eq.${slug},url.ilike.%${slug}%`);
+          }
+
+          const { data, error } = await query.limit(1).maybeSingle();
 
           if (error || !data) {
             console.error('Website not found:', error);
-            navigate('/websites', { replace: true });
+            setWebsite(null);
+            setLoading(false);
             return;
           }
+
+          const websiteId = data.id;
 
           currentWebsite = {
             id: data.id,
             name: data.normalised_url,
             title: data.title,
             subtitle: data.description || data.normalised_url,
-            image: data.image_url,
+            image: data.fullpage_image_url || data.image_url || data.thumbnail_url,
             logo: data.logo_url || `https://www.google.com/s2/favicons?domain=${data.normalised_url || data.url}&sz=128`,
             link: data.url,
             categories: data.categories || [],
@@ -64,50 +82,110 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
           
           document.title = `${currentWebsite.title} | Ref.Design`;
           
-          // Also fetch sections (from website_pages media)
-          const { data: pagesData, error: pagesError } = await supabase
+          let compiledSections = [];
+
+          // 3. Fetch standalone / captured sections from website_sections table
+          const { data: dbSecData } = await supabase
+            .from('website_sections')
+            .select('*')
+            .eq('website_id', websiteId)
+            .order('sort_order', { ascending: true });
+
+          if (dbSecData && dbSecData.length > 0) {
+            dbSecData.forEach(sec => {
+              const classification = classifySection(sec.section_title || sec.section_type || '');
+              compiledSections.push({
+                id: sec.id,
+                section_type: sec.section_type || classification.category || 'Section',
+                section_title: sec.section_title || classification.title || 'Section',
+                category: sec.category || classification.category,
+                tags: Array.isArray(sec.tags) ? sec.tags : classification.tags,
+                image_url: sec.image_url,
+                page_url: sec.page_url || data.url
+              });
+            });
+          }
+
+          // 4. Fetch sections from website_pages media
+          const { data: pagesData } = await supabase
             .from('website_pages')
             .select('media, url')
-            .eq('website_id', slug)
+            .eq('website_id', websiteId)
             .order('sort_order', { ascending: true });
             
-          if (!pagesError && pagesData) {
-            let allSections = [];
+          if (pagesData && pagesData.length > 0) {
             pagesData.forEach(page => {
               if (page.media && Array.isArray(page.media)) {
                 page.media.forEach((m, idx) => {
-                  allSections.push({
-                    id: m.url || `${page.url}-${idx}`,
-                    section_type: m.title || 'Other',
-                    section_title: m.title || 'Section',
-                    image_url: m.url,
-                    page_url: page.url
-                  });
+                  const mediaUrl = (m && typeof m === 'object') ? (m.thumbnailUrl || m.url || '') : (typeof m === 'string' ? m : '');
+                  const classification = classifySection(m.filename || m.title || '');
+                  const mediaTitle = (m && typeof m === 'object' && m.title && m.title !== 'Deposit' && m.title !== 'Deposite')
+                    ? m.title
+                    : (classification.title || 'Section');
+                  const mediaCategory = (m && typeof m === 'object' && m.category) ? m.category : classification.category;
+                  const mediaTags = (m && typeof m === 'object' && Array.isArray(m.tags) && m.tags.length > 0) ? m.tags : classification.tags;
+                  
+                  // Avoid duplicate entry if already present in dbSecData
+                  if (!compiledSections.some(s => s.image_url === mediaUrl)) {
+                    compiledSections.push({
+                      id: (m && m.url) || `${page.url}-${idx}`,
+                      section_type: mediaCategory || mediaTitle,
+                      section_title: mediaTitle,
+                      category: mediaCategory,
+                      tags: mediaTags,
+                      image_url: mediaUrl,
+                      page_url: page.url
+                    });
+                  }
                 });
               }
             });
-            setSections(allSections);
           }
+
+          setSections(compiledSections);
         }
         
         setWebsite(currentWebsite);
       } catch (err) {
         console.error('Error fetching website data:', err);
-        navigate('/websites', { replace: true });
+        setWebsite(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchWebsiteData();
-  }, [slug, navigate]);
+  }, [slug]);
 
-  if (loading) return null;
-  if (!website) return null;
+  if (loading) {
+    return (
+      <div className="website-detail-page" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--dv-text)', fontSize: '15px' }}>Loading website details...</p>
+      </div>
+    );
+  }
 
-  const displaySections = sections;
-
-  const filteredSections = sectionFilter === 'All' ? displaySections : displaySections.filter(s => s.section_type === sectionFilter);
+  if (!website) {
+    return (
+      <div className="website-detail-page" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+        <h2 style={{ color: 'var(--dv-text)', margin: 0 }}>Website Not Found</h2>
+        <button 
+          onClick={() => navigate('/websites')} 
+          style={{ 
+            padding: '8px 16px', 
+            borderRadius: '8px', 
+            backgroundColor: 'var(--dv-text)', 
+            color: 'var(--dv-bg)', 
+            border: 'none', 
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+        >
+          Back to Websites
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="website-detail-page">
@@ -118,9 +196,6 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
           toggleSave={toggleSave}
           viewMode={viewMode}
           setViewMode={setViewMode}
-          sectionFilter={sectionFilter}
-          setSectionFilter={setSectionFilter}
-          filteredSectionsCount={filteredSections.length}
         />
         
         <div className="website-detail-body">
@@ -134,13 +209,13 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
             </div>
           ) : (
             <div className="sections-grid-container">
-              {filteredSections.length === 0 ? (
+              {sections.length === 0 ? (
                 <div className="empty-sections-state">
-                  <p>No sections match the "{sectionFilter}" filter.</p>
+                  <p>No sections available for this website.</p>
                 </div>
               ) : (
                 <div className="card-grid">
-                  {filteredSections.map((sec) => (
+                  {sections.map((sec) => (
                     <SectionCard 
                       key={sec.id} 
                       id={sec.id}
@@ -149,6 +224,7 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
                       image_url={sec.image_url}
                       page_url={sec.page_url}
                       parentWebsite={website}
+                      onToast={addToast}
                       onUpdateSection={(id, updatedFields) => {
                         setSections(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
                       }}
@@ -163,6 +239,29 @@ export default function WebsiteDetailPage({ savedItems, toggleSave }) {
           )}
         </div>
       </div>
+
+      {/* Toast Notifications */}
+      {toasts.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div className="lm-toast-container">
+          {toasts.map(toast => (
+            <div key={toast.id} className="lm-toast">
+              <div className={`lm-toast-icon lm-toast-${toast.type || 'success'}`}>
+                {toast.type === 'error' ? <X size={13} strokeWidth={2.5} /> : <Check size={13} strokeWidth={2.5} />}
+              </div>
+              <span className="lm-toast-msg">{toast.message}</span>
+              <button 
+                type="button" 
+                className="lm-toast-close" 
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                aria-label="Close notification"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

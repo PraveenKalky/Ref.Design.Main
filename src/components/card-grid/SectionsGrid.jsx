@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import { 
   BookmarkSimple, 
@@ -20,6 +21,7 @@ export const SectionCard = ({
   image_url, 
   page_url, 
   parentWebsite,
+  onToast,
   onUpdateSection,
   onDeleteSection
 }) => {
@@ -47,10 +49,15 @@ export const SectionCard = ({
     }, 3500);
   };
 
-  // Sanitize title for display
-  const rawTitle = section_title || section_type || 'Section';
-  const cleanTitle = sanitizeSectionName(rawTitle) || 'Section';
-  const cleanType = sanitizeSectionName(section_type) || cleanTitle;
+  // Display title directly without auto-sanitizing original filename (with bulletproof type safety)
+  const strTitle = typeof section_title === 'string' ? section_title.trim() : (typeof section_type === 'string' ? section_type.trim() : '');
+  const cleanTitle = strTitle || 'Section';
+  const displayTitle = cleanTitle;
+  
+  const strType = typeof section_type === 'string' ? section_type.trim() : '';
+  const displayCategory = (strType && strType !== 'Custom' && !displayTitle.toLowerCase().includes(strType.toLowerCase()))
+    ? strType
+    : null;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -288,21 +295,25 @@ export const SectionCard = ({
       <div className="card-meta" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="card-text-container" style={{ flex: 1 }}>
           <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ 
-              backgroundColor: 'var(--dv-surface-dark, #262626)', 
-              color: 'var(--dv-text, #fff)', 
-              fontSize: '11px', 
-              fontWeight: 600, 
-              padding: '2px 6px', 
-              borderRadius: '4px',
-              border: '1px solid rgba(255,255,255,0.1)'
-            }}>
-              {cleanType}
-            </span>
-            <span>{cleanTitle}</span>
+            {displayCategory && (
+              <span style={{ 
+                backgroundColor: 'var(--dv-surface-dark, #262626)', 
+                color: 'var(--dv-text, #fff)', 
+                fontSize: '11px', 
+                fontWeight: 600, 
+                padding: '2px 6px', 
+                borderRadius: '4px',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                {displayCategory}
+              </span>
+            )}
+            <span>{displayTitle}</span>
           </div>
           <div className="card-subtitle" style={{ fontSize: '12px', opacity: 0.7 }}>
-            {parentWebsite?.title || parentWebsite?.normalised_url || 'Website Section'}
+            {parentWebsite?.title || parentWebsite?.normalised_url || (page_url ? (() => {
+              try { return new URL(page_url).hostname.replace(/^www\./, ''); } catch (e) { return page_url; }
+            })() : 'Standalone Section')}{strType && strType !== 'Custom' && strType !== 'Other' ? ` • ${strType}` : ''}
           </div>
         </div>
       </div>
@@ -367,21 +378,27 @@ export const SectionCard = ({
         </div>
       )}
 
-      {/* Ref.Design Toast Feedback Container */}
-      {toasts.length > 0 && (
-        <div className="lm-toast-container" style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 10000 }}>
+      {/* Ref.Design Toast Feedback Container (Portaled to document.body for bottom-center viewport alignment) */}
+      {toasts.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div className="lm-toast-container">
           {toasts.map(toast => (
             <div key={toast.id} className="lm-toast">
               <div className={`lm-toast-icon lm-toast-${toast.type || 'success'}`}>
-                {toast.type === 'error' ? <X size={14} strokeWidth={3} /> : <Check size={14} strokeWidth={3} />}
+                {toast.type === 'error' ? <X size={13} strokeWidth={2.5} /> : <Check size={13} strokeWidth={2.5} />}
               </div>
               <span className="lm-toast-msg">{toast.message}</span>
-              <button className="lm-toast-close" onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}>
+              <button 
+                type="button" 
+                className="lm-toast-close" 
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                aria-label="Close notification"
+              >
                 <X size={14} />
               </button>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -518,21 +535,27 @@ export default function SectionsGrid({ selectedCategory }) {
         />
       )}
 
-      {/* Global Ref.Design Toaster Container (Bottom Center Fixed) */}
-      {toasts.length > 0 && (
+      {/* Global Ref.Design Toaster Container (Bottom Center Fixed via Portal) */}
+      {toasts.length > 0 && typeof document !== 'undefined' && createPortal(
         <div className="lm-toast-container">
           {toasts.map(toast => (
             <div key={toast.id} className="lm-toast">
               <div className={`lm-toast-icon lm-toast-${toast.type || 'success'}`}>
-                {toast.type === 'error' ? <X size={14} strokeWidth={3} /> : <Check size={14} strokeWidth={3} />}
+                {toast.type === 'error' ? <X size={13} strokeWidth={2.5} /> : <Check size={13} strokeWidth={2.5} />}
               </div>
               <span className="lm-toast-msg">{toast.message}</span>
-              <button className="lm-toast-close" onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}>
+              <button 
+                type="button" 
+                className="lm-toast-close" 
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                aria-label="Close notification"
+              >
                 <X size={14} />
               </button>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

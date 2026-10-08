@@ -85,8 +85,8 @@ const AddWebsite = () => {
           description: sub.description || '',
           categories: Array.isArray(sub.categories) ? sub.categories.join(', ') : (sub.categories || ''),
           styles: Array.isArray(sub.styles) ? sub.styles.join(', ') : (sub.styles || ''),
-          thumbnail_url: sub.image_url || sub.thumbnail_url || '',
-          fullpage_image_url: sub.fullpage_image_url || '',
+          thumbnail_url: sub.thumbnail_url || sub.image_url || '',
+          fullpage_image_url: sub.fullpage_image_url || sub.thumbnail_url || sub.image_url || '',
           use_separate_media: sub.use_separate_media || false,
           logo_url: sub.logo_url || ''
         });

@@ -21,6 +21,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   // Discovery Filter State (Category, Type, Tag matching approved layout)
   const [activePlatform, setActivePlatform] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedType, setSelectedType] = useState('all');
   const [selectedTag, setSelectedTag] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -255,8 +256,11 @@ export default function UITastesPage({ savedItems, toggleSave }) {
       list = list.filter(p => (p.platform || '').toLowerCase() === activePlatform.toLowerCase());
     }
 
-    // 2. Category Filter
-    if (selectedCategory && selectedCategory !== 'All') {
+    // 2. Category Filter (multi-select or single-select)
+    if (selectedCategories && selectedCategories.length > 0) {
+      const lowerCats = selectedCategories.map(c => c.toLowerCase());
+      list = list.filter(p => lowerCats.includes((p.category || '').toLowerCase()));
+    } else if (selectedCategory && selectedCategory !== 'All') {
       list = list.filter(p => (p.category || '').toLowerCase() === selectedCategory.toLowerCase());
     }
 
@@ -298,11 +302,12 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     });
 
     return list;
-  }, [posts, activePlatform, selectedCategory, selectedType, selectedTag, searchQuery, sortBy, savedItems]);
+  }, [posts, activePlatform, selectedCategory, selectedCategories, selectedType, selectedTag, searchQuery, sortBy, savedItems]);
 
   const handleResetFilters = () => {
     setActivePlatform('all');
     setSelectedCategory('All');
+    setSelectedCategories([]);
     setSelectedType('all');
     setSelectedTag(null);
     setSearchQuery('');
@@ -335,6 +340,8 @@ export default function UITastesPage({ savedItems, toggleSave }) {
           setActivePlatform={setActivePlatform}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
           selectedType={selectedType}
           setSelectedType={setSelectedType}
           selectedTag={selectedTag}

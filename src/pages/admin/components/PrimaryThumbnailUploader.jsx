@@ -300,10 +300,7 @@ const PrimaryThumbnailUploader = ({
 
           {/* 2. Landing Page / Full Screenshot */}
           <div className="ptu-dual-section">
-            <div className="ptu-section-header">
-              <label className="ptu-section-label">Landing Page / Full Screenshot</label>
-              <span className="ptu-optional-badge">Optional</span>
-            </div>
+            <label className="ptu-section-label">Landing Page / Full Screenshot</label>
             {!fullpageValue ? (
               <div
                 className={`pmu-dropzone ${dragActiveFullpage ? 'drag-active' : ''}`}

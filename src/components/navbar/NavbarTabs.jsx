@@ -30,7 +30,7 @@ const NavbarTabs = () => {
         { name: 'Home',        path: '/'      },
         { name: 'Websites',    path: '/websites' },
         { name: 'Apps',        path: '/'      },
-        { name: 'Resources',   path: '/'      },
+        { name: 'Sections',    path: '/sections' },
         { name: 'Fonts',       path: '/fonts' },
         { name: 'UI/UX Tastes',path: '/ui-tastes' },
         { name: 'Skills',      path: '/skills' },
@@ -85,8 +85,10 @@ const NavbarTabs = () => {
     useEffect(() => {
         if (location.pathname.startsWith('/fonts')) {
             setActiveLink('Fonts');
-        } else if (location.pathname === '/websites') {
+        } else if (location.pathname.startsWith('/websites')) {
             setActiveLink('Websites');
+        } else if (location.pathname.startsWith('/sections')) {
+            setActiveLink('Sections');
         } else if (location.pathname === '/ui-tastes') {
             setActiveLink('UI/UX Tastes');
         } else if (location.pathname === '/skills') {

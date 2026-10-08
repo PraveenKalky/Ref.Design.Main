@@ -2,12 +2,6 @@ import React, { useState } from 'react';
 import { Star, MoreHorizontal, Bookmark, FileImage, LayoutTemplate, ChevronDown, SlidersHorizontal, Search, Share, Monitor, Tablet, Smartphone, ArrowUpRight } from 'lucide-react';
 import './WebsiteOverview.css';
 
-const SECTION_FILTERS = [
-  'All', 'Hero', 'Navigation', 'Features', 'Pricing', 'Testimonials', 
-  'CTA', 'FAQ', 'Footer', 'Dashboard', 'Forms', 'Authentication', 
-  'Integrations', 'Comparison', 'Contact', 'Blog', 'Other'
-];
-
 const AnimatedText = ({ text }) => (
   <span>
     {[...text].map((char, i) => (
@@ -27,10 +21,7 @@ export default function WebsiteOverview({
   isSaved, 
   toggleSave,
   viewMode,
-  setViewMode,
-  sectionFilter,
-  setSectionFilter,
-  filteredSectionsCount
+  setViewMode
 }) {
   const [activePreset, setActivePreset] = useState('Desktop');
 
@@ -179,20 +170,6 @@ export default function WebsiteOverview({
             </div>
           </div>
         </div>
-
-        {viewMode === 'sections' && (
-          <div className="section-filters-container">
-            {SECTION_FILTERS.map(filter => (
-              <button
-                key={filter}
-                className={`section-filter-pill ${sectionFilter === filter ? 'active' : ''}`}
-                onClick={() => setSectionFilter(filter)}
-              >
-                <AnimatedText text={filter} />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

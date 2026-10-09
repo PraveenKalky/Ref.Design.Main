@@ -50,6 +50,93 @@
   transform: scale(1.05);
 }
 
+/* ============================================================
+   Ref.Design — Section Card Layout
+   Equal 16px padding on all 4 sides, centered framed canvas,
+   adaptive light/dark surface, Figma smooth corners on outer card,
+   sharp 0px image corners, no outlines, no zooming/cropping.
+   ============================================================ */
+
+.section-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-card-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 120px;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f4f4f5;
+  border: none;
+  border-radius: 24px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  overflow: hidden;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+[data-theme='light'] .section-card-image-wrapper {
+  background-color: #f4f4f5;
+  border: none;
+}
+
+[data-theme='dark'] .section-card-image-wrapper {
+  background-color: #18181b;
+  border: none;
+}
+
+.section-card-image {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  object-fit: contain !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  corner-shape: none !important;
+  -webkit-corner-shape: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  transform: none !important;
+  transition: none;
+}
+
+[data-theme='dark'] .section-card-image {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Prevent any image zooming or cropping on hover */
+.section-card-container:hover .section-card-image,
+.card-container:hover .section-card-image {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .section-card-container:hover .section-card-image {
+  box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+  .section-card-image-wrapper {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-card-image-wrapper {
+    padding: 12px;
+    border-radius: 18px;
+  }
+}
+
+
 .card-overlay {
   position: absolute;
   inset: 0;
@@ -225,6 +312,14 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+[data-theme='light'] .card-title {
+  color: #000000;
+}
+
+[data-theme='dark'] .card-title {
+  color: #ffffff;
 }
 
 .card-subtitle {

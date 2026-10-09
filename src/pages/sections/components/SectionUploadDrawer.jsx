@@ -6,13 +6,19 @@ import { useAuth } from '../../../context/AuthContext';
 import { uploadWithProgress } from '../../../utils/uploadXHR';
 import { sanitizeSectionName } from '../../admin/components/PageMediaUploader';
 import { ALL_SECTION_CATEGORIES, GEMINI_SECTION_CATEGORIES } from '../../../data/section-categories';
+import { classifySection } from '../../../utils/sectionTaxonomy';
 import './section-upload-drawer.css';
 
 // ─────────────────────────────────────────────
-// Helpers (reused from PageMediaUploader)
+// Helpers
 // ─────────────────────────────────────────────
 
 const MAX_SIZE_MB = 100;
+const VALID_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+const VALID_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
+const ALL_VALID_TYPES = [...VALID_IMAGE_TYPES, ...VALID_VIDEO_TYPES];
+
+const isVideoFile = (file) => file?.type?.startsWith('video/') || false;
 
 const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) =>
   new Promise((resolve) => {
@@ -23,8 +29,11 @@ const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) =>
       URL.revokeObjectURL(url);
       let { width, height } = img;
       if (width <= maxDimension && height <= maxDimension && file.size < 600 * 1024) return resolve(file);
-      if (width > height) { if (width > maxDimension) { height = Math.round((height * maxDimension) / width); width = maxDimension; } }
-      else { if (height > maxDimension) { width = Math.round((width * maxDimension) / height); height = maxDimension; } }
+      if (width > height) {
+        if (width > maxDimension) { height = Math.round((height * maxDimension) / width); width = maxDimension; }
+      } else {
+        if (height > maxDimension) { width = Math.round((width * maxDimension) / height); height = maxDimension; }
+      }
       const canvas = document.createElement('canvas');
       canvas.width = width; canvas.height = height;
       canvas.getContext('2d').drawImage(img, 0, 0, width, height);
@@ -34,7 +43,7 @@ const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) =>
     img.src = url;
   });
 
-const generateAutoThumbnail = (file, targetRatio = 16 / 10) =>
+const generateAutoThumbnail = (file, maxDimension = 1280) =>
   new Promise((resolve) => {
     if (!file?.type?.startsWith('image/') || file.type.includes('svg')) return resolve(null);
     const img = new Image();
@@ -43,18 +52,82 @@ const generateAutoThumbnail = (file, targetRatio = 16 / 10) =>
       URL.revokeObjectURL(url);
       const naturalW = img.naturalWidth || img.width;
       const naturalH = img.naturalHeight || img.height;
-      const cropW = naturalW;
-      const cropH = Math.min(naturalH, Math.round(naturalW / targetRatio));
+      let width = naturalW;
+      let height = naturalH;
+      if (width > height) {
+        if (width > maxDimension) { height = Math.round((height * maxDimension) / width); width = maxDimension; }
+      } else {
+        if (height > maxDimension) { width = Math.round((width * maxDimension) / height); height = maxDimension; }
+      }
       const canvas = document.createElement('canvas');
-      canvas.width = 1280; canvas.height = Math.round(1280 / targetRatio);
-      canvas.getContext('2d').drawImage(img, 0, 0, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
       canvas.toBlob(blob => {
-        if (blob) resolve({ file: new File([blob], `thumb-${file.name}`, { type: 'image/jpeg' }), cropData: { yPercent: 0, heightPercent: (cropH / naturalH) * 100 } });
+        if (blob) resolve({ file: new File([blob], `thumb-${file.name}.jpg`, { type: 'image/jpeg' }) });
         else resolve(null);
       }, 'image/jpeg', 0.85);
     };
     img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
     img.src = url;
+  });
+
+const generateVideoThumbnail = (file, maxDimension = 1280) =>
+  new Promise((resolve) => {
+    if (!isVideoFile(file)) return resolve(null);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    const url = URL.createObjectURL(file);
+    video.src = url;
+
+    let seekFired = false;
+    const finishWithFrame = () => {
+      if (seekFired) return;
+      seekFired = true;
+      try {
+        const naturalW = video.videoWidth || 1280;
+        const naturalH = video.videoHeight || 720;
+        let width = naturalW;
+        let height = naturalH;
+        if (width > height) {
+          if (width > maxDimension) { height = Math.round((height * maxDimension) / width); width = maxDimension; }
+        } else {
+          if (height > maxDimension) { width = Math.round((width * maxDimension) / height); height = maxDimension; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(url);
+          if (blob) {
+            resolve({
+              file: new File([blob], `thumb-${file.name.replace(/\.[^/.]+$/, '')}.jpg`, { type: 'image/jpeg' })
+            });
+          } else {
+            resolve(null);
+          }
+        }, 'image/jpeg', 0.85);
+      } catch {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      }
+    };
+
+    video.onloadeddata = () => {
+      video.currentTime = Math.min(0.5, (video.duration || 1) / 4);
+    };
+    video.onseeked = finishWithFrame;
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+
+    // Fallback timeout in case video seek doesn't trigger
+    setTimeout(() => finishWithFrame(), 3000);
   });
 
 const computeFileHash = async (file) => {
@@ -69,6 +142,9 @@ const computeFileHash = async (file) => {
 
 const analyzeWithGemini = async (file) => {
   try {
+    // If video, cannot classify via image endpoint; return null
+    if (isVideoFile(file)) return null;
+
     const targetFile = await compressImageForAI(file);
     const base64 = await new Promise((res, rej) => {
       const r = new FileReader();
@@ -135,14 +211,22 @@ function CategoryDropdown({ value, onChange }) {
   );
 }
 
-function UploadQueueItem({ item, onRemove, onCategoryChange }) {
+function UploadQueueItem({ item, onRemove, onCategoryChange, onTitleChange, onClassifyAI }) {
   return (
     <div className="sud-queue-item">
+      {/* Thumbnail */}
       <div className="sud-queue-thumb">
-        {item.previewUrl
-          ? <img src={item.previewUrl} alt={item.filename} className="sud-queue-thumb-img" />
-          : <div className="sud-queue-thumb-placeholder" />}
-        {item.status === 'analyzing' && <div className="sud-queue-badge">✦ AI</div>}
+        {item.previewUrl ? (
+          item.isVideo ? (
+            <video src={item.previewUrl} className="sud-queue-thumb-img" muted playsInline preload="metadata" />
+          ) : (
+            <img src={item.previewUrl} alt={item.filename} className="sud-queue-thumb-img" />
+          )
+        ) : (
+          <div className="sud-queue-thumb-placeholder" />
+        )}
+
+        {item.isClassifying && <div className="sud-queue-badge">✦ AI</div>}
         {item.status === 'uploading' && (
           <div className="sud-queue-progress-bar">
             <div className="sud-queue-progress-fill" style={{ width: `${item.progress}%` }} />
@@ -152,17 +236,50 @@ function UploadQueueItem({ item, onRemove, onCategoryChange }) {
         {item.status === 'error' && <div className="sud-queue-badge sud-queue-badge--error">!</div>}
       </div>
 
+      {/* Meta & Inputs */}
       <div className="sud-queue-meta">
-        <div className="sud-queue-filename" title={item.filename}>{item.filename}</div>
-        {item.status === 'analyzing' && <div className="sud-queue-status">Classifying with AI…</div>}
-        {item.status === 'uploading' && <div className="sud-queue-status">Uploading {item.progress}%…</div>}
-        {item.status === 'done' && (
+        {/* Editable Title: Preserves original filename by default */}
+        <div className="sud-queue-title-wrap">
+          <input
+            type="text"
+            className="sud-queue-title-input"
+            value={item.title}
+            onChange={(e) => onTitleChange(item.id, e.target.value)}
+            placeholder="Section title…"
+            title="Edit section title (original filename preserved by default)"
+          />
+        </div>
+
+        {/* Original filename subtitle */}
+        <div className="sud-queue-filename-sub" title={item.filename}>
+          {item.filename}
+        </div>
+
+        {/* Controls row: Category dropdown + optional manual AI classify */}
+        <div className="sud-queue-controls">
           <CategoryDropdown value={item.category} onChange={(cat) => onCategoryChange(item.id, cat)} />
-        )}
+
+          {!item.isVideo && (
+            <button
+              type="button"
+              className={`sud-ai-classify-btn ${item.isClassifying ? 'is-loading' : ''}`}
+              onClick={() => onClassifyAI(item.id)}
+              disabled={item.isClassifying || item.status === 'uploading'}
+              title="Classify section with AI"
+            >
+              <Sparkle size={11} weight="fill" />
+              <span>{item.isClassifying ? 'Analyzing…' : 'Classify'}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Status text */}
+        {item.status === 'uploading' && <div className="sud-queue-status">Uploading {item.progress}%…</div>}
         {item.status === 'error' && <div className="sud-queue-status sud-queue-status--error">{item.errorMsg || 'Upload failed'}</div>}
         {item.status === 'waiting' && <div className="sud-queue-status">Waiting…</div>}
       </div>
 
+      {/* Remove Button */}
       <button type="button" className="sud-queue-remove" onClick={() => onRemove(item.id)} title="Remove">
         <X size={14} weight="bold" />
       </button>
@@ -190,7 +307,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
 
   const isDirty = queue.length > 0 || websiteUrl.trim() || tags.trim() || description.trim();
   const allDone = queue.length > 0 && queue.every(q => q.status === 'done' || q.status === 'error');
-  const hasPublishable = queue.some(q => q.status === 'done');
+  const hasPublishable = queue.some(q => q.status === 'done' && q.imageUrl);
 
   // Lock body scroll
   useEffect(() => {
@@ -232,29 +349,42 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
   // ── File processing ──
   const processFiles = useCallback(async (files) => {
     setErrorMsg('');
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     const candidates = Array.from(files).filter(f => {
-      if (!validTypes.includes(f.type)) { setErrorMsg('Unsupported type. Please upload PNG, JPG, or WEBP.'); return false; }
-      if (f.size > MAX_SIZE_MB * 1024 * 1024) { setErrorMsg(`File too large. Max ${MAX_SIZE_MB}MB.`); return false; }
+      if (!ALL_VALID_TYPES.includes(f.type)) {
+        setErrorMsg('Unsupported type. Please upload PNG, JPG, WEBP, or MP4/WEBM video.');
+        return false;
+      }
+      if (f.size > MAX_SIZE_MB * 1024 * 1024) {
+        setErrorMsg(`File too large. Max ${MAX_SIZE_MB}MB.`);
+        return false;
+      }
       return true;
     });
     if (!candidates.length) return;
 
-    // Build initial queue entries
+    // Build initial queue entries: preserve original filename by default
     const newItems = await Promise.all(candidates.map(async (file) => {
       const hash = await computeFileHash(file);
+      // Clean extension to preserve original filename 1:1 as default title
+      const defaultTitle = file.name.replace(/\.[^/.]+$/, '').trim();
+      const classified = classifySection(defaultTitle);
+      const isVideo = isVideoFile(file);
+
       return {
         id: Math.random().toString(36).slice(2),
         file,
         hash,
         filename: file.name,
+        title: defaultTitle || 'Section',
+        category: classified?.category || 'Hero',
+        isVideo,
         previewUrl: URL.createObjectURL(file),
-        status: 'analyzing',
-        progress: 0,
-        category: '',
+        status: 'uploading',
+        progress: 5,
         imageUrl: '',
         thumbnailUrl: '',
         errorMsg: '',
+        isClassifying: false,
       };
     }));
 
@@ -266,26 +396,18 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
       return [...prev, ...unique];
     });
 
-    // Process each file
+    // Process each file (Upload immediately, AI remains strictly OFF by default)
     newItems.forEach(item => processItem(item));
   }, []);
 
   const processItem = async (item) => {
-    // Step 1: AI classification
-    const aiCategory = await analyzeWithGemini(item.file);
-
     if (cancelledRef.current.has(item.id)) return;
 
-    setQueue(prev => prev.map(q => q.id === item.id
-      ? { ...q, status: 'uploading', category: aiCategory || 'Hero', progress: 5 }
-      : q
-    ));
-
-    // Step 2: Upload full screenshot
-    const fileExt = item.file.name.split('.').pop() || 'png';
-    const uniqueSlug = Math.random().toString(36).slice(2, 7);
-    const categorySlug = (aiCategory || 'section').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const filePath = `sections/${categorySlug}-${uniqueSlug}.${fileExt}`;
+    // Step 1: Upload full file to Supabase storage
+    const fileExt = item.file.name.split('.').pop() || (item.isVideo ? 'mp4' : 'png');
+    const uniqueSlug = Math.random().toString(36).slice(2, 8);
+    const safeTitle = (item.title || 'section').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+    const filePath = `sections/${safeTitle}-${uniqueSlug}.${fileExt}`;
 
     const uploadResult = await uploadWithProgress(item.file, 'submissions', filePath, (pct) => {
       if (!cancelledRef.current.has(item.id)) {
@@ -304,24 +426,45 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
 
     const { data: { publicUrl } } = supabase.storage.from('submissions').getPublicUrl(filePath);
 
-    // Step 3: Auto-generate thumbnail
+    // Step 2: Auto-generate 16:10 thumbnail
     let thumbnailUrl = publicUrl;
-    const autoThumb = await generateAutoThumbnail(item.file);
-    if (autoThumb && !cancelledRef.current.has(item.id)) {
-      const thumbPath = `thumbnails/thumb-${categorySlug}-${uniqueSlug}.jpg`;
-      const thumbResult = await uploadWithProgress(autoThumb.file, 'submissions', thumbPath, () => {});
-      if (!thumbResult.error) {
-        const { data: { publicUrl: thumbPub } } = supabase.storage.from('submissions').getPublicUrl(thumbPath);
-        thumbnailUrl = thumbPub;
+    try {
+      const autoThumb = item.isVideo 
+        ? await generateVideoThumbnail(item.file)
+        : await generateAutoThumbnail(item.file);
+
+      if (autoThumb && !cancelledRef.current.has(item.id)) {
+        const thumbPath = `thumbnails/thumb-${safeTitle}-${uniqueSlug}.jpg`;
+        const thumbResult = await uploadWithProgress(autoThumb.file, 'submissions', thumbPath, () => {});
+        if (!thumbResult.error) {
+          const { data: { publicUrl: thumbPub } } = supabase.storage.from('submissions').getPublicUrl(thumbPath);
+          thumbnailUrl = thumbPub;
+        }
       }
+    } catch (err) {
+      console.warn('[SectionUploadDrawer] Thumbnail warning:', err);
     }
 
     if (cancelledRef.current.has(item.id)) return;
 
     setQueue(prev => prev.map(q => q.id === item.id
-      ? { ...q, status: 'done', progress: 100, imageUrl: publicUrl, thumbnailUrl, category: aiCategory || 'Hero' }
+      ? { ...q, status: 'done', progress: 100, imageUrl: publicUrl, thumbnailUrl }
       : q
     ));
+  };
+
+  // Manual trigger for Gemini AI categorization (only runs on user request)
+  const handleClassifyAI = async (id) => {
+    const item = queue.find(q => q.id === id);
+    if (!item || item.isVideo) return;
+
+    setQueue(prev => prev.map(q => q.id === id ? { ...q, isClassifying: true } : q));
+    const aiCategory = await analyzeWithGemini(item.file);
+    setQueue(prev => prev.map(q => q.id === id ? {
+      ...q,
+      isClassifying: false,
+      category: aiCategory || q.category
+    } : q));
   };
 
   const removeItem = (id) => {
@@ -337,9 +480,12 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
     setQueue(prev => prev.map(q => q.id === id ? { ...q, category } : q));
   };
 
-  // ── Publish ──
-  const handlePublish = async (e) => {
-    e.preventDefault();
+  const updateTitle = (id, title) => {
+    setQueue(prev => prev.map(q => q.id === id ? { ...q, title } : q));
+  };
+
+  // ── Save Draft or Publish ──
+  const handleSubmit = async (targetStatus = 'Approved') => {
     const publishable = queue.filter(q => q.status === 'done' && q.imageUrl);
     if (!publishable.length) return;
 
@@ -347,13 +493,11 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
     setErrorMsg('');
 
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
-    const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
-    const status = isAdmin ? 'Approved' : 'Pending';
 
     try {
       const inserts = publishable.map(item => ({
-        section_type: item.category,
-        section_title: item.category,
+        section_type: item.category || 'Hero',
+        section_title: (item.title || item.filename.replace(/\.[^/.]+$/, '')).trim() || 'Section',
         image_url: item.imageUrl,
         thumbnail_url: item.thumbnailUrl || item.imageUrl,
         page_url: websiteUrl.trim() || null,
@@ -361,20 +505,20 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
         tags: tagList,
         description: description.trim() || null,
         is_standalone: true,
-        status,
+        status: targetStatus, // 'Approved' for published, 'Draft' for draft
         submitted_by: user?.id || null,
         sort_order: 0,
-        // website_id is intentionally null for standalone sections
+        website_id: null,
       }));
 
       const { error } = await supabase.from('website_sections').insert(inserts);
       if (error) throw error;
 
-      if (onUploadSuccess) onUploadSuccess({ count: inserts.length, status });
+      if (onUploadSuccess) onUploadSuccess({ count: inserts.length, status: targetStatus });
       forceClose();
     } catch (err) {
-      console.error('[SectionUploadDrawer] Publish error:', err);
-      setErrorMsg(err.message || 'Failed to publish. Please try again.');
+      console.error('[SectionUploadDrawer] Submit error:', err);
+      setErrorMsg(err.message || 'Failed to save sections. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -389,6 +533,8 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
 
   if (!isOpen) return null;
 
+  const publishableCount = queue.filter(q => q.status === 'done' && q.imageUrl).length;
+
   const drawer = (
     <div className="sud-backdrop" onClick={(e) => { if (e.target === e.currentTarget) attemptClose(); }}>
       <aside className="sud-panel" role="dialog" aria-modal="true" aria-labelledby="sud-title">
@@ -396,7 +542,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
         <div className="sud-header">
           <div className="sud-header-left">
             <h2 id="sud-title" className="sud-title">Upload Section</h2>
-            <p className="sud-subtitle">Add screenshots to the Sections library.</p>
+            <p className="sud-subtitle">Add screenshots or recordings to the Sections library.</p>
           </div>
           <button type="button" className="sud-close-btn" onClick={attemptClose} disabled={isSubmitting}>
             <X size={17} weight="bold" />
@@ -404,13 +550,13 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
         </div>
 
         {/* Scrollable body */}
-        <form id="sud-form" className="sud-body" onSubmit={handlePublish}>
+        <div className="sud-body">
           {errorMsg && <div className="sud-error-banner">{errorMsg}</div>}
 
           {/* Dropzone */}
           <div className="sud-section">
             <label className="sud-label">
-              Screenshots <span className="sud-required">*</span>
+              Files <span className="sud-required">*</span>
             </label>
             <div
               className={`sud-dropzone ${isDragOver ? 'is-drag-over' : ''}`}
@@ -425,12 +571,12 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
                 </svg>
               </div>
               <p className="sud-dropzone-main">Choose files or drag & drop here.</p>
-              <p className="sud-dropzone-sub">PNG, JPG, WEBP • Max {MAX_SIZE_MB}MB each</p>
+              <p className="sud-dropzone-sub">PNG, JPG, WEBP, MP4, WEBM • Max {MAX_SIZE_MB}MB each</p>
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp"
+              accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4,video/webm,video/quicktime"
               multiple
               style={{ display: 'none' }}
               onChange={(e) => { if (e.target.files?.length) processFiles(e.target.files); e.target.value = null; }}
@@ -442,7 +588,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
             <div className="sud-section">
               <div className="sud-queue-header">
                 <label className="sud-label">Uploads ({queue.length})</label>
-                {queue.length > 1 && (
+                {queue.length > 0 && (
                   <button type="button" className="sud-add-more" onClick={() => fileInputRef.current?.click()}>
                     + Add more
                   </button>
@@ -455,14 +601,11 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
                     item={item}
                     onRemove={removeItem}
                     onCategoryChange={updateCategory}
+                    onTitleChange={updateTitle}
+                    onClassifyAI={handleClassifyAI}
                   />
                 ))}
               </div>
-              {!allDone && queue.some(q => q.status === 'analyzing' || q.status === 'uploading') && (
-                <p className="sud-ai-hint">
-                  <Sparkle size={13} weight="fill" /> AI is classifying your sections…
-                </p>
-              )}
             </div>
           )}
 
@@ -517,7 +660,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-        </form>
+        </div>
 
         {/* Footer */}
         <div className="sud-footer">
@@ -525,14 +668,22 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
             Cancel
           </button>
           <button
-            type="submit"
-            form="sud-form"
+            type="button"
+            className="sud-draft-btn"
+            onClick={() => handleSubmit('Draft')}
+            disabled={isSubmitting || !hasPublishable}
+          >
+            Save Draft
+          </button>
+          <button
+            type="button"
             className="sud-submit-btn"
+            onClick={() => handleSubmit('Approved')}
             disabled={isSubmitting || !hasPublishable}
           >
             {isSubmitting
-              ? <span>Publishing…</span>
-              : <><Sparkle size={14} weight="fill" /> Publish Section{queue.filter(q => q.status === 'done').length > 1 ? 's' : ''}</>
+              ? <span>Saving…</span>
+              : <><Sparkle size={14} weight="fill" /> Publish Section{publishableCount > 1 ? 's' : ''}</>
             }
           </button>
         </div>

@@ -39,7 +39,7 @@ const CategoryFilterExpanded = ({ activeTab, tabs, selectedCategories = [], setS
             onClick={() => toggleItem(cat)}
           >
             {cat}
-            {CATEGORY_COUNTS[cat] && <span className="cfe-tag-count">{CATEGORY_COUNTS[cat]}</span>}
+            <span className="cfe-tag-count">{CATEGORY_COUNTS[cat] || 0}</span>
           </button>
         ))}
       </div>

@@ -4,7 +4,7 @@ import { Check, X } from 'lucide-react';
 import UITasteInput from './UITasteInput';
 import UITasteCard from './UITasteCard';
 import UITasteHero from './UITasteHero';
-import UITasteFilterBar from './UITasteFilterBar';
+import UITasteFilterBar, { UI_TASTES_CATEGORIES, SORT_OPTIONS } from './UITasteFilterBar';
 import '../../components/card-grid/card-grid.css'; // For reusing card hover states
 import './ui-tastes.css';
 import '../../components/navbar/login-modal.css'; // Reuse existing toast styles
@@ -25,7 +25,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedTag, setSelectedTag] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest'
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'popular' | 'oldest'
 
   const addToast = (message, type = 'success') => {
     const id = Date.now();
@@ -259,9 +259,18 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     // 2. Category Filter (multi-select or single-select)
     if (selectedCategories && selectedCategories.length > 0) {
       const lowerCats = selectedCategories.map(c => c.toLowerCase());
-      list = list.filter(p => lowerCats.includes((p.category || '').toLowerCase()));
+      list = list.filter(p => {
+        const postCat = (p.category || '').toLowerCase();
+        const postDesc = (p.description || '').toLowerCase();
+        return lowerCats.some(c => postCat === c || postCat.includes(c) || postDesc.includes(c));
+      });
     } else if (selectedCategory && selectedCategory !== 'All') {
-      list = list.filter(p => (p.category || '').toLowerCase() === selectedCategory.toLowerCase());
+      const cLower = selectedCategory.toLowerCase();
+      list = list.filter(p => {
+        const postCat = (p.category || '').toLowerCase();
+        const postDesc = (p.description || '').toLowerCase();
+        return postCat === cLower || postCat.includes(cLower) || postDesc.includes(cLower);
+      });
     }
 
     // 3. Media Type Filter
@@ -298,11 +307,60 @@ export default function UITastesPage({ savedItems, toggleSave }) {
       if (sortBy === 'oldest') {
         return new Date(a.created_at || 0) - new Date(b.created_at || 0);
       }
+      if (sortBy === 'popular') {
+        return (b.likes || b.views || 0) - (a.likes || a.views || 0) || new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      }
       return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     });
 
     return list;
   }, [posts, activePlatform, selectedCategory, selectedCategories, selectedType, selectedTag, searchQuery, sortBy, savedItems]);
+
+  // Dynamic category counts calculated from actual published ui_tastes data, respecting active non-category filters
+  const categoryCounts = React.useMemo(() => {
+    let baseList = [...posts];
+
+    // 1. Source Platform Tab Filter
+    if (activePlatform === 'saved') {
+      baseList = baseList.filter(p => savedItems && savedItems[p.id]);
+    } else if (activePlatform === 'upload') {
+      baseList = baseList.filter(p => p.url && p.url.includes('/manual-upload/'));
+    } else if (activePlatform !== 'all') {
+      baseList = baseList.filter(p => (p.platform || '').toLowerCase() === activePlatform.toLowerCase());
+    }
+
+    // 2. Media Type Filter
+    if (selectedType === 'video') {
+      baseList = baseList.filter(p => Boolean(p.is_video));
+    } else if (selectedType === 'image') {
+      baseList = baseList.filter(p => !p.is_video);
+    }
+
+    // 3. Keyword Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      baseList = baseList.filter(p => {
+        const username = (p.username || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const platform = (p.platform || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return username.includes(q) || desc.includes(q) || platform.includes(q) || cat.includes(q);
+      });
+    }
+
+    // 4. Calculate dynamic counts for each category
+    const counts = {};
+    (UI_TASTES_CATEGORIES || []).forEach(cat => {
+      const cLower = cat.toLowerCase();
+      counts[cat] = baseList.filter(p => {
+        const postCat = (p.category || '').toLowerCase();
+        const postDesc = (p.description || '').toLowerCase();
+        return postCat === cLower || postCat.includes(cLower) || postDesc.includes(cLower);
+      }).length;
+    });
+
+    return counts;
+  }, [posts, activePlatform, selectedType, searchQuery, savedItems]);
 
   const handleResetFilters = () => {
     setActivePlatform('all');
@@ -351,6 +409,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
           sortBy={sortBy}
           setSortBy={setSortBy}
           filteredCount={filteredPosts.length}
+          categoryCounts={categoryCounts}
           savedCount={savedCount}
           onResetFilters={handleResetFilters}
         />

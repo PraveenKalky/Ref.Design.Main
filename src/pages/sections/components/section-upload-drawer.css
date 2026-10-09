@@ -301,13 +301,87 @@
   gap: 4px;
 }
 
-.sud-queue-filename {
-  font-size: 11.5px;
-  font-weight: 500;
+.sud-queue-title-wrap {
+  width: 100%;
+}
+
+.sud-queue-title-input {
+  width: 100%;
+  height: 28px;
+  background: var(--dv-bg, #ffffff);
+  border: 1px solid var(--dv-border, rgba(0, 0, 0, 0.1));
+  border-radius: 6px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--dv-text, #111111);
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.sud-queue-title-input:focus {
+  border-color: var(--dv-text, #111111);
+  background: var(--dv-bg, #ffffff);
+}
+
+.sud-queue-filename-sub {
+  font-size: 10.5px;
+  color: var(--dv-text-ghost, #888888);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.sud-queue-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.sud-queue-controls .sud-dropdown-container {
+  flex: 1;
+}
+
+.sud-ai-classify-btn {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dv-border, rgba(0, 0, 0, 0.1));
+  border-radius: 6px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  background: var(--dv-bg, #ffffff);
+  color: var(--dv-text, #222222);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sud-ai-classify-btn:hover:not(:disabled) {
+  background: var(--dv-surface-dark, #eeeeee);
+  border-color: var(--dv-text-ghost, #888888);
+}
+
+.sud-ai-classify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sud-ai-classify-btn.is-loading {
+  color: #3b82f6;
 }
 
 .sud-queue-status {
@@ -509,6 +583,36 @@
   color: var(--dv-text, #111111);
 }
 
+.sud-draft-btn {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--dv-border, rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  background: var(--dv-bg, #ffffff);
+  color: var(--dv-text, #222222);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.sud-draft-btn:hover:not(:disabled) {
+  background: var(--dv-surface-dark, #eeeeee);
+  border-color: var(--dv-text-ghost, #888888);
+}
+
+.sud-draft-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .sud-submit-btn {
   flex: 1;
   height: 42px;
@@ -551,13 +655,58 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+[data-theme='dark'] .sud-queue-title-input {
+  background: #181818;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #eeeeee;
+}
+
+[data-theme='dark'] .sud-queue-title-input:focus {
+  border-color: #ffffff;
+  background: #202020;
+}
+
+[data-theme='dark'] .sud-ai-classify-btn {
+  background: #1c1c1c;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #dddddd;
+}
+
+[data-theme='dark'] .sud-ai-classify-btn:hover:not(:disabled) {
+  background: #282828;
+}
+
+[data-theme='dark'] .sud-dropdown-trigger {
+  background: #1c1c1c;
+  color: #eeeeee;
+}
+
+[data-theme='dark'] .sud-dropdown-trigger:hover,
+[data-theme='dark'] .sud-dropdown-trigger.is-open {
+  background: #262626;
+}
+
 [data-theme='dark'] .sud-dropdown-menu {
   background: #1c1c1c;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+[data-theme='dark'] .sud-dropdown-item {
+  color: #eeeeee;
+}
+
 [data-theme='dark'] .sud-dropdown-item:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .sud-draft-btn {
+  background: #1c1c1c;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #dddddd;
+}
+
+[data-theme='dark'] .sud-draft-btn:hover:not(:disabled) {
+  background: #252525;
 }
 
 [data-theme='dark'] .sud-submit-btn {

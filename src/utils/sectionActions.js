@@ -12,7 +12,6 @@ export const updateSectionTitleInDB = async (sectionItem, rawNewTitle) => {
     // 1. Update website_sections table
     let secQuery = supabase.from('website_sections').update({
       section_title: cleanTitle,
-      section_type: cleanTitle
     });
 
     if (sectionItem.id && typeof sectionItem.id === 'string' && !sectionItem.id.startsWith('http')) {
@@ -20,7 +19,10 @@ export const updateSectionTitleInDB = async (sectionItem, rawNewTitle) => {
     } else if (sectionItem.image_url) {
       secQuery = secQuery.eq('image_url', sectionItem.image_url);
     }
-    await secQuery;
+    const { error: secError } = await secQuery;
+    if (secError) {
+      console.warn('[Section Actions] website_sections update notice:', secError.message);
+    }
 
     // 2. Update website_pages media array if image_url exists
     if (sectionItem.image_url) {
@@ -59,7 +61,8 @@ export const updateSectionTitleInDB = async (sectionItem, rawNewTitle) => {
 };
 
 /**
- * Deletes a section asset from website_sections table and website_pages media JSON
+ * Deletes a section asset from website_sections table and website_pages media JSON,
+ * and cleans up orphaned files from Supabase Storage bucket.
  */
 export const deleteSectionFromDB = async (sectionItem) => {
   try {
@@ -70,7 +73,10 @@ export const deleteSectionFromDB = async (sectionItem) => {
     } else if (sectionItem.image_url) {
       secQuery = secQuery.eq('image_url', sectionItem.image_url);
     }
-    await secQuery;
+    const { error: secError } = await secQuery;
+    if (secError) {
+      console.warn('[Section Actions] website_sections delete notice:', secError.message);
+    }
 
     // 2. Remove media from website_pages media array
     if (sectionItem.image_url) {
@@ -97,6 +103,23 @@ export const deleteSectionFromDB = async (sectionItem) => {
         }
       }
     }
+
+    // 3. Remove storage object from 'submissions' bucket to prevent orphaned files
+    const urlsToClean = [sectionItem.image_url, sectionItem.thumbnail_url].filter(Boolean);
+    for (const url of urlsToClean) {
+      if (typeof url === 'string' && url.includes('/submissions/')) {
+        try {
+          const parts = url.split('/submissions/');
+          if (parts[1]) {
+            const storagePath = decodeURIComponent(parts[1].split('?')[0]);
+            await supabase.storage.from('submissions').remove([storagePath]);
+          }
+        } catch (stErr) {
+          console.warn('[Section Actions] Storage cleanup notice:', stErr.message);
+        }
+      }
+    }
+
     return true;
   } catch (err) {
     console.error('[Section Actions] Error deleting section:', err);

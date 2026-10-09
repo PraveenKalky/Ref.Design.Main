@@ -297,6 +297,10 @@ export default function SectionDetailPage() {
     : null;
   const parentWebsite = section.submissions;
   const visitUrl = section.page_url || section.website_url || parentWebsite?.url;
+  const isVideo = typeof section.image_url === 'string' && (
+    section.image_url.endsWith('.mp4') || section.image_url.endsWith('.webm') || section.image_url.endsWith('.mov') ||
+    section.image_url.includes('.mp4?') || section.image_url.includes('.webm?')
+  );
 
   return (
     <div className="section-detail-page">
@@ -388,18 +392,34 @@ export default function SectionDetailPage() {
             </button>
           </div>
 
-          <div className="section-detail-image-wrapper" onClick={() => setIsFullscreen(true)}>
-            <img 
-              src={section.image_url} 
-              alt={cleanTitle} 
-              className="section-detail-image"
-              onLoad={(e) => {
-                setImgNaturalSize({
-                  width: e.target.naturalWidth,
-                  height: e.target.naturalHeight
-                });
-              }}
-            />
+          <div className="section-detail-image-wrapper">
+            {isVideo ? (
+              <video 
+                src={section.image_url} 
+                controls
+                playsInline
+                className="section-detail-image"
+                onLoadedMetadata={(e) => {
+                  setImgNaturalSize({
+                    width: e.target.videoWidth,
+                    height: e.target.videoHeight
+                  });
+                }}
+              />
+            ) : (
+              <img 
+                src={section.image_url} 
+                alt={cleanTitle} 
+                className="section-detail-image"
+                onClick={() => setIsFullscreen(true)}
+                onLoad={(e) => {
+                  setImgNaturalSize({
+                    width: e.target.naturalWidth,
+                    height: e.target.naturalHeight
+                  });
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -521,12 +541,23 @@ export default function SectionDetailPage() {
           >
             <X size={24} weight="bold" />
           </button>
-          <img 
-            src={section.image_url} 
-            alt={cleanTitle} 
-            className="section-detail-lightbox-img" 
-            onClick={(e) => e.stopPropagation()} 
-          />
+          {isVideo ? (
+            <video 
+              src={section.image_url} 
+              controls
+              autoPlay
+              playsInline
+              className="section-detail-lightbox-img" 
+              onClick={(e) => e.stopPropagation()} 
+            />
+          ) : (
+            <img 
+              src={section.image_url} 
+              alt={cleanTitle} 
+              className="section-detail-lightbox-img" 
+              onClick={(e) => e.stopPropagation()} 
+            />
+          )}
         </div>
       )}
 

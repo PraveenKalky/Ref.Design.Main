@@ -19,7 +19,9 @@ export const SectionCard = ({
   section_type, 
   section_title, 
   image_url, 
+  thumbnail_url,
   page_url, 
+  status,
   parentWebsite,
   onToast,
   onUpdateSection,
@@ -40,6 +42,11 @@ export const SectionCard = ({
   });
   const [toasts, setToasts] = useState([]);
   const menuRef = useRef(null);
+
+  const isVideo = typeof image_url === 'string' && (
+    image_url.endsWith('.mp4') || image_url.endsWith('.webm') || image_url.endsWith('.mov') ||
+    image_url.includes('.mp4?') || image_url.includes('.webm?')
+  );
 
   const addToast = (message, type = 'success') => {
     const toastId = Date.now() + Math.random();
@@ -215,7 +222,7 @@ export const SectionCard = ({
     }
 
     // Persist to DB
-    await deleteSectionFromDB({ id, image_url });
+    await deleteSectionFromDB({ id, image_url, thumbnail_url });
 
     setIsSubmitting(false);
     setShowDeleteModal(false);
@@ -223,9 +230,21 @@ export const SectionCard = ({
   };
 
   return (
-    <div className="card-container" style={{ textDecoration: 'none', position: 'relative' }}>
-      <div className="card-image-wrapper">
-        <img src={image_url} alt={cleanTitle} className="card-image" style={{ objectFit: 'contain', backgroundColor: '#0a0a0a' }} />
+    <div className="card-container section-card-container" style={{ textDecoration: 'none', position: 'relative' }}>
+      <div className="card-image-wrapper section-card-image-wrapper">
+        {isVideo ? (
+          <video 
+            src={image_url} 
+            className="card-image section-card-image" 
+            muted 
+            playsInline 
+            loop
+            onMouseEnter={(e) => e.target.play().catch(() => {})}
+            onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+          />
+        ) : (
+          <img src={image_url} alt={cleanTitle} className="card-image section-card-image" />
+        )}
         
         {/* Card Overlay & Bottom Center Action Bar (No Tooltips, 4 Circles) */}
         <div className="card-overlay">
@@ -295,6 +314,19 @@ export const SectionCard = ({
       <div className="card-meta" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="card-text-container" style={{ flex: 1 }}>
           <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {status === 'Draft' && (
+              <span style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                color: '#eab308',
+                fontSize: '10.5px',
+                fontWeight: 600,
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid rgba(234, 179, 8, 0.3)'
+              }}>
+                Draft
+              </span>
+            )}
             {displayCategory && (
               <span style={{ 
                 backgroundColor: 'var(--dv-surface-dark, #262626)', 

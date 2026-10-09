@@ -222,6 +222,109 @@ function decodeHTMLEntities(str: string): string {
     .replace(/&#39;/g, "'");
 }
 
+// ─── Strategy 0.2: Dedicated Instagram Uncropped Scraper ──────────────────────
+// Instagram serves cropped square thumbnails (stp=c...) in og:image/twitter:image.
+// This function fetches the uncropped original high-res image (4:5 portrait, 9:16 reel, 1:1, landscape)
+// from the raw candidates JSON embedded in the post HTML.
+async function tryInstagramFetch(url: string): Promise<{
+  mediaUrl: string | null;
+  description: string | null;
+  title: string | null;
+  isVideo: boolean;
+}> {
+  try {
+    console.log(`[instagram-fetch] Fetching uncropped Instagram post: ${url}`);
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      console.warn(`[instagram-fetch] HTTP ${res.status} fetching Instagram post`);
+      return { mediaUrl: null, description: null, title: null, isVideo: false };
+    }
+
+    const html = await res.text();
+
+    // 1. Extract uncropped media URL from JSON candidate arrays
+    let uncroppedUrl: string | null = null;
+    const candidateArrayMatches = [...html.matchAll(/"candidates"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/g)];
+
+    for (const m of candidateArrayMatches) {
+      try {
+        const raw = m[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+        const candidates = JSON.parse(raw);
+        if (Array.isArray(candidates) && candidates.length > 0) {
+          // Filter out profile pics and cropped square thumbnails (stp=c...)
+          const validCandidates = candidates.filter((c: any) => 
+            c.url && 
+            !c.url.includes('profile_pic') && 
+            !c.url.includes('stp=c') &&
+            !c.url.includes('s150x150')
+          );
+
+          if (validCandidates.length > 0) {
+            // Sort by width * height descending or pick first
+            validCandidates.sort((a: any, b: any) => {
+              const areaA = (a.width || 0) * (a.height || 0);
+              const areaB = (b.width || 0) * (b.height || 0);
+              return areaB - areaA;
+            });
+            uncroppedUrl = validCandidates[0].url;
+            break;
+          }
+        }
+      } catch {
+        // Continue searching
+      }
+    }
+
+    // Fallback: If no candidate array matched without stp=c, check preload image link
+    if (!uncroppedUrl) {
+      const preloadMatch = html.match(/<link[^>]+(?:as="image"[^>]+href="([^">]+)"|href="([^">]+)"[^>]+as="image")/i);
+      if (preloadMatch && !preloadMatch[1].includes('profile_pic')) {
+        uncroppedUrl = decodeHTMLEntities(preloadMatch[1]);
+      }
+    }
+
+    // 2. Extract description and title
+    const ogDescMatch =
+      html.match(/<meta[^>]+property="og:description"[^>]+content="([^">]+)"/i) ||
+      html.match(/<meta[^>]+name="description"[^>]+content="([^">]+)"/i);
+
+    const titleMatch =
+      html.match(/<meta[^>]+property="og:title"[^>]+content="([^">]+)"/i) ||
+      html.match(/<meta[^>]+name="twitter:title"[^>]+content="([^">]+)"/i) ||
+      html.match(/<title>([^<]+)<\/title>/i);
+
+    const description = ogDescMatch?.[1] ? decodeHTMLEntities(ogDescMatch[1]) : null;
+    let title = titleMatch?.[1] ? decodeHTMLEntities(titleMatch[1].trim()) : null;
+    if (title && title.length > 100) {
+      title = title.substring(0, 100);
+    }
+
+    // 3. Determine if video / reel
+    const isReel = url.includes('/reel/') || url.includes('/reels/');
+    const hasVideo = html.includes('"video_versions"') || html.includes('video_duration');
+    const isVideo = isReel || hasVideo;
+
+    return {
+      mediaUrl: uncroppedUrl,
+      description,
+      title,
+      isVideo
+    };
+  } catch (err) {
+    console.error(`[instagram-fetch] Error fetching uncropped Instagram:`, err);
+    return { mediaUrl: null, description: null, title: null, isVideo: false };
+  }
+}
+
 async function uploadToStorage(mediaUrl: string): Promise<string | null> {
   try {
     const res = await fetch(mediaUrl, {
@@ -237,17 +340,27 @@ async function uploadToStorage(mediaUrl: string): Promise<string | null> {
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
     const fileName = `instagram/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
-    const { data, error } = await supabase.storage.from('post-media').upload(fileName, buffer, {
+    // Upload to verified public 'submissions' bucket
+    let { data, error } = await supabase.storage.from('submissions').upload(fileName, buffer, {
       contentType,
-      upsert: false
+      upsert: true
     });
 
     if (error) {
-      console.error('[storage] Upload error:', error.message);
-      return null;
+      console.error('[storage] Upload error on submissions bucket:', error.message);
+      // Fallback to post-media bucket if configured
+      const fb = await supabase.storage.from('post-media').upload(fileName, buffer, {
+        contentType,
+        upsert: true
+      });
+      if (fb.error) {
+        console.error('[storage] Upload error on post-media bucket:', fb.error.message);
+        return null;
+      }
+      return supabase.storage.from('post-media').getPublicUrl(fileName).data.publicUrl;
     }
 
-    const { data: publicData } = supabase.storage.from('post-media').getPublicUrl(fileName);
+    const { data: publicData } = supabase.storage.from('submissions').getPublicUrl(fileName);
     return publicData.publicUrl;
   } catch (e) {
     console.error('[storage] Fetch/Upload exception:', e);
@@ -271,6 +384,22 @@ async function fetchMetadata(url: string): Promise<{
   const errors: string[] = [];
 
   const isDribbble = url.includes('dribbble.com');
+  const isInstagram = url.includes('instagram.com');
+
+  // ── Strategy -1: Instagram Dedicated Uncropped Scraper ──
+  if (isInstagram) {
+    const insta = await tryInstagramFetch(url);
+    if (insta.mediaUrl) {
+      mediaUrl = insta.mediaUrl;
+      fetchMethod = 'instagram-uncropped';
+      if (insta.description) description = insta.description;
+      if (insta.title) title = insta.title;
+      isVideo = insta.isVideo;
+      console.log(`[instagram-uncropped] Extracted uncropped original media: ${mediaUrl.substring(0, 80)}`);
+    } else {
+      errors.push('instagram-uncropped: could not extract uncropped candidate from HTML');
+    }
+  }
 
   // ── Strategy 0: Dribbble Scraper / API ──
   if (isDribbble) {
@@ -315,8 +444,8 @@ async function fetchMetadata(url: string): Promise<{
     }
   }
 
-  // ── Strategy 1: noembed (skip Dribbble — returns "no matching providers") ──
-  if (!mediaUrl && !isDribbble) {
+  // ── Strategy 1: noembed (skip Dribbble & Instagram) ──
+  if (!mediaUrl && !isDribbble && !isInstagram) {
     const noembedUrl = await tryNoembed(url);
     if (noembedUrl) {
       mediaUrl = noembedUrl;
@@ -327,8 +456,8 @@ async function fetchMetadata(url: string): Promise<{
     }
   }
 
-  // ── Strategy 2: Microlink (skip Dribbble — returns HTTP 400) ──
-  if (!mediaUrl && !isDribbble) {
+  // ── Strategy 2: Microlink (skip Dribbble & Instagram) ──
+  if (!mediaUrl && !isDribbble && !isInstagram) {
     const ml = await tryMicrolink(url);
     if (ml.mediaUrl) {
       mediaUrl = ml.mediaUrl;
@@ -342,7 +471,7 @@ async function fetchMetadata(url: string): Promise<{
     isVideo = ml.isVideo;
   }
 
-  // ── Strategy 3: Direct OGP (skip Dribbble — Cloudflare WAF blocks datacenter IPs) ──
+  // ── Strategy 3: Direct OGP (skip Dribbble) ──
   if (!mediaUrl && !isDribbble) {
     const direct = await tryDirectFetch(url);
     if (direct.mediaUrl) {
@@ -575,6 +704,7 @@ serve(async (req) => {
         if (error) throw error;
 
         const methodLabel: Record<string, string> = {
+          'instagram-uncropped': '📸 Uncropped Instagram',
           'dribbble-api': '🎨 Dribbble API',
           'dribbble-scraper': '🎨 Dribbble Scraper',
           'noembed': '🔗 oEmbed',

@@ -81,7 +81,8 @@ export const TYPE_OPTIONS = [
 ];
 
 export const SORT_OPTIONS = [
-  { id: 'newest', label: 'Newest' },
+  { id: 'newest', label: 'Latest' },
+  { id: 'popular', label: 'Most Popular' },
   { id: 'oldest', label: 'Oldest' }
 ];
 
@@ -101,6 +102,7 @@ export default function UITasteFilterBar({
   sortBy,
   setSortBy,
   filteredCount,
+  categoryCounts = {},
   savedCount = 0,
   onResetFilters
 }) {
@@ -171,7 +173,7 @@ export default function UITasteFilterBar({
     isSortActive;
 
   const currentTypeOption = TYPE_OPTIONS.find(t => t.id === selectedType) || TYPE_OPTIONS[0];
-  const currentSortOption = SORT_OPTIONS.find(s => s.id === sortBy) || SORT_OPTIONS[0];
+  const currentSortOption = SORT_OPTIONS.find(s => s.id === sortBy) || (sortBy === 'latest' ? SORT_OPTIONS[0] : null) || SORT_OPTIONS[0];
 
   return (
     <div className="ui-taste-filter-bar">
@@ -310,7 +312,7 @@ export default function UITasteFilterBar({
             {openDropdown === 'sort' && (
               <div className="ui-taste-dropdown-menu align-right" role="listbox">
                 {SORT_OPTIONS.map((opt) => {
-                  const isSelected = (!sortBy && opt.id === 'newest') || sortBy === opt.id;
+                  const isSelected = (!sortBy && opt.id === 'newest') || sortBy === opt.id || (sortBy === 'latest' && opt.id === 'newest');
                   return (
                     <button
                       key={opt.id}
@@ -323,7 +325,10 @@ export default function UITasteFilterBar({
                         setOpenDropdown(null);
                       }}
                     >
-                      <span>{opt.label}</span>
+                      <span className="ui-taste-item-label">
+                        <span>{opt.label}</span>
+                        <span className="cfe-tag-count ui-taste-dropdown-count">{filteredCount}</span>
+                      </span>
                       {isSelected && <Check size={13} weight="bold" />}
                     </button>
                   );
@@ -338,10 +343,11 @@ export default function UITasteFilterBar({
       <div className={`filter-categories-wrapper ui-taste-categories-wrapper ${isCategoriesExpanded ? 'expanded' : ''}`}>
         <div className="filter-categories-inner">
           <div className="category-filter-expanded">
-            {/* Multi-Row Categories Text Grid (~16px text) */}
+            {/* Multi-Row Categories Text Grid (20px font with hover count pill) */}
             <div className="cfe-tags-grid ui-taste-categories-grid">
               {UI_TASTES_CATEGORIES.map((cat) => {
                 const isSelected = selectedCategories.includes(cat);
+                const count = categoryCounts[cat] || 0;
                 return (
                   <button
                     key={cat}
@@ -350,6 +356,7 @@ export default function UITasteFilterBar({
                     onClick={() => toggleCategory(cat)}
                   >
                     <span>{cat}</span>
+                    <span className="cfe-tag-count ui-taste-tag-count">{count}</span>
                   </button>
                 );
               })}

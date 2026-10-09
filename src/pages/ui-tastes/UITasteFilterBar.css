@@ -347,6 +347,60 @@
   gap: 6px;
 }
 
+.ui-taste-dropdown-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.08);
+  color: #666666;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  height: 18px;
+  padding: 0;
+  line-height: 1;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  margin-left: 0;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transform: scale(0.85);
+  transform-origin: left center;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              margin-left 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ui-taste-dropdown-item:hover .ui-taste-dropdown-count {
+  opacity: 1;
+  max-width: 60px;
+  margin-left: 6px;
+  padding: 0 7px;
+  transform: scale(1);
+}
+
+.ui-taste-dropdown-item.is-selected .ui-taste-dropdown-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ui-taste-dropdown-count {
+  background: rgba(255, 255, 255, 0.15);
+  color: #cccccc;
+}
+
+[data-theme="dark"] .ui-taste-dropdown-item.is-selected .ui-taste-dropdown-count {
+  background: rgba(0, 0, 0, 0.25);
+  color: #111111;
+}
+
 /* Search Pill: 40px height, fully rounded */
 .ui-taste-search-pill {
   position: relative;
@@ -428,12 +482,12 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Multi-Row Categories Text Grid (~16px clean text) */
+/* Multi-Row Categories Text Grid (20px clean text + hover count pill) */
 .ui-taste-categories-grid {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 12px 28px;
+  align-items: center;
+  gap: 14px 28px;
   padding: 4px 0;
 }
 
@@ -444,9 +498,9 @@
   border: none !important;
   padding: 0;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 20px !important;
   font-weight: 400;
-  color: #888888;
+  color: var(--dv-text-ghost, #999999);
   cursor: pointer;
   transition: color 0.2s ease, font-weight 0.2s ease;
   white-space: nowrap;
@@ -455,12 +509,12 @@
 }
 
 .ui-taste-cfe-tag:hover {
-  color: #111111;
+  color: var(--dv-text, #111111) !important;
 }
 
 .ui-taste-cfe-tag.selected {
-  color: #E8323C;
-  font-weight: 600;
+  color: #E8323C !important;
+  font-weight: 600 !important;
 }
 
 [data-theme="dark"] .ui-taste-cfe-tag {
@@ -468,11 +522,57 @@
 }
 
 [data-theme="dark"] .ui-taste-cfe-tag:hover {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .ui-taste-cfe-tag.selected {
-  color: #ff5252;
+  color: #ff5252 !important;
+  font-weight: 600 !important;
+}
+
+/* Hover Count Pill: Exact Sections Match with Squircle & Spring Ease */
+.ui-taste-tag-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dv-surface-dark, #f0f0f2);
+  color: var(--dv-subtext, #666666);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  height: 22px;
+  padding: 0;
+  line-height: 1;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  margin-left: 0;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transform: scale(0.85);
+  transform-origin: left center;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              max-width 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ui-taste-cfe-tag:hover .ui-taste-tag-count {
+  opacity: 1;
+  max-width: 80px;
+  margin-left: 8px;
+  padding: 0 9px;
+  transform: scale(1);
+}
+
+[data-theme="dark"] .ui-taste-tag-count {
+  background: rgba(255, 255, 255, 0.12);
+  color: #bbbbbb;
 }
 
 /* Active Selection Chips (Matching Reference Component) */

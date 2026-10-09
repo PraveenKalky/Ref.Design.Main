@@ -3,6 +3,41 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.10.0',
+    date: 'Saturday, October 10, 2026',
+    description: 'Introduced the Section Upload Drawer with video support and advanced Category Filters.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Built the Section Upload Drawer UI for adding screenshots and videos (MP4, WEBM) directly from the Sections Page.',
+          'Added AI-powered category classification and Save Draft / Publish workflows to the new Upload Drawer.',
+          'Implemented an expanded Category Filter component for precise content discovery across UI Tastes and Sections.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Updated Agent Rules and documentation to strictly guide AI-assisted coding behavior and UI integrity.',
+          'Refined Sections Grid layout and styling to fully accommodate standalone sections.',
+          'Added new visual assets for the Sections Hero background.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Fixed minor layout and spacing issues in the UI Tastes Filter Bar.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.9.0',
     date: 'Friday, October 9, 2026',
     description: 'Introduced Standalone UI Sections, Dual-Media uploads, and AI auto-renaming.',

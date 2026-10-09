@@ -30,6 +30,18 @@ import './sections-page.css';
 
 const ITEMS_PER_PAGE = 24;
 
+const AnimatedText = ({ text }) => {
+  return (
+    <span className="animated-text">
+      {[...text].map((c, i) => (
+        <span key={i} className="char" style={{ '--i': i }}>
+          {c === " " ? "\u00A0" : c}
+        </span>
+      ))}
+    </span>
+  );
+};
+
 // Curated category tab mapping matching Ref.Design filter architecture
 const SECTION_TABS = [
   { id: 'popular', label: 'Popular Sections' },
@@ -78,6 +90,7 @@ export default function SectionsPage() {
     return param ? [param] : [];
   });
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [isSearchOpen, setIsSearchOpen] = useState(() => Boolean(searchParams.get('q')));
   const [sourceFilter, setSourceFilter] = useState('all'); // 'all' | 'website' | 'standalone'
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'az'
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +98,7 @@ export default function SectionsPage() {
   // Data states
   const [sections, setSections] = useState([]);
   const [carouselData, setCarouselData] = useState([]);
+  const [publishedPageSections, setPublishedPageSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -141,36 +155,48 @@ export default function SectionsPage() {
       // Only fetch standalone sections for the main grid
       setSections(combined);
 
-      // Fetch from website_pages exclusively to populate the hero animation carousel
+      // Fetch from website_pages to extract published sections and populate the carousel
       const { data: pagesData } = await supabase
         .from('website_pages')
         .select(`id, url, media, created_at, page_title`)
-        .limit(20);
+        .limit(50);
 
       const carouselItems = [];
+      const pageSections = [];
       if (pagesData && Array.isArray(pagesData)) {
         pagesData.forEach(page => {
           if (Array.isArray(page.media)) {
             page.media.forEach((m) => {
-              if (m.url && carouselItems.length < 10) {
+              if (m.url) {
                 let title = (m && typeof m === 'object' && m.title && m.title !== 'Deposit' && m.title !== 'Deposite')
                   ? m.title : (m.filename || 'Section');
                 
                 // Clean up title (remove extension if filename)
                 title = title.replace(/\.[^/.]+$/, "");
 
-                carouselItems.push({
-                  id: m.url,
+                const classification = classifySection(title);
+                pageSections.push({
                   section_title: title,
-                  image_url: m.url,
-                  thumbnail_url: m.thumbnailUrl || m.url
+                  section_type: classification.category || 'Section',
+                  category: classification.category,
+                  tags: classification.tags || []
                 });
+
+                if (carouselItems.length < 10) {
+                  carouselItems.push({
+                    id: m.url,
+                    section_title: title,
+                    image_url: m.url,
+                    thumbnail_url: m.thumbnailUrl || m.url
+                  });
+                }
               }
             });
           }
         });
       }
       setCarouselData(carouselItems);
+      setPublishedPageSections(pageSections);
       
     } catch (err) {
       console.error('Unexpected error fetching sections:', err);
@@ -181,30 +207,35 @@ export default function SectionsPage() {
 
   useEffect(() => {
     fetchSections();
-    // Add class for transparent navbar on this page
-    document.body.classList.add('is-sections-page');
-    return () => {
-      document.body.classList.remove('is-sections-page');
-    };
   }, [fetchSections]);
 
-  // Dynamic category counts calculated from loaded data
+  // Dynamic category counts calculated from actual published section data
   const categoryCounts = useMemo(() => {
     const counts = {};
-    sections.forEach(sec => {
-      const type = (sec.section_type || '').trim();
-      if (!type) return;
-      const lower = type.toLowerCase();
+    const allPublished = [...sections, ...publishedPageSections];
 
-      ALL_SECTION_CATEGORIES.forEach(cat => {
-        if (lower.includes(cat.toLowerCase()) || cat.toLowerCase().includes(lower)) {
-          counts[cat] = (counts[cat] || 0) + 1;
+    allPublished.forEach(sec => {
+      const type = (sec.section_type || '').trim();
+      const title = (sec.section_title || '').trim();
+      const cat = (sec.category || '').trim();
+      const tags = Array.isArray(sec.tags) ? sec.tags : [];
+
+      const terms = [type, title, cat, ...tags].filter(Boolean);
+
+      ALL_SECTION_CATEGORIES.forEach(c => {
+        const cLower = c.toLowerCase();
+        const matched = terms.some(t => {
+          const tLower = t.toLowerCase();
+          return tLower === cLower || tLower.includes(cLower) || cLower.includes(tLower);
+        });
+        if (matched) {
+          counts[c] = (counts[c] || 0) + 1;
         }
       });
-      counts[type] = (counts[type] || 0) + 1;
     });
+
     return counts;
-  }, [sections]);
+  }, [sections, publishedPageSections]);
 
   // Toggle category selection
   const toggleCategory = (cat) => {
@@ -326,10 +357,7 @@ export default function SectionsPage() {
   return (
     <div className="sections-page">
       {/* ── Craftwork-Inspired Atmospheric Hero ── */}
-      <section 
-        className="sections-craft-hero"
-        style={{ backgroundImage: `url(${heroBg})` }}
-      >
+      <section className="sections-craft-hero">
         <div className="sections-hero-container">
           {/* Floating Pill Announcement Badge */}
           <div className="sections-hero-badge-wrap">
@@ -360,18 +388,22 @@ export default function SectionsPage() {
             <button 
               type="button" 
               onClick={scrollToFilters}
-              className="sections-cta-primary"
+              className="sections-cta-primary sweep-shuffle-btn"
             >
-              <span>Browse 60+ Categories</span>
-              <ArrowDown size={15} weight="bold" />
+              <div className="btn-content">
+                <AnimatedText text="Browse 60+ Categories" />
+                <ArrowDown size={15} weight="bold" />
+              </div>
             </button>
             <button 
               type="button" 
               onClick={() => setIsUploadOpen(true)}
-              className="sections-cta-secondary"
+              className="sections-cta-secondary sweep-shuffle-btn"
             >
-              <UploadSimple size={16} weight="bold" />
-              <span>Upload Section</span>
+              <div className="btn-content">
+                <UploadSimple size={16} weight="bold" />
+                <AnimatedText text="Upload Section" />
+              </div>
             </button>
           </div>
         </div>
@@ -432,7 +464,7 @@ export default function SectionsPage() {
       <div className="filter-bar-container sections-filterbar-sticky" ref={filterBarRef}>
         <div className="filter-bar-content">
           {/* Left Side: Collapse Toggle & Category Tabs */}
-          <div className="filter-tabs">
+          <div className="filter-tabs sections-filter-tabs">
             <button 
               className={`collapse-btn ${isExpanded ? 'active' : ''}`}
               onClick={() => setIsExpanded(!isExpanded)}
@@ -441,26 +473,52 @@ export default function SectionsPage() {
             >
               <ChevronDown size={16} strokeWidth={3} className="arrow-icon" />
             </button>
-            {SECTION_TABS.map(tab => (
-              <button 
-                key={tab.id}
-                className={`filter-tab ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  if (!isExpanded) setIsExpanded(true);
-                }}
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
+            <div className="sections-tabs-track">
+              {SECTION_TABS.map(tab => (
+                <button 
+                  key={tab.id}
+                  className={`sections-tab-pill ${activeTab === tab.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (!isExpanded) setIsExpanded(true);
+                  }}
+                  type="button"
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Right Side: Search, Source Control, Sort, and Upload CTA */}
           <div className="filter-actions sections-filter-actions">
-            {/* Search Input */}
-            <div className="sections-inline-search">
-              <MagnifyingGlass size={15} className="sections-search-icon" />
+            {/* Expandable Circular Search */}
+            <div 
+              className={`sections-inline-search ${isSearchOpen || searchQuery ? 'expanded' : 'collapsed'}`}
+              onClick={() => {
+                if (!isSearchOpen) {
+                  setIsSearchOpen(true);
+                  setTimeout(() => searchInputRef.current?.focus(), 50);
+                }
+              }}
+              title={!isSearchOpen && !searchQuery ? "Search sections" : undefined}
+            >
+              <button 
+                type="button" 
+                className="sections-search-icon-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isSearchOpen) {
+                    setIsSearchOpen(true);
+                    setTimeout(() => searchInputRef.current?.focus(), 50);
+                  } else if (!searchQuery) {
+                    setIsSearchOpen(false);
+                  }
+                }}
+                aria-label="Search sections"
+              >
+                <MagnifyingGlass size={16} className="sections-search-icon" />
+              </button>
               <input 
                 ref={searchInputRef}
                 type="text"
@@ -470,14 +528,27 @@ export default function SectionsPage() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
+                onFocus={() => setIsSearchOpen(true)}
+                onBlur={() => {
+                  if (!searchQuery.trim()) {
+                    setIsSearchOpen(false);
+                  }
+                }}
                 className="sections-search-input"
+                tabIndex={isSearchOpen || searchQuery ? 0 : -1}
               />
-              {searchQuery && (
+              {(searchQuery || isSearchOpen) && (
                 <button 
                   type="button"
                   className="sections-search-clear"
-                  onClick={() => setSearchQuery('')}
-                  title="Clear search"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSearchQuery('');
+                    setIsSearchOpen(false);
+                    setCurrentPage(1);
+                  }}
+                  title="Close search"
+                  aria-label="Close search"
                 >
                   <XIcon size={13} />
                 </button>
@@ -527,7 +598,7 @@ export default function SectionsPage() {
                     type="button"
                   >
                     <span>{cat}</span>
-                    {count > 0 && <span className="cfe-tag-count">{count}</span>}
+                    <span className="cfe-tag-count">{count}</span>
                   </button>
                 );
               })}
@@ -589,8 +660,10 @@ export default function SectionsPage() {
             <div className="sections-empty-state">
               <h3>No sections found</h3>
               <p>Upload a standalone section to start building your library.</p>
-              <button onClick={() => setIsUploadOpen(true)} className="sections-cta-secondary">
-                Upload Section
+              <button onClick={() => setIsUploadOpen(true)} className="sections-cta-secondary sweep-shuffle-btn">
+                <div className="btn-content">
+                  <AnimatedText text="Upload Section" />
+                </div>
               </button>
             </div>
           </div>
@@ -606,8 +679,10 @@ export default function SectionsPage() {
                   id={sec.id}
                   section_type={sec.section_type}
                   section_title={sec.section_title}
-                  image_url={sec.thumbnail_url || sec.image_url}
+                  image_url={sec.image_url || sec.thumbnail_url}
+                  thumbnail_url={sec.thumbnail_url}
                   page_url={sec.page_url || sec.website_url}
+                  status={sec.status}
                   parentWebsite={sec.submissions}
                   onToast={addToast}
                   onUpdateSection={(id, updated) => {
@@ -639,12 +714,17 @@ export default function SectionsPage() {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUploadSuccess={({ count, status }) => {
-          addToast(
-            status === 'Approved' 
-              ? `${count} section${count > 1 ? 's' : ''} published to the library!`
-              : `${count} section${count > 1 ? 's' : ''} submitted for review!`,
-            'success'
-          );
+          if (status === 'Draft') {
+            addToast(
+              `${count} section${count > 1 ? 's' : ''} saved as draft!`,
+              'info'
+            );
+          } else {
+            addToast(
+              `${count} section${count > 1 ? 's' : ''} published to the library!`,
+              'success'
+            );
+          }
           fetchSections();
         }}
       />

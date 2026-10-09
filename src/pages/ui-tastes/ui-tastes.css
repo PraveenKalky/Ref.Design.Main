@@ -254,17 +254,24 @@
   overflow: hidden;
   background-color: #f5f5f5;
   cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.taste-card-media-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
 }
 
 .taste-card-image {
   width: 100%;
+  height: auto;
   display: block;
-  object-fit: cover;
-  transition: transform 0.4s ease;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
 .taste-card-media-wrapper:hover .taste-card-image {
-  transform: scale(1.03);
+  transform: none; /* Prevent zoom crop on hover to keep full image dimensions and text visible */
 }
 
 .taste-card-video-indicator {

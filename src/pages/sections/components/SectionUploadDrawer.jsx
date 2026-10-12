@@ -14,15 +14,27 @@ import './section-upload-drawer.css';
 // ─────────────────────────────────────────────
 
 const MAX_SIZE_MB = 100;
-const VALID_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-const VALID_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
+const VALID_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif', 'image/avif'];
+const VALID_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/ogg', 'video/x-m4v'];
 const ALL_VALID_TYPES = [...VALID_IMAGE_TYPES, ...VALID_VIDEO_TYPES];
 
 const isVideoFile = (file) => file?.type?.startsWith('video/') || false;
 
+const isAnimatedFile = (file) => {
+  if (!file) return false;
+  const type = file.type || '';
+  const name = file.name || '';
+  return (
+    type === 'image/gif' ||
+    type === 'image/avif' ||
+    name.toLowerCase().endsWith('.gif') ||
+    name.toLowerCase().endsWith('.avif')
+  );
+};
+
 const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) =>
   new Promise((resolve) => {
-    if (!file?.type?.startsWith('image/') || file.type.includes('svg')) return resolve(file);
+    if (!file?.type?.startsWith('image/') || file.type.includes('svg') || isAnimatedFile(file)) return resolve(file);
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -45,7 +57,7 @@ const compressImageForAI = (file, maxDimension = 1280, quality = 0.8) =>
 
 const generateAutoThumbnail = (file, maxDimension = 1280) =>
   new Promise((resolve) => {
-    if (!file?.type?.startsWith('image/') || file.type.includes('svg')) return resolve(null);
+    if (!file?.type?.startsWith('image/') || file.type.includes('svg') || isAnimatedFile(file)) return resolve(null);
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -218,7 +230,15 @@ function UploadQueueItem({ item, onRemove, onCategoryChange, onTitleChange, onCl
       <div className="sud-queue-thumb">
         {item.previewUrl ? (
           item.isVideo ? (
-            <video src={item.previewUrl} className="sud-queue-thumb-img" muted playsInline preload="metadata" />
+            <video 
+              src={item.previewUrl} 
+              className="sud-queue-thumb-img" 
+              autoPlay 
+              loop 
+              muted 
+              playsInline 
+              preload="auto" 
+            />
           ) : (
             <img src={item.previewUrl} alt={item.filename} className="sud-queue-thumb-img" />
           )
@@ -291,7 +311,7 @@ function UploadQueueItem({ item, onRemove, onCategoryChange, onTitleChange, onCl
 // Main Drawer
 // ─────────────────────────────────────────────
 
-export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }) {
+export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, initialSection }) {
   const { user } = useAuth ? useAuth() : { user: null };
 
   const [queue, setQueue] = useState([]);         // Array of upload items
@@ -305,9 +325,43 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
   const fileInputRef = useRef(null);
   const cancelledRef = useRef(new Set());
 
-  const isDirty = queue.length > 0 || websiteUrl.trim() || tags.trim() || description.trim();
+  const isDirty = initialSection 
+    ? true 
+    : (queue.length > 0 || websiteUrl.trim() || tags.trim() || description.trim());
   const allDone = queue.length > 0 && queue.every(q => q.status === 'done' || q.status === 'error');
   const hasPublishable = queue.some(q => q.status === 'done' && q.imageUrl);
+
+  // Initialize or reset form based on initialSection
+  useEffect(() => {
+    if (isOpen && initialSection) {
+      const cleanTitle = (initialSection.section_title || initialSection.section_type || 'Section').replace(/\.[^/.]+$/, '').trim();
+      const isVideo = typeof initialSection.image_url === 'string' && (
+        initialSection.image_url.endsWith('.mp4') || initialSection.image_url.endsWith('.webm') || initialSection.image_url.endsWith('.mov')
+      );
+      setQueue([{
+        id: initialSection.id || 'edit-item',
+        file: null,
+        hash: 'existing',
+        filename: initialSection.section_title || 'section',
+        title: cleanTitle,
+        category: initialSection.section_type || 'Hero',
+        isVideo,
+        previewUrl: initialSection.image_url || initialSection.thumbnail_url,
+        status: 'done',
+        progress: 100,
+        imageUrl: initialSection.image_url || initialSection.thumbnail_url,
+        thumbnailUrl: initialSection.thumbnail_url || initialSection.image_url,
+        errorMsg: '',
+        isClassifying: false,
+      }]);
+      setWebsiteUrl(initialSection.page_url || initialSection.website_url || '');
+      setTags(Array.isArray(initialSection.tags) ? initialSection.tags.join(', ') : (initialSection.tags || ''));
+      setDescription(initialSection.description || '');
+      setErrorMsg('');
+    } else if (isOpen && !initialSection) {
+      resetForm();
+    }
+  }, [isOpen, initialSection]);
 
   // Lock body scroll
   useEffect(() => {
@@ -339,11 +393,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
 
   const attemptClose = () => {
     if (isSubmitting) return;
-    if (isDirty) {
-      if (window.confirm('You have unsaved changes. Discard and close?')) forceClose();
-    } else {
-      forceClose();
-    }
+    forceClose();
   };
 
   // ── File processing ──
@@ -351,7 +401,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
     setErrorMsg('');
     const candidates = Array.from(files).filter(f => {
       if (!ALL_VALID_TYPES.includes(f.type)) {
-        setErrorMsg('Unsupported type. Please upload PNG, JPG, WEBP, or MP4/WEBM video.');
+        setErrorMsg('Unsupported type. Please upload PNG, JPG, WEBP, GIF, AVIF, or MP4/WEBM/MOV video.');
         return false;
       }
       if (f.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -426,23 +476,25 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
 
     const { data: { publicUrl } } = supabase.storage.from('submissions').getPublicUrl(filePath);
 
-    // Step 2: Auto-generate 16:10 thumbnail
+    // Step 2: Auto-generate 16:10 thumbnail (skip for animated images to preserve animation)
     let thumbnailUrl = publicUrl;
-    try {
-      const autoThumb = item.isVideo 
-        ? await generateVideoThumbnail(item.file)
-        : await generateAutoThumbnail(item.file);
+    if (!isAnimatedFile(item.file)) {
+      try {
+        const autoThumb = item.isVideo 
+          ? await generateVideoThumbnail(item.file)
+          : await generateAutoThumbnail(item.file);
 
-      if (autoThumb && !cancelledRef.current.has(item.id)) {
-        const thumbPath = `thumbnails/thumb-${safeTitle}-${uniqueSlug}.jpg`;
-        const thumbResult = await uploadWithProgress(autoThumb.file, 'submissions', thumbPath, () => {});
-        if (!thumbResult.error) {
-          const { data: { publicUrl: thumbPub } } = supabase.storage.from('submissions').getPublicUrl(thumbPath);
-          thumbnailUrl = thumbPub;
+        if (autoThumb && !cancelledRef.current.has(item.id)) {
+          const thumbPath = `thumbnails/thumb-${safeTitle}-${uniqueSlug}.jpg`;
+          const thumbResult = await uploadWithProgress(autoThumb.file, 'submissions', thumbPath, () => {});
+          if (!thumbResult.error) {
+            const { data: { publicUrl: thumbPub } } = supabase.storage.from('submissions').getPublicUrl(thumbPath);
+            thumbnailUrl = thumbPub;
+          }
         }
+      } catch (err) {
+        console.warn('[SectionUploadDrawer] Thumbnail warning:', err);
       }
-    } catch (err) {
-      console.warn('[SectionUploadDrawer] Thumbnail warning:', err);
     }
 
     if (cancelledRef.current.has(item.id)) return;
@@ -495,6 +547,39 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
     try {
+      if (initialSection?.id) {
+        const item = publishable[0];
+        const updatePayload = {
+          section_type: item.category || 'Hero',
+          section_title: (item.title || item.filename?.replace(/\.[^/.]+$/, '') || '').trim() || 'Section',
+          image_url: item.imageUrl || initialSection.image_url,
+          thumbnail_url: item.thumbnailUrl || initialSection.thumbnail_url || item.imageUrl,
+          page_url: websiteUrl.trim() || null,
+          website_url: websiteUrl.trim() || null,
+          tags: tagList,
+          description: description.trim() || null,
+          status: targetStatus,
+        };
+
+        const { error } = await supabase
+          .from('website_sections')
+          .update(updatePayload)
+          .eq('id', initialSection.id);
+
+        if (error) throw error;
+
+        if (onUploadSuccess) {
+          onUploadSuccess({ 
+            count: 1, 
+            status: targetStatus, 
+            isEdit: true, 
+            updatedSection: { ...initialSection, ...updatePayload } 
+          });
+        }
+        forceClose();
+        return;
+      }
+
       const inserts = publishable.map(item => ({
         section_type: item.category || 'Hero',
         section_title: (item.title || item.filename.replace(/\.[^/.]+$/, '')).trim() || 'Section',
@@ -541,8 +626,12 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
         {/* Header */}
         <div className="sud-header">
           <div className="sud-header-left">
-            <h2 id="sud-title" className="sud-title">Upload Section</h2>
-            <p className="sud-subtitle">Add screenshots or recordings to the Sections library.</p>
+            <h2 id="sud-title" className="sud-title">{initialSection ? 'Edit Section' : 'Upload Section'}</h2>
+            <p className="sud-subtitle">
+              {initialSection 
+                ? 'Update section details, category, and metadata.' 
+                : 'Add screenshots or recordings to the Sections library.'}
+            </p>
           </div>
           <button type="button" className="sud-close-btn" onClick={attemptClose} disabled={isSubmitting}>
             <X size={17} weight="bold" />
@@ -571,12 +660,12 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
                 </svg>
               </div>
               <p className="sud-dropzone-main">Choose files or drag & drop here.</p>
-              <p className="sud-dropzone-sub">PNG, JPG, WEBP, MP4, WEBM • Max {MAX_SIZE_MB}MB each</p>
+              <p className="sud-dropzone-sub">PNG, JPG, WEBP, GIF, AVIF, MP4, WEBM • Max {MAX_SIZE_MB}MB each</p>
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4,video/webm,video/quicktime"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime,video/ogg,video/x-m4v"
               multiple
               style={{ display: 'none' }}
               onChange={(e) => { if (e.target.files?.length) processFiles(e.target.files); e.target.value = null; }}
@@ -669,21 +758,15 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess }
           </button>
           <button
             type="button"
-            className="sud-draft-btn"
-            onClick={() => handleSubmit('Draft')}
-            disabled={isSubmitting || !hasPublishable}
-          >
-            Save Draft
-          </button>
-          <button
-            type="button"
             className="sud-submit-btn"
             onClick={() => handleSubmit('Approved')}
             disabled={isSubmitting || !hasPublishable}
           >
             {isSubmitting
               ? <span>Saving…</span>
-              : <><Sparkle size={14} weight="fill" /> Publish Section{publishableCount > 1 ? 's' : ''}</>
+              : initialSection
+                ? <><Sparkle size={14} weight="fill" /> Save Changes</>
+                : <><Sparkle size={14} weight="fill" /> Publish Section{publishableCount > 1 ? 's' : ''}</>
             }
           </button>
         </div>

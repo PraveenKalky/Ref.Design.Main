@@ -5,7 +5,7 @@ const changelogData = [
   {
     version: '1.10.0',
     date: 'Saturday, October 10, 2026',
-    description: 'Introduced the Section Upload Drawer with video support and advanced Category Filters.',
+    description: 'Introduced the Section Upload Drawer with video support, full editing workflows, and advanced Category Filters.',
     groups: [
       {
         type: 'New',
@@ -13,6 +13,7 @@ const changelogData = [
         badgeClass: 'new',
         items: [
           'Built the Section Upload Drawer UI for adding screenshots and videos (MP4, WEBM) directly from the Sections Page.',
+          'Extended the Section Upload Drawer to support full editing capabilities for existing sections, including metadata and category updates.',
           'Added AI-powered category classification and Save Draft / Publish workflows to the new Upload Drawer.',
           'Implemented an expanded Category Filter component for precise content discovery across UI Tastes and Sections.'
         ]
@@ -22,6 +23,8 @@ const changelogData = [
         title: 'Enhancements',
         badgeClass: 'improvement',
         items: [
+          'Streamlined the section update workflow by merging upload and edit UI paths directly into the Section Grid.',
+          'Added success toaster notifications for successful section edits and draft saves.',
           'Updated Agent Rules and documentation to strictly guide AI-assisted coding behavior and UI integrity.',
           'Refined Sections Grid layout and styling to fully accommodate standalone sections.',
           'Added new visual assets for the Sections Hero background.'
@@ -32,6 +35,7 @@ const changelogData = [
         title: 'Bug Fixes',
         badgeClass: 'fix',
         items: [
+          'Fixed drawer close behavior and removed disruptive discard prompts when closing without changes.',
           'Fixed minor layout and spacing issues in the UI Tastes Filter Bar.'
         ]
       }

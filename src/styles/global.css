@@ -42,6 +42,7 @@
      These MUST be defined or any consumer of var(--dv-*) sees transparent
      which on macOS dark mode appears as black through the OS Canvas.        */
   --dv-bg:           #ffffff;
+  --dv-surface:      #ffffff;
   --dv-text:         #111111;
   --dv-text-ghost:   #888888;
   --dv-surface-dark: #f0f0f0;
@@ -81,6 +82,7 @@
 
 [data-theme="dark"] {
   --dv-bg:           #111111;
+  --dv-surface:      #18181b;
   --dv-text:         #f0f0f0;
   --dv-text-ghost:   #888888;
   --dv-surface-dark: #1c1c1c;

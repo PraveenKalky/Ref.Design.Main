@@ -51,6 +51,37 @@
 }
 
 /* ============================================================
+   Ref.Design — True Masonry Grid Layout
+   Independent column stacking with consistent 24px vertical
+   and horizontal gaps. Natural aspect ratio without dead zones.
+   ============================================================ */
+
+.sections-masonry-grid {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+.sections-masonry-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .sections-masonry-grid {
+    gap: 16px;
+  }
+  .sections-masonry-col {
+    gap: 16px;
+  }
+}
+
+/* ============================================================
    Ref.Design — Section Card Layout
    Equal 16px padding on all 4 sides, centered framed canvas,
    adaptive light/dark surface, Figma smooth corners on outer card,
@@ -61,6 +92,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: 100%;
 }
 
 .section-card-image-wrapper {
@@ -136,6 +168,86 @@
   }
 }
 
+/* ============================================================
+   Ref.Design — Section Card Metadata
+   Format: Section Name | Company / Source Name
+   Single line, dark section name, muted grey source name
+   ============================================================ */
+
+.section-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 2px 0 2px;
+}
+
+.section-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.section-card-name {
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #000000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+
+[data-theme='dark'] .section-card-name {
+  color: #ffffff;
+}
+
+.section-card-divider {
+  font-size: 13px;
+  font-weight: 400;
+  color: #9ca3af;
+  user-select: none;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .section-card-divider {
+  color: #71717a;
+}
+
+.section-card-source {
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #666666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+[data-theme='dark'] .section-card-source {
+  color: #888888;
+}
+
+.section-draft-badge {
+  background-color: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
 
 .card-overlay {
   position: absolute;
@@ -152,23 +264,85 @@
   background-color: rgba(0, 0, 0, 0.35);
 }
 
-/* Bottom Center Hover Action Bar (4 Individual Circles Container) */
-.card-action-bar {
+/* Bottom Center Hover Action Bar (Unified Pill Container with Grey Circular Buttons) */
+.card-action-bar,
+.card-action-tabs {
   position: absolute;
-  bottom: 14px;
+  bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(8px) scale(0.96);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 9999px;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none !important;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.2s ease, 
+              border-color 0.2s ease;
+}
+
+/* Dark Theme Container */
+[data-theme='dark'] .card-action-bar,
+[data-theme='dark'] .card-action-tabs {
+  background: rgba(20, 20, 23, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none !important;
+}
+
+/* Entrance on Screenshot Hover */
+.card-container:hover .card-action-bar,
+.section-card-container:hover .card-action-bar,
+.card-container:hover .card-action-tabs,
+.section-card-container:hover .card-action-tabs {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Individual Fully Rounded Circular Tab inside Pill */
+.card-action-tab-btn,
+.card-action-btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50% !important;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0;
-  background: transparent !important;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  outline: none !important;
   border: none !important;
+  transform: none !important;
   box-shadow: none !important;
-  z-index: 20;
+  /* Default: subtle grey circular background */
+  background: rgba(0, 0, 0, 0.05);
+  color: #374151;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.18s ease;
+}
+
+/* Dark Theme Default: Subtle grey circular background */
+[data-theme='dark'] .card-action-tab-btn,
+[data-theme='dark'] .card-action-btn-icon {
+  background: rgba(255, 255, 255, 0.09);
+  color: #e4e4e7;
 }
 
 /* Remove focus rings */
+.card-action-tab-btn:focus,
+.card-action-tab-btn:focus-visible,
+.card-action-tab-btn:active,
 .card-action-btn-icon:focus,
 .card-action-btn-icon:focus-visible,
 .card-action-btn-icon:active {
@@ -176,108 +350,66 @@
   box-shadow: none !important;
 }
 
-/* Circular Action Buttons - Base / Light Theme */
-.card-action-btn-icon,
-[data-theme='light'] .card-action-btn-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #111827;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  
-  /* Initial hidden state with smooth reverse exit */
-  opacity: 0;
-  transform: translateY(8px) scale(0.92);
-  pointer-events: none;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
-              opacity 0.18s ease, 
-              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
-              border-color 0.2s ease, 
-              color 0.2s ease, 
-              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: 0ms;
+/* Icons stay perfectly centered and stationary without up/down movement */
+.card-action-tab-btn svg,
+.card-action-btn-icon svg {
+  display: block;
+  transform: none !important;
 }
 
-/* Dark Theme Base */
-[data-theme='dark'] .card-action-btn-icon {
-  background: rgba(24, 24, 27, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #f4f4f5;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-}
-
-/* Staggered Entrance on Screenshot Hover */
-.card-container:hover .card-action-bar .card-action-btn-icon {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(1) {
-  transition-delay: 20ms;
-}
-.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(2) {
-  transition-delay: 50ms;
-}
-.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(3) {
-  transition-delay: 80ms;
-}
-.card-container:hover .card-action-bar .card-action-btn-icon:nth-child(4) {
-  transition-delay: 110ms;
-}
-
-/* 1. Light Theme Hover: Circle turns BLACK with WHITE icon */
+/* Circular Tab Hover State - Light Theme: Solid dark fill without movement */
+.card-action-tab-btn:hover,
+[data-theme='light'] .card-action-tab-btn:hover,
 .card-action-btn-icon:hover,
 [data-theme='light'] .card-action-btn-icon:hover {
-  transform: translateY(-2.5px) scale(1.08) !important;
-  background: #000000 !important;
-  border-color: #000000 !important;
+  background: #111827 !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32) !important;
-  transition-delay: 0ms !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-/* 2. Dark Theme Hover: Circle turns WHITE with BLACK icon */
+/* Circular Tab Hover State - Dark Theme: Solid white fill without movement */
+[data-theme='dark'] .card-action-tab-btn:hover,
 [data-theme='dark'] .card-action-btn-icon:hover {
-  transform: translateY(-2.5px) scale(1.08) !important;
   background: #ffffff !important;
-  border-color: #ffffff !important;
-  color: #000000 !important;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.38) !important;
-  transition-delay: 0ms !important;
+  color: #09090b !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-/* Active / Click press */
+/* Active / Pressed Micro Feedback: Stays centered without position shift */
+.card-action-tab-btn:active,
 .card-action-btn-icon:active {
-  transform: translateY(0) scale(0.96) !important;
+  transform: none !important;
+  opacity: 0.88;
 }
 
-/* Saved state base icon colors */
+/* Saved state on Bookmark tab (subtle amber circle) */
+.card-action-tab-btn.is-saved,
 .card-action-btn-icon.is-saved {
-  color: #d97706;
+  color: #d97706 !important;
+  background: rgba(217, 119, 6, 0.12) !important;
 }
+
+[data-theme='dark'] .card-action-tab-btn.is-saved,
 [data-theme='dark'] .card-action-btn-icon.is-saved {
-  color: #ffc800;
+  color: #ffc800 !important;
+  background: rgba(255, 200, 0, 0.15) !important;
 }
 
 /* Saved state hover icon colors */
+.card-action-tab-btn.is-saved:hover,
+[data-theme='light'] .card-action-tab-btn.is-saved:hover,
 .card-action-btn-icon.is-saved:hover,
 [data-theme='light'] .card-action-btn-icon.is-saved:hover {
-  color: #ffffff !important;
+  background: #111827 !important;
+  color: #f59e0b !important;
 }
+
+[data-theme='dark'] .card-action-tab-btn.is-saved:hover,
 [data-theme='dark'] .card-action-btn-icon.is-saved:hover {
-  color: #000000 !important;
+  background: #ffffff !important;
+  color: #b45309 !important;
 }
 
 .card-meta {
@@ -540,97 +672,498 @@
 /* Card Action Menu & Dropdown */
 .card-menu-container {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 25;
+  top: 14px;
+  right: 14px;
+  z-index: 30;
 }
 
 .card-menu-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
   opacity: 0;
-  transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+  transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.card-container:hover .card-menu-btn {
+.card-menu-btn:focus,
+.card-menu-btn:focus-visible,
+.card-menu-btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Light Theme: Base Menu Button */
+.card-menu-btn,
+[data-theme='light'] .card-menu-btn {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #111827;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark Theme: Base Menu Button */
+[data-theme='dark'] .card-menu-btn {
+  background: rgba(24, 24, 27, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f4f4f5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* Reveal button on card hover or when menu is active/open */
+.card-container:hover .card-menu-btn,
+.card-menu-btn.active {
   opacity: 1;
 }
 
-.card-menu-btn:hover {
-  background: rgba(0, 0, 0, 0.85);
-  border-color: rgba(255, 255, 255, 0.3);
+/* Light Theme Hover / Active State */
+.card-menu-btn:hover,
+.card-menu-btn.active,
+[data-theme='light'] .card-menu-btn:hover,
+[data-theme='light'] .card-menu-btn.active {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
   transform: scale(1.05);
 }
 
+/* Dark Theme Hover / Active State */
+[data-theme='dark'] .card-menu-btn:hover,
+[data-theme='dark'] .card-menu-btn.active {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.35) !important;
+  transform: scale(1.05);
+}
+
+/* Dropdown Menu Container */
 .card-dropdown-menu {
   position: absolute;
-  top: 40px;
+  top: 42px;
   right: 0;
   z-index: 100;
-  background: var(--dv-surface, #18181b);
-  border: 1px solid var(--dv-border, #27272a);
-  border-radius: 12px;
+  border-radius: 14px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   padding: 6px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  min-width: 148px;
   display: flex;
   flex-direction: column;
-  min-width: 140px;
-  animation: cardDropdownFade 0.15s ease-out;
+  gap: 2px;
+  animation: cardDropdownFade 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+/* Light Theme Dropdown Menu */
+.card-dropdown-menu,
+[data-theme='light'] .card-dropdown-menu {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* Dark Theme Dropdown Menu */
+[data-theme='dark'] .card-dropdown-menu {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes cardDropdownFade {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Dropdown Items */
 .card-dropdown-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 9px;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 13.5px;
   font-weight: 500;
-  color: var(--dv-text, #f4f4f5);
   cursor: pointer;
   background: transparent;
   border: none;
+  outline: none;
   width: 100%;
   text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
-  font-family: inherit;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  user-select: none;
 }
 
-.card-dropdown-item:hover {
-  background: var(--dv-border, #27272a);
+.card-dropdown-icon {
+  flex-shrink: 0;
+  transition: color 0.15s ease;
 }
 
-.card-dropdown-item.delete-item {
-  color: #ef4444;
+.card-dropdown-item:active {
+  transform: scale(0.98);
 }
 
-.card-dropdown-item.delete-item:hover {
-  background: rgba(239, 68, 68, 0.12);
+/* Light Theme: Regular item (Rename) */
+.card-dropdown-item,
+[data-theme='light'] .card-dropdown-item {
+  color: #111827;
+}
+
+.card-dropdown-item .card-dropdown-icon,
+[data-theme='light'] .card-dropdown-item .card-dropdown-icon {
+  color: #4b5563;
+}
+
+.card-dropdown-item:hover,
+[data-theme='light'] .card-dropdown-item:hover {
+  background: #f4f4f5;
+  color: #000000;
+}
+
+.card-dropdown-item:hover .card-dropdown-icon,
+[data-theme='light'] .card-dropdown-item:hover .card-dropdown-icon {
+  color: #000000;
+}
+
+/* Light Theme: Delete item */
+.card-dropdown-item.delete-item,
+[data-theme='light'] .card-dropdown-item.delete-item {
+  color: #dc2626;
+}
+
+.card-dropdown-item.delete-item .card-dropdown-icon,
+[data-theme='light'] .card-dropdown-item.delete-item .card-dropdown-icon {
+  color: #dc2626;
+}
+
+.card-dropdown-item.delete-item:hover,
+[data-theme='light'] .card-dropdown-item.delete-item:hover {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
+.card-dropdown-item.delete-item:hover .card-dropdown-icon,
+[data-theme='light'] .card-dropdown-item.delete-item:hover .card-dropdown-icon {
+  color: #b91c1c;
+}
+
+/* Dark Theme: Regular item (Rename) */
+[data-theme='dark'] .card-dropdown-item {
+  color: #f4f4f5;
+}
+
+[data-theme='dark'] .card-dropdown-item .card-dropdown-icon {
+  color: #a1a1aa;
+}
+
+[data-theme='dark'] .card-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .card-dropdown-item:hover .card-dropdown-icon {
+  color: #ffffff;
+}
+
+/* Dark Theme: Delete item */
+[data-theme='dark'] .card-dropdown-item.delete-item {
   color: #f87171;
 }
 
-/* Modals for Section Rename & Delete */
+[data-theme='dark'] .card-dropdown-item.delete-item .card-dropdown-icon {
+  color: #f87171;
+}
+
+[data-theme='dark'] .card-dropdown-item.delete-item:hover {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .card-dropdown-item.delete-item:hover .card-dropdown-icon {
+  color: #fca5a5;
+}
+
+/* ============================================================
+   Ref.Design — Layout 2: Compact Centered Micro-Dialog (Rename)
+   Dimensions: ~370px × ~118px, ambient blur, Figma smooth squircles
+   ============================================================ */
+
+.rename-micro-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: renameFadeIn 0.16s ease-out;
+}
+
+@keyframes renameFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rename-micro-dialog {
+  width: 100%;
+  max-width: 370px;
+  border-radius: 16px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 16px 18px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  animation: renameScaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes renameScaleUp {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Light Theme Micro Dialog */
+.rename-micro-dialog,
+[data-theme='light'] .rename-micro-dialog {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.16), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  color: #111827;
+}
+
+/* Dark Theme Micro Dialog */
+[data-theme='dark'] .rename-micro-dialog {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.65), 0 4px 14px rgba(0, 0, 0, 0.4);
+  color: #f4f4f5;
+}
+
+.rename-micro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.rename-micro-title {
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #111827;
+}
+
+[data-theme='dark'] .rename-micro-title {
+  color: #f4f4f5;
+}
+
+.rename-micro-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.rename-micro-close:hover {
+  color: #111827;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .rename-micro-close {
+  color: #9ca3af;
+}
+
+[data-theme='dark'] .rename-micro-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rename-micro-body {
+  width: 100%;
+}
+
+.rename-micro-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Light Theme Input */
+.rename-micro-input,
+[data-theme='light'] .rename-micro-input {
+  background: #f4f4f5;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  color: #111827;
+}
+
+.rename-micro-input:focus,
+[data-theme='light'] .rename-micro-input:focus {
+  border-color: #000000;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Dark Theme Input */
+[data-theme='dark'] .rename-micro-input {
+  background: #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .rename-micro-input:focus {
+  border-color: #ffffff;
+  background: #202023;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.rename-micro-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.rename-micro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+/* Light Theme Cancel Button */
+.rename-micro-cancel,
+[data-theme='light'] .rename-micro-cancel {
+  background: transparent;
+  color: #4b5563;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.rename-micro-cancel:hover,
+[data-theme='light'] .rename-micro-cancel:hover {
+  background: #f4f4f5;
+  color: #111827;
+}
+
+/* Dark Theme Cancel Button */
+[data-theme='dark'] .rename-micro-cancel {
+  background: transparent;
+  color: #a1a1aa;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark'] .rename-micro-cancel:hover {
+  background: #27272a;
+  color: #ffffff;
+}
+
+/* Light Theme Save Button */
+.rename-micro-save,
+[data-theme='light'] .rename-micro-save {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.rename-micro-save:hover,
+[data-theme='light'] .rename-micro-save:hover {
+  background: #27272a;
+  border-color: #27272a;
+}
+
+.rename-micro-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark Theme Save Button */
+[data-theme='dark'] .rename-micro-save {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+[data-theme='dark'] .rename-micro-save:hover {
+  background: #e4e4e7;
+  border-color: #e4e4e7;
+}
+
+/* Keyboard hint badges */
+.rename-micro-kbd {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  user-select: none;
+}
+
+.rename-micro-cancel .rename-micro-kbd,
+[data-theme='light'] .rename-micro-cancel .rename-micro-kbd {
+  background: rgba(0, 0, 0, 0.06);
+  color: #6b7280;
+}
+
+[data-theme='dark'] .rename-micro-cancel .rename-micro-kbd {
+  background: rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+}
+
+.rename-micro-save .rename-micro-kbd,
+[data-theme='light'] .rename-micro-save .rename-micro-kbd {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .rename-micro-save .rename-micro-kbd {
+  background: rgba(0, 0, 0, 0.14);
+  color: #000000;
+}
+
+/* Modals for Section Delete */
 .section-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -645,28 +1178,47 @@
 }
 
 .section-modal-card {
-  background: var(--dv-surface, #18181b);
-  border: 1px solid var(--dv-border, #27272a);
-  border-radius: 16px;
-  corner-shape: squircle;
-  -webkit-corner-shape: squircle;
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
   overflow: hidden;
-  color: var(--dv-text, #ffffff);
+  animation: cardDropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Modal Light Mode */
+.section-modal-card,
+[data-theme='light'] .section-modal-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  color: #111827;
+}
+
+/* Modal Dark Mode */
+[data-theme='dark'] .section-modal-card {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  color: #ffffff;
 }
 
 .section-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--dv-border, #27272a);
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+[data-theme='dark'] .section-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.09);
 }
 
 .section-modal-header h3 {
   margin: 0;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
   font-size: 16px;
   font-weight: 600;
 }
@@ -674,22 +1226,32 @@
 .section-modal-close {
   background: none;
   border: none;
-  color: var(--dv-text-ghost, #9ca3af);
+  color: #6b7280;
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .section-modal-close:hover {
-  color: var(--dv-text, #ffffff);
+  color: #111827;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .section-modal-close {
+  color: #9ca3af;
+}
+
+[data-theme='dark'] .section-modal-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .section-modal-body {
-  padding: 20px;
+  padding: 22px;
 }
 
 .section-modal-body label {
@@ -697,31 +1259,52 @@
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 8px;
-  color: var(--dv-text-ghost, #9ca3af);
+  color: #4b5563;
+}
+
+[data-theme='dark'] .section-modal-body label {
+  color: #a1a1aa;
 }
 
 .section-modal-body input {
   width: 100%;
-  background: var(--dv-surface-dark, #09090b);
-  border: 1px solid var(--dv-border, #27272a);
-  color: var(--dv-text, #ffffff);
+  background: #f4f4f5;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #111827;
   padding: 12px 14px;
   border-radius: 10px;
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
   font-family: inherit;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .section-modal-body input:focus {
-  border-color: #3b82f6;
+  border-color: #000000;
+  background: #ffffff;
+}
+
+[data-theme='dark'] .section-modal-body input {
+  background: #09090b;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .section-modal-body input:focus {
+  border-color: #ffffff;
+  background: #121215;
 }
 
 .section-modal-body p {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--dv-text-ghost, #a1a1aa);
+  color: #4b5563;
+}
+
+[data-theme='dark'] .section-modal-body p {
+  color: #a1a1aa;
 }
 
 .section-modal-footer {
@@ -729,9 +1312,14 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  padding: 14px 20px;
-  border-top: 1px solid var(--dv-border, #27272a);
-  background: rgba(0, 0, 0, 0.15);
+  padding: 16px 22px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  background: #fafafa;
+}
+
+[data-theme='dark'] .section-modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .section-modal-btn {
@@ -747,28 +1335,79 @@
 
 .section-modal-btn-cancel {
   background: transparent;
-  border-color: var(--dv-border, #27272a);
-  color: var(--dv-text, #f4f4f5);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #374151;
 }
 
 .section-modal-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+[data-theme='dark'] .section-modal-btn-cancel {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f4f4f5;
+}
+
+[data-theme='dark'] .section-modal-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
 
 .section-modal-btn-primary {
-  background: var(--dv-text, #ffffff);
-  color: var(--dv-surface, #000000);
+  background: #000000;
+  color: #ffffff;
 }
 
 .section-modal-btn-primary:hover {
   opacity: 0.9;
 }
 
+[data-theme='dark'] .section-modal-btn-primary {
+  background: #ffffff;
+  color: #000000;
+}
+
 .section-modal-btn-danger {
-  background: #ef4444;
+  background: #dc2626;
   color: #ffffff;
 }
 
 .section-modal-btn-danger:hover {
+  background: #b91c1c;
+}
+
+[data-theme='dark'] .section-modal-btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .section-modal-btn-danger:hover {
   background: #dc2626;
+}
+
+/* ============================================================
+   Card Hover Suppression during Modal Open
+   Prevents any card hover animation, cursor interaction, or
+   visual shifts while Rename or Delete modal is active.
+   ============================================================ */
+body.has-modal-open .card-container,
+body.has-modal-open .card-container:hover,
+body.has-modal-open .section-card-container,
+body.has-modal-open .section-card-container:hover {
+  transform: none !important;
+  pointer-events: none !important;
+}
+
+body.has-modal-open .card-container:hover .card-overlay,
+body.has-modal-open .section-card-container:hover .card-overlay {
+  background-color: transparent !important;
+}
+
+body.has-modal-open .card-container:hover .card-action-bar,
+body.has-modal-open .card-container:hover .card-menu-btn,
+body.has-modal-open .section-card-container:hover .card-action-bar,
+body.has-modal-open .section-card-container:hover .card-menu-btn {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

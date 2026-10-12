@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUpRight, Bookmark, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cardsData } from './cards-data';
 import Pagination from '../pagination/Pagination';
+import { isVideoMedia } from '../../utils/mediaUtils';
 import './card-grid.css';
 
 export const Card = ({ 
@@ -45,6 +46,17 @@ export const Card = ({
     if (onDelete) onDelete(id);
   };
 
+  const isVideo = isVideoMedia(image);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (isVideo && videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [image, isVideo]);
+
   return (
     <>
       <div className="card-container" style={{ position: 'relative' }}>
@@ -79,7 +91,20 @@ export const Card = ({
 
         <Link to={`/websites/${name || id}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="card-image-wrapper">
-            <img src={image} alt={title} className="card-image" />
+            {isVideo ? (
+              <video
+                ref={videoRef}
+                src={image}
+                className="card-image"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            ) : (
+              <img src={image} alt={title} className="card-image" loading="lazy" />
+            )}
             <div className="card-overlay">
               <div className="card-actions">
                 <button 

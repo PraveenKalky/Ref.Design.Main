@@ -25,6 +25,7 @@ import {
   SIDEBAR_TO_SECTION_TYPE 
 } from '../../data/section-categories';
 import { classifySection } from '../../utils/sectionTaxonomy';
+import { isVideoMedia } from '../../utils/mediaUtils';
 import heroBg from '../../assets/sections-hero-bg.png';
 import './sections-page.css';
 
@@ -100,8 +101,18 @@ export default function SectionsPage() {
   const [carouselData, setCarouselData] = useState([]);
   const [publishedPageSections, setPublishedPageSections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingSection, setEditingSection] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
+
+  // Carousel animation & scroll-responsiveness refs
+  const carouselTrackRef = useRef(null);
+  const isCarouselHoveredRef = useRef(false);
+  const scrollPosRef = useRef(0);
+  const currentVelocityRef = useRef(0.05); // initialized at 50% slower base velocity
+  const scrollVelocityRef = useRef(0);
+  const lastScrollYRef = useRef(typeof window !== 'undefined' ? window.scrollY : 0);
+  const lastScrollTimeRef = useRef(typeof performance !== 'undefined' ? performance.now() : 0);
 
   // Toast trigger
   const addToast = useCallback((message, type = 'success') => {
@@ -208,6 +219,99 @@ export default function SectionsPage() {
   useEffect(() => {
     fetchSections();
   }, [fetchSections]);
+
+  // ── Scroll-Responsive Infinite Carousel Loop (Craftwork-Inspired) ──
+  useEffect(() => {
+    if (carouselData.length === 0) return;
+
+    const track = carouselTrackRef.current;
+    if (!track) return;
+
+    let reqId;
+    let lastTime = performance.now();
+    lastScrollYRef.current = window.scrollY;
+    lastScrollTimeRef.current = performance.now();
+
+    const handleScroll = () => {
+      const now = performance.now();
+      const currentY = window.scrollY;
+      const dy = currentY - lastScrollYRef.current;
+      const dt = Math.max(1, now - lastScrollTimeRef.current);
+      lastScrollYRef.current = currentY;
+      lastScrollTimeRef.current = now;
+
+      // dy > 0 when scrolling down; dy < 0 when scrolling up
+      scrollVelocityRef.current = dy / dt;
+    };
+
+    const handleWheel = (e) => {
+      // When at or near top of page and user scrolls upward (e.deltaY < 0),
+      // window.scrollY cannot go below 0 so window scroll won't fire.
+      // Directly inject scroll velocity impulse from wheel gesture.
+      if (window.scrollY <= 4 && e.deltaY < 0) {
+        scrollVelocityRef.current = Math.min(-0.8, e.deltaY * 0.02);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: true });
+
+    const animate = (now) => {
+      const dt = Math.min(32, Math.max(8, now - lastTime));
+      lastTime = now;
+
+      const halfWidth = track.scrollWidth / 2;
+      // Exactly 50% slower default speed: full cycle takes 80s instead of 40s
+      const baseVelocity = halfWidth > 0 ? halfWidth / 80000 : 0.05;
+
+      // Smooth decay of scroll velocity towards 0 when scrolling stops
+      scrollVelocityRef.current *= 0.92;
+      if (Math.abs(scrollVelocityRef.current) < 0.001) {
+        scrollVelocityRef.current = 0;
+      }
+
+      let targetVelocity = baseVelocity;
+      if (isCarouselHoveredRef.current && scrollVelocityRef.current === 0) {
+        // Smoothly pause on hover when user is not actively scrolling
+        targetVelocity = 0;
+      } else if (scrollVelocityRef.current > 0) {
+        // Accelerate in existing direction (right to left) when scrolling down
+        targetVelocity = baseVelocity + scrollVelocityRef.current * 1.8;
+      } else if (scrollVelocityRef.current < 0) {
+        // Reverse direction (left to right) when scrolling up, speed proportional to scroll velocity
+        targetVelocity = scrollVelocityRef.current * 1.8;
+      }
+
+      // Cap maximum velocity to prevent sudden teleporting during extreme flick scrolls
+      targetVelocity = Math.max(-2.2, Math.min(2.8, targetVelocity));
+
+      // Premium easing between current and target velocity
+      currentVelocityRef.current += (targetVelocity - currentVelocityRef.current) * 0.08;
+
+      scrollPosRef.current += currentVelocityRef.current * dt;
+
+      // Mathematically seamless infinite loop wrap in both directions
+      if (halfWidth > 0) {
+        if (scrollPosRef.current >= halfWidth) {
+          scrollPosRef.current %= halfWidth;
+        } else if (scrollPosRef.current < 0) {
+          scrollPosRef.current = ((scrollPosRef.current % halfWidth) + halfWidth) % halfWidth;
+        }
+      }
+
+      track.style.transform = `translate3d(${-scrollPosRef.current}px, 0, 0)`;
+
+      reqId = requestAnimationFrame(animate);
+    };
+
+    reqId = requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+      if (reqId) cancelAnimationFrame(reqId);
+    };
+  }, [carouselData.length]);
 
   // Dynamic category counts calculated from actual published section data
   const categoryCounts = useMemo(() => {
@@ -338,12 +442,39 @@ export default function SectionsPage() {
   const currentTabLabel = SECTION_TABS.find(t => t.id === activeTab)?.label || 'Popular Sections';
   const visibleCategories = TAB_CATEGORIES[currentTabLabel] || TAB_CATEGORIES['Popular Sections'];
 
+  // Responsive Masonry column count (3 on desktop >1024px, 2 on tablet 641px-1024px, 1 on mobile <=640px)
+  const [columnCount, setColumnCount] = useState(() => {
+    if (typeof window === 'undefined') return 3;
+    if (window.innerWidth <= 640) return 1;
+    if (window.innerWidth <= 1024) return 2;
+    return 3;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const nextCount = width <= 640 ? 1 : width <= 1024 ? 2 : 3;
+      setColumnCount(prev => (prev !== nextCount ? nextCount : prev));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Pagination calculation
   const totalPages = Math.ceil(filteredSections.length / ITEMS_PER_PAGE);
   const currentCards = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredSections.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredSections, currentPage]);
+
+  // Distribute cards round-robin across columns for natural left-to-right reading order
+  const columns = useMemo(() => {
+    const cols = Array.from({ length: columnCount }, () => []);
+    currentCards.forEach((sec, index) => {
+      cols[index % columnCount].push(sec);
+    });
+    return cols;
+  }, [currentCards, columnCount]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -410,8 +541,12 @@ export default function SectionsPage() {
 
         {/* ── Continuous Horizontal Scrolling Carousel ── */}
         {carouselData.length > 0 && (
-          <div className="sections-hero-carousel">
-            <div className="hero-scrolling-track">
+          <div 
+            className="sections-hero-carousel"
+            onMouseEnter={() => { isCarouselHoveredRef.current = true; }}
+            onMouseLeave={() => { isCarouselHoveredRef.current = false; }}
+          >
+            <div ref={carouselTrackRef} className="hero-scrolling-track">
               {/* Render two identical groups of cards to create a mathematically perfect infinite loop */}
               <div className="carousel-group">
                 {carouselData.map((sec, idx) => (
@@ -422,11 +557,24 @@ export default function SectionsPage() {
                     title={sec.section_title}
                   >
                     <div className="hero-carousel-image-wrap">
-                      <img 
-                        src={sec.thumbnail_url || sec.image_url} 
-                        alt={sec.section_title} 
-                        loading="lazy"
-                      />
+                      {isVideoMedia(sec.image_url || sec.thumbnail_url) ? (
+                        <video 
+                          src={sec.image_url || sec.thumbnail_url} 
+                          autoPlay 
+                          muted 
+                          loop 
+                          playsInline 
+                          preload="auto"
+                          className="hero-carousel-image" 
+                        />
+                      ) : (
+                        <img 
+                          src={sec.image_url || sec.thumbnail_url} 
+                          alt={sec.section_title} 
+                          loading="lazy"
+                          className="hero-carousel-image"
+                        />
+                      )}
                     </div>
                     <div className="hero-carousel-title-wrap">
                       <span className="hcc-title">{sec.section_title || sec.section_type || 'Section'}</span>
@@ -443,11 +591,24 @@ export default function SectionsPage() {
                     title={sec.section_title}
                   >
                     <div className="hero-carousel-image-wrap">
-                      <img 
-                        src={sec.thumbnail_url || sec.image_url} 
-                        alt={sec.section_title} 
-                        loading="lazy"
-                      />
+                      {isVideoMedia(sec.image_url || sec.thumbnail_url) ? (
+                        <video 
+                          src={sec.image_url || sec.thumbnail_url} 
+                          autoPlay 
+                          muted 
+                          loop 
+                          playsInline 
+                          preload="auto"
+                          className="hero-carousel-image" 
+                        />
+                      ) : (
+                        <img 
+                          src={sec.image_url || sec.thumbnail_url} 
+                          alt={sec.section_title} 
+                          loading="lazy"
+                          className="hero-carousel-image"
+                        />
+                      )}
                     </div>
                     <div className="hero-carousel-title-wrap">
                       <span className="hcc-title">{sec.section_title || sec.section_type || 'Section'}</span>
@@ -668,30 +829,38 @@ export default function SectionsPage() {
             </div>
           </div>
         ) : (
-          <div className="card-grid">
-            {currentCards.map(sec => (
-              <div 
-                key={sec.id} 
-                className="sections-card-wrapper"
-                onClick={() => handleCardClick(sec.id)}
-              >
-                <SectionCard 
-                  id={sec.id}
-                  section_type={sec.section_type}
-                  section_title={sec.section_title}
-                  image_url={sec.image_url || sec.thumbnail_url}
-                  thumbnail_url={sec.thumbnail_url}
-                  page_url={sec.page_url || sec.website_url}
-                  status={sec.status}
-                  parentWebsite={sec.submissions}
-                  onToast={addToast}
-                  onUpdateSection={(id, updated) => {
-                    setSections(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
-                  }}
-                  onDeleteSection={(id) => {
-                    setSections(prev => prev.filter(s => s.id !== id));
-                  }}
-                />
+          <div className="sections-masonry-grid">
+            {columns.map((colCards, colIdx) => (
+              <div key={colIdx} className="sections-masonry-col">
+                {colCards.map(sec => (
+                  <div 
+                    key={sec.id} 
+                    className="sections-card-wrapper"
+                    onClick={() => handleCardClick(sec.id)}
+                  >
+                    <SectionCard 
+                      id={sec.id}
+                      section_type={sec.section_type}
+                      section_title={sec.section_title}
+                      image_url={sec.image_url || sec.thumbnail_url}
+                      thumbnail_url={sec.thumbnail_url}
+                      page_url={sec.page_url || sec.website_url}
+                      status={sec.status}
+                      parentWebsite={sec.submissions}
+                      onToast={addToast}
+                      onEditSection={() => {
+                        setEditingSection(sec);
+                        setIsUploadOpen(true);
+                      }}
+                      onUpdateSection={(id, updated) => {
+                        setSections(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
+                      }}
+                      onDeleteSection={(id) => {
+                        setSections(prev => prev.filter(s => s.id !== id));
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -709,21 +878,32 @@ export default function SectionsPage() {
         )}
       </section>
 
-      {/* ── Upload Section Drawer ── */}
+      {/* ── Upload / Edit Section Drawer ── */}
       <SectionUploadDrawer 
         isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onUploadSuccess={({ count, status }) => {
-          if (status === 'Draft') {
-            addToast(
-              `${count} section${count > 1 ? 's' : ''} saved as draft!`,
-              'info'
-            );
+        initialSection={editingSection}
+        onClose={() => {
+          setIsUploadOpen(false);
+          setEditingSection(null);
+        }}
+        onUploadSuccess={({ count, status, isEdit, updatedSection }) => {
+          if (isEdit) {
+            addToast(status === 'Draft' ? 'Section saved as draft!' : 'Section updated successfully!', 'success');
+            if (updatedSection) {
+              setSections(prev => prev.map(s => s.id === updatedSection.id ? { ...s, ...updatedSection } : s));
+            }
           } else {
-            addToast(
-              `${count} section${count > 1 ? 's' : ''} published to the library!`,
-              'success'
-            );
+            if (status === 'Draft') {
+              addToast(
+                `${count} section${count > 1 ? 's' : ''} saved as draft!`,
+                'info'
+              );
+            } else {
+              addToast(
+                `${count} section${count > 1 ? 's' : ''} published to the library!`,
+                'success'
+              );
+            }
           }
           fetchSections();
         }}

@@ -222,9 +222,11 @@ export default function UITasteUploadModal({
     else if (lower.includes('dribbble.com')) setPlatform('Dribbble');
   };
 
-  // Downscale image if larger than max dimension to optimize load time & bandwidth
+  // Downscale image if larger than max dimension to optimize load time & bandwidth (bypass animated media)
   const optimizeImage = (imageFile) => {
     return new Promise((resolve) => {
+      const isAnimated = imageFile?.type === 'image/gif' || imageFile?.type === 'image/avif' || imageFile?.type?.startsWith('video/') || imageFile?.name?.toLowerCase().endsWith('.gif') || imageFile?.name?.toLowerCase().endsWith('.avif');
+      if (isAnimated) return resolve(imageFile);
       const img = new Image();
       img.onload = () => {
         const MAX_WIDTH = 1920;

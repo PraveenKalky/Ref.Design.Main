@@ -561,8 +561,30 @@
   color: #ffffff;
 }
 
-.sections-main-grid-section .card-grid {
-  align-items: start;
+/* True Masonry Grid Layout for Sections Page */
+.sections-masonry-grid {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+.sections-masonry-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .sections-masonry-grid {
+    gap: 16px;
+  }
+  .sections-masonry-col {
+    gap: 16px;
+  }
 }
 
 .sections-card-wrapper {
@@ -673,6 +695,7 @@
 .sections-hero-carousel {
   position: relative;
   width: 100%;
+  margin-top: 48px;
   padding-bottom: 40px;
   overflow: hidden;
   display: flex;
@@ -682,7 +705,7 @@
 .hero-scrolling-track {
   display: flex;
   width: max-content;
-  animation: scroll-carousel 40s linear infinite;
+  will-change: transform;
 }
 
 .carousel-group {
@@ -691,19 +714,9 @@
   padding-right: 20px; /* seamless spacing before the next group starts */
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero-scrolling-track {
-    animation-duration: 120s;
-  }
-}
-
-.hero-scrolling-track:hover {
-  animation-play-state: paused;
-}
-
 .hero-carousel-card {
   position: relative;
-  width: 320px;
+  width: 384px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -717,7 +730,7 @@
 
 .hero-carousel-image-wrap {
   width: 100%;
-  height: 180px; /* 16:9 aspect ratio */
+  height: 256px;
   border-radius: 20px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
@@ -728,7 +741,9 @@
   transform: translateZ(0); /* Prevents WebKit corner bleeding on transform */
 }
 
-.hero-carousel-image-wrap img {
+.hero-carousel-image-wrap img,
+.hero-carousel-image-wrap video,
+.hero-carousel-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -746,7 +761,9 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-.hero-carousel-card:hover img {
+.hero-carousel-card:hover img,
+.hero-carousel-card:hover video,
+.hero-carousel-card:hover .hero-carousel-image {
   transform: scale(1.05);
 }
 
@@ -780,26 +797,6 @@
 @keyframes scroll-carousel {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
-}
-
-@media (max-width: 768px) {
-  .hero-carousel-card {
-    width: 260px;
-    border-radius: 16px;
-    corner-shape: squircle;
-    -webkit-corner-shape: squircle;
-  }
-  .hero-carousel-image-wrap {
-    height: 146px; /* 16:9 aspect ratio */
-    border-radius: 16px;
-    corner-shape: squircle;
-    -webkit-corner-shape: squircle;
-  }
-  .hero-carousel-image-wrap img {
-    border-radius: 16px;
-    corner-shape: squircle;
-    -webkit-corner-shape: squircle;
-  }
 }
 
 /* ── Sweep & Shuffle Hover Effect for Hero CTAs ── */

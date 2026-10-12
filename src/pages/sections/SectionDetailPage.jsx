@@ -18,6 +18,7 @@ import { supabase } from '../../lib/supabase';
 import { SectionCard } from '../../components/card-grid/SectionsGrid';
 import { sanitizeSectionName } from '../admin/components/PageMediaUploader';
 import { classifySection } from '../../utils/sectionTaxonomy';
+import { isVideoMedia } from '../../utils/mediaUtils';
 import './section-detail.css';
 
 export default function SectionDetailPage() {
@@ -297,10 +298,7 @@ export default function SectionDetailPage() {
     : null;
   const parentWebsite = section.submissions;
   const visitUrl = section.page_url || section.website_url || parentWebsite?.url;
-  const isVideo = typeof section.image_url === 'string' && (
-    section.image_url.endsWith('.mp4') || section.image_url.endsWith('.webm') || section.image_url.endsWith('.mov') ||
-    section.image_url.includes('.mp4?') || section.image_url.includes('.webm?')
-  );
+  const isVideo = isVideoMedia(section.image_url);
 
   return (
     <div className="section-detail-page">
@@ -396,8 +394,12 @@ export default function SectionDetailPage() {
             {isVideo ? (
               <video 
                 src={section.image_url} 
+                autoPlay
+                muted
+                loop
                 controls
                 playsInline
+                preload="auto"
                 className="section-detail-image"
                 onLoadedMetadata={(e) => {
                   setImgNaturalSize({
@@ -546,6 +548,7 @@ export default function SectionDetailPage() {
               src={section.image_url} 
               controls
               autoPlay
+              loop
               playsInline
               className="section-detail-lightbox-img" 
               onClick={(e) => e.stopPropagation()} 

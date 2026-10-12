@@ -15,6 +15,7 @@ import {
 import './WebsitePreviewPanel.css';
 import dummyImage from '../../../assets/dummy-preview.jpg';
 import WebsiteMetadataPanel from './WebsiteMetadataPanel';
+import { isVideoMedia } from '../../../utils/mediaUtils';
 
 export default function WebsitePreviewPanel({
   website,
@@ -125,13 +126,26 @@ export default function WebsitePreviewPanel({
           className="preview-canvas-wrapper"
           style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
         >
-          <img 
-            ref={imageRef}
-            src={website.image || dummyImage} 
-            alt={website.title}
-            className={`preview-canvas-img ${cropActive ? 'crop-mode' : ''} ${activePanel === 'annotations' ? 'annotate-mode' : ''}`}
-            onClick={handleImageClick}
-          />
+          {isVideoMedia(website.image) ? (
+            <video 
+              ref={imageRef}
+              src={website.image} 
+              autoPlay
+              muted
+              loop
+              playsInline
+              className={`preview-canvas-img ${cropActive ? 'crop-mode' : ''} ${activePanel === 'annotations' ? 'annotate-mode' : ''}`}
+              onClick={handleImageClick}
+            />
+          ) : (
+            <img 
+              ref={imageRef}
+              src={website.image || dummyImage} 
+              alt={website.title}
+              className={`preview-canvas-img ${cropActive ? 'crop-mode' : ''} ${activePanel === 'annotations' ? 'annotate-mode' : ''}`}
+              onClick={handleImageClick}
+            />
+          )}
 
           {/* Render Crop Handles Overlay if active */}
           {cropActive && (

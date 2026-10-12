@@ -20,7 +20,8 @@ const UI_KEYWORDS = [
 // Helper to auto-generate a 16:10 top-fold thumbnail from a full screenshot
 const generateAutoThumbnail = (file, targetRatio = 16 / 10) => {
   return new Promise((resolve) => {
-    if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('svg')) {
+    const isAnimated = file?.type === 'image/gif' || file?.type === 'image/avif' || file?.name?.toLowerCase().endsWith('.gif') || file?.name?.toLowerCase().endsWith('.avif');
+    if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('svg') || isAnimated) {
       return resolve(null);
     }
     const img = new Image();
@@ -525,10 +526,10 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName
     setErrorMsg('');
     if (!files || files.length === 0) return;
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'video/mp4', 'video/quicktime'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif', 'image/avif', 'video/mp4', 'video/webm', 'video/quicktime'];
     const candidates = Array.from(files).filter(file => {
       if (!validTypes.includes(file.type)) {
-        setErrorMsg('Some files were skipped. Unsupported type. Please upload PNG, JPG, JPEG, WEBP, MP4, or MOV.');
+        setErrorMsg('Some files were skipped. Unsupported type. Please upload PNG, JPG, JPEG, WEBP, GIF, AVIF, MP4, WEBM, or MOV.');
         return false;
       }
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -736,7 +737,7 @@ const PageMediaUploader = ({ media = [], onChange, folder = 'pages', companyName
       <input
         ref={inputRef}
         type="file"
-        accept="image/png, image/jpeg, image/jpg, image/webp, video/mp4, video/quicktime"
+        accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/avif, video/mp4, video/webm, video/quicktime"
         multiple
         onChange={handleChange}
         style={{ display: "none" }}

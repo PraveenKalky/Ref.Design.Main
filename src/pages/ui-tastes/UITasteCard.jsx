@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bookmark, Play } from 'lucide-react';
+import { isVideoMedia } from '../../utils/mediaUtils';
 
 export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) {
   const [imageError, setImageError] = React.useState(false);
@@ -91,12 +92,23 @@ export default function UITasteCard({ post, isSaved, toggleSave, isResolving }) 
                 : (!localMediaUrl ? 'Thumbnail unavailable' : 'Media failed to load')}
             </small>
           </div>
+        ) : (post.is_video || isVideoMedia(localMediaUrl)) ? (
+          <video
+            src={localMediaUrl}
+            className="taste-card-image"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
         ) : (
           <img 
             src={getDisplayImageUrl(localMediaUrl)} 
             alt={post.description || post.username} 
             className="taste-card-image" 
             onError={() => setImageError(true)}
+            loading="lazy"
           />
         )}
 

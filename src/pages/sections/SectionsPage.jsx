@@ -81,6 +81,7 @@ export default function SectionsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const filterBarRef = useRef(null);
+  const heroRef = useRef(null);
   const searchInputRef = useRef(null);
 
   // Filter & Search states
@@ -143,6 +144,7 @@ export default function SectionsPage() {
           description,
           status,
           created_at,
+          media,
           submissions:website_id (
             id,
             title,
@@ -159,7 +161,8 @@ export default function SectionsPage() {
           section_type: s.section_type || classification.category || 'Section',
           section_title: s.section_title || classification.title || 'Section',
           category: s.category || classification.category,
-          tags: Array.isArray(s.tags) && s.tags.length > 0 ? s.tags : classification.tags
+          tags: Array.isArray(s.tags) && s.tags.length > 0 ? s.tags : classification.tags,
+          media: Array.isArray(s.media) ? s.media : []
         };
       }) : [];
 
@@ -240,21 +243,19 @@ export default function SectionsPage() {
       lastScrollYRef.current = currentY;
       lastScrollTimeRef.current = now;
 
-      // dy > 0 when scrolling down; dy < 0 when scrolling up
-      scrollVelocityRef.current = dy / dt;
-    };
-
-    const handleWheel = (e) => {
-      // When at or near top of page and user scrolls upward (e.deltaY < 0),
-      // window.scrollY cannot go below 0 so window scroll won't fire.
-      // Directly inject scroll velocity impulse from wheel gesture.
-      if (window.scrollY <= 4 && e.deltaY < 0) {
-        scrollVelocityRef.current = Math.min(-0.8, e.deltaY * 0.02);
+      // When already at the top of the page (scrollY <= 0) and attempting to scroll up:
+      // Do NOT trigger any scroll-based acceleration or reversal. Keep normal automatic loop.
+      if (currentY <= 0 && dy <= 0) {
+        scrollVelocityRef.current = 0;
+        return;
       }
+
+      // Normal scroll through the page (scrolling down or scrolling up from below):
+      const clampedDy = Math.max(-120, Math.min(120, dy));
+      scrollVelocityRef.current = clampedDy / dt;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('wheel', handleWheel, { passive: true });
 
     const animate = (now) => {
       const dt = Math.min(32, Math.max(8, now - lastTime));
@@ -265,7 +266,7 @@ export default function SectionsPage() {
       const baseVelocity = halfWidth > 0 ? halfWidth / 80000 : 0.05;
 
       // Smooth decay of scroll velocity towards 0 when scrolling stops
-      scrollVelocityRef.current *= 0.92;
+      scrollVelocityRef.current *= 0.88;
       if (Math.abs(scrollVelocityRef.current) < 0.001) {
         scrollVelocityRef.current = 0;
       }
@@ -275,18 +276,18 @@ export default function SectionsPage() {
         // Smoothly pause on hover when user is not actively scrolling
         targetVelocity = 0;
       } else if (scrollVelocityRef.current > 0) {
-        // Accelerate in existing direction (right to left) when scrolling down
-        targetVelocity = baseVelocity + scrollVelocityRef.current * 1.8;
+        // Scroll down: cards accelerate in original direction (right to left)
+        targetVelocity = baseVelocity + scrollVelocityRef.current * 0.8;
       } else if (scrollVelocityRef.current < 0) {
-        // Reverse direction (left to right) when scrolling up, speed proportional to scroll velocity
-        targetVelocity = scrollVelocityRef.current * 1.8;
+        // Scroll up from below: cards move left to right, accelerating based on scroll speed
+        targetVelocity = scrollVelocityRef.current * 0.8;
       }
 
       // Cap maximum velocity to prevent sudden teleporting during extreme flick scrolls
-      targetVelocity = Math.max(-2.2, Math.min(2.8, targetVelocity));
+      targetVelocity = Math.max(-1.8, Math.min(2.2, targetVelocity));
 
       // Premium easing between current and target velocity
-      currentVelocityRef.current += (targetVelocity - currentVelocityRef.current) * 0.08;
+      currentVelocityRef.current += (targetVelocity - currentVelocityRef.current) * 0.10;
 
       scrollPosRef.current += currentVelocityRef.current * dt;
 
@@ -308,7 +309,6 @@ export default function SectionsPage() {
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('wheel', handleWheel);
       if (reqId) cancelAnimationFrame(reqId);
     };
   }, [carouselData.length]);
@@ -488,7 +488,7 @@ export default function SectionsPage() {
   return (
     <div className="sections-page">
       {/* ── Craftwork-Inspired Atmospheric Hero ── */}
-      <section className="sections-craft-hero">
+      <section ref={heroRef} className="sections-craft-hero">
         <div className="sections-hero-container">
           {/* Floating Pill Announcement Badge */}
           <div className="sections-hero-badge-wrap">
@@ -847,6 +847,7 @@ export default function SectionsPage() {
                       page_url={sec.page_url || sec.website_url}
                       status={sec.status}
                       parentWebsite={sec.submissions}
+                      media={sec.media}
                       onToast={addToast}
                       onEditSection={() => {
                         setEditingSection(sec);

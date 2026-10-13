@@ -32,6 +32,7 @@ export default function SectionDetailPage() {
   const [toasts, setToasts] = useState([]);
   const [isSaved, setIsSaved] = useState(false);
   const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 });
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   const addToast = useCallback((message, type = 'success') => {
     const toastId = Date.now() + Math.random();
@@ -66,6 +67,7 @@ export default function SectionDetailPage() {
               tags,
               description,
               created_at,
+              media,
               submissions:website_id (
                 id,
                 title,
@@ -85,7 +87,8 @@ export default function SectionDetailPage() {
               section_title: data.section_title || classification.title,
               section_type: data.section_type || classification.category,
               category: classification.category,
-              tags: Array.isArray(data.tags) && data.tags.length > 0 ? data.tags : classification.tags
+              tags: Array.isArray(data.tags) && data.tags.length > 0 ? data.tags : classification.tags,
+              media: Array.isArray(data.media) ? data.media : []
             };
           }
         }
@@ -217,7 +220,8 @@ export default function SectionDetailPage() {
   // Handle Copy Image
   const handleCopyImage = async () => {
     try {
-      const resp = await fetch(section.image_url, { mode: 'cors' });
+      const targetUrl = currentMediaUrl || section.image_url;
+      const resp = await fetch(targetUrl, { mode: 'cors' });
       const blob = await resp.blob();
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -239,17 +243,17 @@ export default function SectionDetailPage() {
             await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
             addToast('Image copied to clipboard');
           } catch {
-            await navigator.clipboard.writeText(section.image_url);
+            await navigator.clipboard.writeText(targetUrl);
             addToast('Image URL copied');
           }
         } else {
-          await navigator.clipboard.writeText(section.image_url);
+          await navigator.clipboard.writeText(targetUrl);
           addToast('Image URL copied');
         }
       }, 'image/png');
     } catch {
       try {
-        await navigator.clipboard.writeText(section.image_url);
+        await navigator.clipboard.writeText(currentMediaUrl || section.image_url);
         addToast('Image link copied');
       } catch {
         addToast('Failed to copy', 'error');
@@ -261,12 +265,13 @@ export default function SectionDetailPage() {
   const handleDownload = async () => {
     addToast('Download started');
     try {
-      const resp = await fetch(section.image_url);
+      const targetUrl = currentMediaUrl || section.image_url;
+      const resp = await fetch(targetUrl);
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const cleanName = (section.section_title || section.section_type || 'section')
+      const cleanName = (currentMedia.title || section.section_title || section.section_type || 'section')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-');
       a.download = `${cleanName}.png`;
@@ -275,7 +280,7 @@ export default function SectionDetailPage() {
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
-      window.open(section.image_url, '_blank');
+      window.open(currentMediaUrl || section.image_url, '_blank');
     }
   };
 
@@ -297,8 +302,28 @@ export default function SectionDetailPage() {
     ? strType
     : null;
   const parentWebsite = section.submissions;
-  const visitUrl = section.page_url || section.website_url || parentWebsite?.url;
-  const isVideo = isVideoMedia(section.image_url);
+  const mediaList = (section?.media && Array.isArray(section.media) && section.media.length > 0)
+    ? section.media
+    : [{ url: section?.image_url, thumbnailUrl: section?.thumbnail_url, title: cleanTitle }];
+
+  const currentMedia = mediaList[activeMediaIndex] || mediaList[0] || { url: section?.image_url, title: cleanTitle };
+  const currentMediaUrl = currentMedia.url || section.image_url;
+  const isVideo = isVideoMedia(currentMediaUrl);
+
+  // Keyboard navigation for multi-screen collections
+  useEffect(() => {
+    if (!section?.media || section.media.length <= 1) return;
+    const handleKeyNav = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight') {
+        setActiveMediaIndex(curr => (curr + 1) % section.media.length);
+      } else if (e.key === 'ArrowLeft') {
+        setActiveMediaIndex(curr => (curr - 1 + section.media.length) % section.media.length);
+      }
+    };
+    window.addEventListener('keydown', handleKeyNav);
+    return () => window.removeEventListener('keydown', handleKeyNav);
+  }, [section?.media]);
 
   return (
     <div className="section-detail-page">
@@ -393,7 +418,8 @@ export default function SectionDetailPage() {
           <div className="section-detail-image-wrapper">
             {isVideo ? (
               <video 
-                src={section.image_url} 
+                key={currentMediaUrl}
+                src={currentMediaUrl} 
                 autoPlay
                 muted
                 loop
@@ -410,8 +436,9 @@ export default function SectionDetailPage() {
               />
             ) : (
               <img 
-                src={section.image_url} 
-                alt={cleanTitle} 
+                key={currentMediaUrl}
+                src={currentMediaUrl} 
+                alt={currentMedia.title || cleanTitle} 
                 className="section-detail-image"
                 onClick={() => setIsFullscreen(true)}
                 onLoad={(e) => {
@@ -424,6 +451,46 @@ export default function SectionDetailPage() {
             )}
           </div>
         </div>
+
+        {/* ── Filmstrip Bar for Multi-Screen Collections ── */}
+        {section.media && Array.isArray(section.media) && section.media.length > 1 && (
+          <div className="section-detail-filmstrip-bar">
+            <div className="section-detail-filmstrip-header">
+              <span className="section-detail-filmstrip-title">
+                Screens in this collection ({section.media.length})
+              </span>
+              <span className="section-detail-filmstrip-counter">
+                Screen {activeMediaIndex + 1} of {section.media.length} • Use ← → arrow keys to switch
+              </span>
+            </div>
+            <div className="section-detail-filmstrip-track">
+              {section.media.map((screen, idx) => {
+                const isActive = idx === activeMediaIndex;
+                const isScreenVideo = isVideoMedia(screen.url);
+                return (
+                  <button
+                    key={`${screen.url}-${idx}`}
+                    type="button"
+                    className={`section-detail-filmstrip-thumb ${isActive ? 'is-active' : ''}`}
+                    onClick={() => setActiveMediaIndex(idx)}
+                    title={screen.title || `Screen ${idx + 1}`}
+                  >
+                    {isScreenVideo ? (
+                      <video src={screen.url} muted className="filmstrip-media" />
+                    ) : (
+                      <img 
+                        src={screen.thumbnailUrl || screen.url} 
+                        alt={screen.title || `Screen ${idx + 1}`} 
+                        className="filmstrip-media" 
+                      />
+                    )}
+                    <span className="filmstrip-badge">{idx + 1}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Metadata & Source Panel ── */}
         <div className="section-detail-info-grid">

@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Check, CaretDown, Sparkle } from '@phosphor-icons/react';
+import { X, Check, CaretDown, Sparkle, MagnifyingGlass, Plus, Star } from '@phosphor-icons/react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import { uploadWithProgress } from '../../../utils/uploadXHR';
 import { sanitizeSectionName } from '../../admin/components/PageMediaUploader';
 import { ALL_SECTION_CATEGORIES, GEMINI_SECTION_CATEGORIES } from '../../../data/section-categories';
 import { classifySection } from '../../../utils/sectionTaxonomy';
+import { saveDraft, loadDraft, clearDraft } from '../../../utils/draftStorage';
 import './section-upload-drawer.css';
 
 // ─────────────────────────────────────────────
@@ -183,56 +184,435 @@ const analyzeWithGemini = async (file) => {
 // Sub-components
 // ─────────────────────────────────────────────
 
-function CategoryDropdown({ value, onChange }) {
-  const [open, setOpen] = useState(false);
+const DEFAULT_SECTION_TAGS = [
+  'Dark Mode',
+  'Light Mode',
+  'SaaS',
+  'Fintech',
+  'Crypto',
+  'Web3',
+  'Bento Grid',
+  'Split Layout',
+  'Minimal',
+  'Gradient',
+  'Interactive',
+  'Cards',
+  'Sticky',
+  'Multi-step',
+  'Animation',
+  'Illustration',
+  'Mobile',
+  'Responsive',
+  'Pricing Table',
+  'Dashboard',
+  'Hero',
+  'Modal',
+  'Dropdown',
+  'Table',
+  'Form',
+  'Tabs',
+  'Carousel',
+  'Accordion',
+  'Stats',
+  'Testimonial',
+  'CTA',
+  'Navbar',
+  'Footer',
+];
+
+function CategoryDropdown({ value, onChange, isOpen: controlledOpen, onToggle, onClose }) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [maxScrollHeight, setMaxScrollHeight] = useState(320);
   const ref = useRef(null);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        if (isControlled) {
+          onClose?.();
+        } else {
+          setInternalOpen(false);
+        }
+      }
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+  }, [open, isControlled, onClose]);
+
+  useEffect(() => {
+    if (open) setSearchQuery('');
   }, [open]);
+
+  // Viewport-aware height adjustment to avoid clipping near drawer bottom
+  useEffect(() => {
+    if (!open) return;
+
+    const adjustHeight = () => {
+      if (!ref.current) return;
+      const cardEl = ref.current.closest('.sud-strip-card') || ref.current;
+      const cardRect = cardEl.getBoundingClientRect();
+      const panelEl = ref.current.closest('.sud-panel');
+      const footerEl = panelEl?.querySelector('.sud-footer');
+      
+      const bottomBoundary = footerEl 
+        ? footerEl.getBoundingClientRect().top 
+        : (panelEl ? panelEl.getBoundingClientRect().bottom : window.innerHeight);
+
+      // Available space below card (with margin)
+      const spaceBelow = bottomBoundary - cardRect.bottom - 24;
+      const idealHeight = 320; // 10 rows
+
+      if (spaceBelow >= idealHeight + 60) {
+        setMaxScrollHeight(idealHeight);
+      } else {
+        const availForScroll = Math.max(158, spaceBelow - 55);
+        // Snap to complete rows: row pitch is 32px (26px height + 6px gap)
+        const rowsFit = Math.max(4, Math.floor((availForScroll + 2) / 32));
+        const snappedHeight = rowsFit * 32;
+        setMaxScrollHeight(snappedHeight);
+
+        if (spaceBelow < 280) {
+          cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    };
+
+    adjustHeight();
+    const timer = setTimeout(adjustHeight, 320);
+    window.addEventListener('resize', adjustHeight);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', adjustHeight);
+    };
+  }, [open]);
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredCategories = ALL_SECTION_CATEGORIES.filter(c =>
+    !normalizedQuery || c.toLowerCase().includes(normalizedQuery)
+  );
+
+  const handleSelect = (cat) => {
+    if (value === cat) {
+      onChange('Other');
+    } else {
+      onChange(cat);
+    }
+    if (isControlled) {
+      onClose?.();
+    } else {
+      setInternalOpen(false);
+    }
+  };
+
+  const handleToggle = () => {
+    if (isControlled) {
+      onToggle?.();
+    } else {
+      setInternalOpen(o => !o);
+    }
+  };
 
   return (
     <div className="sud-dropdown-container" ref={ref}>
       <button
         type="button"
         className={`sud-dropdown-trigger ${open ? 'is-open' : ''}`}
-        onClick={() => setOpen(o => !o)}
+        onClick={handleToggle}
+        title="Select Category"
       >
         <span className="sud-dropdown-value">{value || 'Select category…'}</span>
         <CaretDown size={13} weight="bold" className={`sud-dropdown-caret ${open ? 'is-open' : ''}`} />
       </button>
+
       {open && (
-        <div className="sud-dropdown-menu">
-          {ALL_SECTION_CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              type="button"
-              className={`sud-dropdown-item ${value === cat ? 'selected' : ''}`}
-              onClick={() => { onChange(cat); setOpen(false); }}
-            >
-              <span>{cat}</span>
-              {value === cat && <Check size={13} weight="bold" />}
-            </button>
-          ))}
+        <div className="sud-dropdown-menu" role="dialog" aria-label="Category selector">
+          {/* 1. Search Bar */}
+          <div className="sud-dropdown-search-wrap">
+            <MagnifyingGlass size={13} weight="bold" className="sud-search-icon" />
+            <input
+              type="text"
+              className="sud-dropdown-search-input"
+              placeholder="Search categories…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="sud-search-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <X size={11} weight="bold" />
+              </button>
+            )}
+          </div>
+
+          {/* 2. Selectable Category Pills Cloud */}
+          <div 
+            className="sud-tags-cloud-scroll"
+            style={{ maxHeight: `${maxScrollHeight}px` }}
+          >
+            <div className="sud-tags-cloud">
+              {filteredCategories.map(cat => {
+                const isSelected = value === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`sud-tag-pill ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => handleSelect(cat)}
+                  >
+                    {isSelected && <Check size={11} weight="bold" className="sud-tag-check" />}
+                    <span>{cat}</span>
+                  </button>
+                );
+              })}
+              {filteredCategories.length === 0 && (
+                <div className="sud-dropdown-empty">No categories matching &ldquo;{searchQuery}&rdquo;</div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function UploadQueueItem({ item, onRemove, onCategoryChange, onTitleChange, onClassifyAI }) {
+function TagsDropdown({ value = [], onChange, isOpen: controlledOpen, onToggle, onClose }) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [customTags, setCustomTags] = useState([]);
+  const [maxScrollHeight, setMaxScrollHeight] = useState(320);
+  const ref = useRef(null);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        if (isControlled) {
+          onClose?.();
+        } else {
+          setInternalOpen(false);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open, isControlled, onClose]);
+
+  useEffect(() => {
+    if (open) setSearchQuery('');
+  }, [open]);
+
+  // Viewport-aware height adjustment to avoid clipping near drawer bottom
+  useEffect(() => {
+    if (!open) return;
+
+    const adjustHeight = () => {
+      if (!ref.current) return;
+      const cardEl = ref.current.closest('.sud-strip-card') || ref.current;
+      const cardRect = cardEl.getBoundingClientRect();
+      const panelEl = ref.current.closest('.sud-panel');
+      const footerEl = panelEl?.querySelector('.sud-footer');
+      
+      const bottomBoundary = footerEl 
+        ? footerEl.getBoundingClientRect().top 
+        : (panelEl ? panelEl.getBoundingClientRect().bottom : window.innerHeight);
+
+      const spaceBelow = bottomBoundary - cardRect.bottom - 24;
+      const idealHeight = 320;
+
+      if (spaceBelow >= idealHeight + 60) {
+        setMaxScrollHeight(idealHeight);
+      } else {
+        const availForScroll = Math.max(158, spaceBelow - 55);
+        const rowsFit = Math.max(4, Math.floor((availForScroll + 2) / 32));
+        const snappedHeight = rowsFit * 32;
+        setMaxScrollHeight(snappedHeight);
+
+        if (spaceBelow < 280) {
+          cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    };
+
+    adjustHeight();
+    const timer = setTimeout(adjustHeight, 320);
+    window.addEventListener('resize', adjustHeight);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', adjustHeight);
+    };
+  }, [open]);
+
+  const currentTagsList = Array.isArray(value) ? value : [];
+
+  // Combine selected tags, user-created tags, and default tags
+  const combinedTags = Array.from(new Set([
+    ...currentTagsList,
+    ...customTags,
+    ...DEFAULT_SECTION_TAGS,
+  ]));
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredTags = combinedTags.filter(t =>
+    !normalizedQuery || t.toLowerCase().includes(normalizedQuery)
+  );
+
+  const exactMatchExists = combinedTags.some(t => t.toLowerCase() === normalizedQuery);
+
+  const handleToggle = (tag) => {
+    if (currentTagsList.includes(tag)) {
+      onChange(currentTagsList.filter(t => t !== tag));
+    } else {
+      onChange([...currentTagsList, tag]);
+    }
+  };
+
+  const handleCreate = (tagToCreate) => {
+    const trimmed = (tagToCreate || searchQuery).trim();
+    if (!trimmed) return;
+    const formatted = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    if (!customTags.includes(formatted)) {
+      setCustomTags(prev => [...prev, formatted]);
+    }
+    if (!currentTagsList.includes(formatted)) {
+      onChange([...currentTagsList, formatted]);
+    }
+    setSearchQuery('');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (normalizedQuery && !exactMatchExists) {
+        handleCreate(searchQuery);
+      } else if (filteredTags.length > 0) {
+        handleToggle(filteredTags[0]);
+      }
+    }
+  };
+
+  const handleToggleOpen = () => {
+    if (isControlled) {
+      onToggle?.();
+    } else {
+      setInternalOpen(o => !o);
+    }
+  };
+
+  const triggerLabel = currentTagsList.length === 0
+    ? 'Tags'
+    : currentTagsList.length === 1
+      ? currentTagsList[0]
+      : `${currentTagsList.length} Tags`;
+
   return (
-    <div className="sud-queue-item">
-      {/* Thumbnail */}
-      <div className="sud-queue-thumb">
+    <div className="sud-dropdown-container" ref={ref}>
+      <button
+        type="button"
+        className={`sud-dropdown-trigger ${open ? 'is-open' : ''}`}
+        onClick={handleToggleOpen}
+        title="Select Tags"
+      >
+        <span className="sud-dropdown-value">{triggerLabel}</span>
+        <CaretDown size={13} weight="bold" className={`sud-dropdown-caret ${open ? 'is-open' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="sud-dropdown-menu" role="dialog" aria-label="Tags selector">
+          {/* 1. Search Bar */}
+          <div className="sud-dropdown-search-wrap">
+            <MagnifyingGlass size={13} weight="bold" className="sud-search-icon" />
+            <input
+              type="text"
+              className="sud-dropdown-search-input"
+              placeholder="Search or create tag…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="sud-search-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <X size={11} weight="bold" />
+              </button>
+            )}
+          </div>
+
+          {/* 2. Selectable Tags Cloud */}
+          <div 
+            className="sud-tags-cloud-scroll"
+            style={{ maxHeight: `${maxScrollHeight}px` }}
+          >
+            <div className="sud-tags-cloud">
+              {normalizedQuery && !exactMatchExists && (
+                <button
+                  type="button"
+                  className="sud-tag-pill is-create"
+                  onClick={() => handleCreate(searchQuery)}
+                  title={`Create "${searchQuery.trim()}"`}
+                >
+                  <Plus size={11} weight="bold" />
+                  <span>Create &ldquo;{searchQuery.trim()}&rdquo;</span>
+                </button>
+              )}
+
+              {filteredTags.map(tag => {
+                const isSelected = currentTagsList.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`sud-tag-pill ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => handleToggle(tag)}
+                  >
+                    {isSelected && <Check size={11} weight="bold" className="sud-tag-check" />}
+                    <span>{tag}</span>
+                  </button>
+                );
+              })}
+
+              {filteredTags.length === 0 && !normalizedQuery && (
+                <div className="sud-dropdown-empty">No tags available</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UploadQueueItem({ item, onRemove, onCategoryChange, onTitleChange, onTagsChange }) {
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'category' | 'tags' | null
+
+  return (
+    <div className="sud-strip-card">
+      {/* 1. Media Preview Area */}
+      <div className="sud-strip-media-wrap">
         {item.previewUrl ? (
           item.isVideo ? (
             <video 
               src={item.previewUrl} 
-              className="sud-queue-thumb-img" 
+              className="sud-strip-media" 
               autoPlay 
               loop 
               muted 
@@ -240,69 +620,267 @@ function UploadQueueItem({ item, onRemove, onCategoryChange, onTitleChange, onCl
               preload="auto" 
             />
           ) : (
-            <img src={item.previewUrl} alt={item.filename} className="sud-queue-thumb-img" />
+            <img src={item.previewUrl} alt={item.title || item.category || 'Section preview'} className="sud-strip-media" />
           )
         ) : (
-          <div className="sud-queue-thumb-placeholder" />
+          <div className="sud-strip-placeholder" />
         )}
 
-        {item.isClassifying && <div className="sud-queue-badge">✦ AI</div>}
+        {/* Upload progress bar */}
         {item.status === 'uploading' && (
-          <div className="sud-queue-progress-bar">
-            <div className="sud-queue-progress-fill" style={{ width: `${item.progress}%` }} />
+          <div className="sud-strip-progress-bar">
+            <div className="sud-strip-progress-fill" style={{ width: `${item.progress}%` }} />
           </div>
         )}
-        {item.status === 'done' && <div className="sud-queue-badge sud-queue-badge--done">✓</div>}
-        {item.status === 'error' && <div className="sud-queue-badge sud-queue-badge--error">!</div>}
+
+        {/* Remove Button in top-right of media */}
+        <button
+          type="button"
+          className="sud-strip-remove-btn"
+          onClick={() => onRemove(item.id)}
+          title="Remove"
+          aria-label="Remove upload"
+        >
+          <X size={13} weight="bold" />
+        </button>
       </div>
 
-      {/* Meta & Inputs */}
-      <div className="sud-queue-meta">
-        {/* Editable Title: Preserves original filename by default */}
-        <div className="sud-queue-title-wrap">
+      {/* 2. Integrated Bottom 2-Row Meta Area */}
+      <div className="sud-strip-footer">
+        {/* Row 1: Full-Width Section Title */}
+        <div className="sud-strip-title-row">
           <input
             type="text"
-            className="sud-queue-title-input"
-            value={item.title}
+            className="sud-strip-title-input"
+            value={item.title || ''}
             onChange={(e) => onTitleChange(item.id, e.target.value)}
             placeholder="Section title…"
-            title="Edit section title (original filename preserved by default)"
+            title="Section title"
           />
         </div>
 
-        {/* Original filename subtitle */}
-        <div className="sud-queue-filename-sub" title={item.filename}>
-          {item.filename}
+        {/* Row 2: Category Dropdown (Left) + Tags Dropdown (Right) */}
+        <div className="sud-strip-utility-row">
+          <div className="sud-strip-category-wrap">
+            <CategoryDropdown 
+              value={item.category} 
+              onChange={(cat) => onCategoryChange(item.id, cat)}
+              isOpen={activeDropdown === 'category'}
+              onToggle={() => setActiveDropdown(curr => curr === 'category' ? null : 'category')}
+              onClose={() => setActiveDropdown(curr => curr === 'category' ? null : curr)}
+            />
+          </div>
+
+          <div className="sud-strip-tags-wrap">
+            <TagsDropdown
+              value={item.tags || []}
+              onChange={(tags) => onTagsChange(item.id, tags)}
+              isOpen={activeDropdown === 'tags'}
+              onToggle={() => setActiveDropdown(curr => curr === 'tags' ? null : 'tags')}
+              onClose={() => setActiveDropdown(curr => curr === 'tags' ? null : curr)}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GroupCollectionCard({
+  queue,
+  coverItemId,
+  onSelectCover,
+  onRemoveItem,
+  onReorder,
+  title,
+  onTitleChange,
+  category,
+  onCategoryChange,
+  tags,
+  onTagsChange,
+  onAddMore,
+}) {
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const activeCover = queue.find(q => q.id === coverItemId) || queue[0];
+  const coverIndex = queue.findIndex(q => q.id === activeCover?.id);
+
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (isNaN(sourceIndex) || sourceIndex === targetIndex) return;
+    onReorder(sourceIndex, targetIndex);
+  };
+
+  return (
+    <div className="sud-strip-card sud-group-collection-card">
+      {/* 1. Primary Cover Media Preview */}
+      <div className="sud-strip-media-wrap sud-group-cover-wrap">
+        {activeCover?.previewUrl ? (
+          activeCover.isVideo ? (
+            <video
+              src={activeCover.previewUrl}
+              className="sud-strip-media"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+            />
+          ) : (
+            <img
+              src={activeCover.previewUrl}
+              alt={title || 'Collection Cover'}
+              className="sud-strip-media"
+            />
+          )
+        ) : (
+          <div className="sud-strip-placeholder" />
+        )}
+
+        {/* Cover Indicator Badge */}
+        <div className="sud-cover-pill">
+          <Star size={11} weight="fill" />
+          <span>Cover ({coverIndex >= 0 ? coverIndex + 1 : 1} of {queue.length})</span>
         </div>
 
-        {/* Controls row: Category dropdown + optional manual AI classify */}
-        <div className="sud-queue-controls">
-          <CategoryDropdown value={item.category} onChange={(cat) => onCategoryChange(item.id, cat)} />
+        {/* Upload progress bar */}
+        {activeCover?.status === 'uploading' && (
+          <div className="sud-strip-progress-bar">
+            <div className="sud-strip-progress-fill" style={{ width: `${activeCover.progress}%` }} />
+          </div>
+        )}
 
-          {!item.isVideo && (
-            <button
-              type="button"
-              className={`sud-ai-classify-btn ${item.isClassifying ? 'is-loading' : ''}`}
-              onClick={() => onClassifyAI(item.id)}
-              disabled={item.isClassifying || item.status === 'uploading'}
-              title="Classify section with AI"
-            >
-              <Sparkle size={11} weight="fill" />
-              <span>{item.isClassifying ? 'Analyzing…' : 'Classify'}</span>
-            </button>
-          )}
-        </div>
-
-        {/* Status text */}
-        {item.status === 'uploading' && <div className="sud-queue-status">Uploading {item.progress}%…</div>}
-        {item.status === 'error' && <div className="sud-queue-status sud-queue-status--error">{item.errorMsg || 'Upload failed'}</div>}
-        {item.status === 'waiting' && <div className="sud-queue-status">Waiting…</div>}
+        {/* Remove Current Cover button */}
+        {activeCover && (
+          <button
+            type="button"
+            className="sud-strip-remove-btn"
+            onClick={() => onRemoveItem(activeCover.id)}
+            title="Remove from collection"
+            aria-label="Remove screenshot"
+          >
+            <X size={13} weight="bold" />
+          </button>
+        )}
       </div>
 
-      {/* Remove Button */}
-      <button type="button" className="sud-queue-remove" onClick={() => onRemove(item.id)} title="Remove">
-        <X size={14} weight="bold" />
-      </button>
+      {/* 2. Collection Thumbnail Filmstrip Reel */}
+      <div className="sud-collection-reel-section">
+        <div className="sud-collection-reel-header">
+          <span className="sud-collection-reel-title">
+            Screens in Collection ({queue.length})
+          </span>
+          <span className="sud-collection-reel-hint">
+            Click to set cover • Drag to reorder
+          </span>
+        </div>
+
+        <div className="sud-collection-reel">
+          {queue.map((item, idx) => {
+            const isCover = item.id === activeCover?.id;
+            return (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, idx)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, idx)}
+                className={`sud-collection-chip ${isCover ? 'is-cover' : ''}`}
+                onClick={() => onSelectCover(item.id)}
+                title={isCover ? 'Current Cover Image' : `Set screen ${idx + 1} as Cover`}
+              >
+                {item.previewUrl ? (
+                  item.isVideo ? (
+                    <video src={item.previewUrl} className="sud-chip-media" muted playsInline />
+                  ) : (
+                    <img src={item.previewUrl} alt={item.title || `Screen ${idx + 1}`} className="sud-chip-media" />
+                  )
+                ) : (
+                  <div className="sud-chip-placeholder" />
+                )}
+
+                {isCover && (
+                  <span className="sud-chip-star" title="Cover Image">
+                    <Star size={10} weight="fill" />
+                  </span>
+                )}
+
+                <span className="sud-chip-index">{idx + 1}</span>
+
+                {queue.length > 1 && (
+                  <button
+                    type="button"
+                    className="sud-chip-remove-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveItem(item.id);
+                    }}
+                    title="Remove screen"
+                  >
+                    <X size={9} weight="bold" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          <button
+            type="button"
+            className="sud-collection-add-chip"
+            onClick={onAddMore}
+            title="Add more screenshots to collection"
+          >
+            <Plus size={14} weight="bold" />
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Integrated Bottom 2-Row Meta Area */}
+      <div className="sud-strip-footer">
+        {/* Row 1: Full-Width Collection Title */}
+        <div className="sud-strip-title-row">
+          <input
+            type="text"
+            className="sud-strip-title-input"
+            value={title || ''}
+            onChange={(e) => onTitleChange(e.target.value)}
+            placeholder="Collection title (e.g. Dashboard Suite)…"
+            title="Collection title"
+          />
+        </div>
+
+        {/* Row 2: Category Dropdown (Left) + Tags Dropdown (Right) */}
+        <div className="sud-strip-utility-row">
+          <div className="sud-strip-category-wrap">
+            <CategoryDropdown
+              value={category}
+              onChange={onCategoryChange}
+              isOpen={activeDropdown === 'category'}
+              onToggle={() => setActiveDropdown(curr => curr === 'category' ? null : 'category')}
+              onClose={() => setActiveDropdown(curr => curr === 'category' ? null : curr)}
+            />
+          </div>
+
+          <div className="sud-strip-tags-wrap">
+            <TagsDropdown
+              value={tags || []}
+              onChange={onTagsChange}
+              isOpen={activeDropdown === 'tags'}
+              onToggle={() => setActiveDropdown(curr => curr === 'tags' ? null : 'tags')}
+              onClose={() => setActiveDropdown(curr => curr === 'tags' ? null : curr)}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -315,53 +893,171 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
   const { user } = useAuth ? useAuth() : { user: null };
 
   const [queue, setQueue] = useState([]);         // Array of upload items
+  const [isGroupMode, setIsGroupMode] = useState(false); // Option A: Group into collection toggle
+  const [coverItemId, setCoverItemId] = useState(null);
+  const [collectionTitle, setCollectionTitle] = useState('');
+  const [collectionCategory, setCollectionCategory] = useState('Hero');
+  const [collectionTags, setCollectionTags] = useState([]);
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [tags, setTags] = useState('');
   const [description, setDescription] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   const fileInputRef = useRef(null);
   const cancelledRef = useRef(new Set());
 
   const isDirty = initialSection 
     ? true 
-    : (queue.length > 0 || websiteUrl.trim() || tags.trim() || description.trim());
+    : (queue.length > 0 || websiteUrl.trim() || tags.trim() || description.trim() || collectionTitle.trim());
   const allDone = queue.length > 0 && queue.every(q => q.status === 'done' || q.status === 'error');
   const hasPublishable = queue.some(q => q.status === 'done' && q.imageUrl);
 
-  // Initialize or reset form based on initialSection
+  // Initialize from initialSection OR restore draft from IndexedDB
   useEffect(() => {
-    if (isOpen && initialSection) {
+    if (initialSection) {
       const cleanTitle = (initialSection.section_title || initialSection.section_type || 'Section').replace(/\.[^/.]+$/, '').trim();
       const isVideo = typeof initialSection.image_url === 'string' && (
         initialSection.image_url.endsWith('.mp4') || initialSection.image_url.endsWith('.webm') || initialSection.image_url.endsWith('.mov')
       );
-      setQueue([{
-        id: initialSection.id || 'edit-item',
-        file: null,
-        hash: 'existing',
-        filename: initialSection.section_title || 'section',
-        title: cleanTitle,
-        category: initialSection.section_type || 'Hero',
-        isVideo,
-        previewUrl: initialSection.image_url || initialSection.thumbnail_url,
-        status: 'done',
-        progress: 100,
-        imageUrl: initialSection.image_url || initialSection.thumbnail_url,
-        thumbnailUrl: initialSection.thumbnail_url || initialSection.image_url,
-        errorMsg: '',
-        isClassifying: false,
-      }]);
+      const initTags = Array.isArray(initialSection.tags) 
+        ? initialSection.tags 
+        : (initialSection.tags ? initialSection.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+
+      const hasGroupMedia = Array.isArray(initialSection.media) && initialSection.media.length > 0;
+      if (hasGroupMedia) {
+        setIsGroupMode(true);
+        setCollectionTitle(cleanTitle);
+        setCollectionCategory(initialSection.section_type || 'Hero');
+        setCollectionTags(initTags);
+        const mappedQueue = initialSection.media.map((m, idx) => ({
+          id: `edit-media-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+          file: null,
+          hash: `existing-${idx}`,
+          filename: m.filename || m.title || `screen-${idx + 1}`,
+          title: m.title || `Screen ${idx + 1}`,
+          category: m.category || initialSection.section_type || 'Hero',
+          tags: Array.isArray(m.tags) ? m.tags : initTags,
+          isVideo: Boolean(m.isVideo || (typeof m.url === 'string' && (m.url.endsWith('.mp4') || m.url.endsWith('.webm')))),
+          previewUrl: m.url || m.thumbnailUrl,
+          status: 'done',
+          progress: 100,
+          imageUrl: m.url,
+          thumbnailUrl: m.thumbnailUrl || m.url,
+          errorMsg: '',
+          isClassifying: false,
+        }));
+        setQueue(mappedQueue);
+        const coverIdx = initialSection.media.findIndex(m => m.isCover);
+        const coverItem = (coverIdx >= 0 ? mappedQueue[coverIdx] : mappedQueue[0]);
+        setCoverItemId(coverItem?.id || null);
+      } else {
+        setIsGroupMode(false);
+        setCollectionTitle('');
+        setCollectionCategory(initialSection.section_type || 'Hero');
+        setCollectionTags([]);
+        setCoverItemId('edit-item');
+        setQueue([{
+          id: initialSection.id || 'edit-item',
+          file: null,
+          hash: 'existing',
+          filename: initialSection.section_title || 'section',
+          title: cleanTitle,
+          category: initialSection.section_type || 'Hero',
+          tags: initTags,
+          isVideo,
+          previewUrl: initialSection.image_url || initialSection.thumbnail_url,
+          status: 'done',
+          progress: 100,
+          imageUrl: initialSection.image_url || initialSection.thumbnail_url,
+          thumbnailUrl: initialSection.thumbnail_url || initialSection.image_url,
+          errorMsg: '',
+          isClassifying: false,
+        }]);
+      }
       setWebsiteUrl(initialSection.page_url || initialSection.website_url || '');
       setTags(Array.isArray(initialSection.tags) ? initialSection.tags.join(', ') : (initialSection.tags || ''));
       setDescription(initialSection.description || '');
       setErrorMsg('');
-    } else if (isOpen && !initialSection) {
-      resetForm();
+      setHasLoadedDraft(true);
+    } else {
+      // Restore draft from IndexedDB
+      let isMounted = true;
+      loadDraft('section_upload_draft').then(saved => {
+        if (!isMounted || !saved) {
+          setHasLoadedDraft(true);
+          return;
+        }
+        const hasItems = Array.isArray(saved.queue) && saved.queue.length > 0;
+        const hasFields = Boolean(
+          saved.websiteUrl?.trim() ||
+          saved.tags?.trim() ||
+          saved.description?.trim() ||
+          saved.collectionTitle?.trim()
+        );
+        if (hasItems || hasFields) {
+          setQueue(saved.queue || []);
+          setIsGroupMode(Boolean(saved.isGroupMode));
+          setCoverItemId(saved.coverItemId || (saved.queue?.[0]?.id || null));
+          setCollectionTitle(saved.collectionTitle || '');
+          setCollectionCategory(saved.collectionCategory || 'Hero');
+          setCollectionTags(Array.isArray(saved.collectionTags) ? saved.collectionTags : []);
+          setWebsiteUrl(saved.websiteUrl || '');
+          setTags(saved.tags || '');
+          setDescription(saved.description || '');
+        }
+        setHasLoadedDraft(true);
+      });
+      return () => { isMounted = false; };
     }
-  }, [isOpen, initialSection]);
+  }, [initialSection]);
+
+  // Auto-save draft changes to IndexedDB
+  useEffect(() => {
+    if (initialSection || !hasLoadedDraft) return;
+
+    const hasContent = queue.length > 0 ||
+      Boolean(websiteUrl.trim()) ||
+      Boolean(tags.trim()) ||
+      Boolean(description.trim()) ||
+      Boolean(collectionTitle.trim());
+
+    if (!hasContent) {
+      clearDraft('section_upload_draft');
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      saveDraft('section_upload_draft', {
+        queue,
+        isGroupMode,
+        coverItemId,
+        collectionTitle,
+        collectionCategory,
+        collectionTags,
+        websiteUrl,
+        tags,
+        description,
+      });
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [
+    initialSection,
+    hasLoadedDraft,
+    queue,
+    isGroupMode,
+    coverItemId,
+    collectionTitle,
+    collectionCategory,
+    collectionTags,
+    websiteUrl,
+    tags,
+    description,
+  ]);
 
   // Lock body scroll
   useEffect(() => {
@@ -371,29 +1067,58 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
     }
   }, [isOpen]);
 
-  // ESC to close
+  // ESC to close (preserves draft without prompt)
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Escape' && isOpen && !isSubmitting) attemptClose();
+      if (e.key === 'Escape' && isOpen && !isSubmitting) {
+        if (showDiscardConfirm) {
+          setShowDiscardConfirm(false);
+        } else {
+          handleCloseDrawer();
+        }
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, isSubmitting, isDirty]);
+  }, [isOpen, isSubmitting, showDiscardConfirm]);
 
   const resetForm = () => {
     setQueue([]);
+    setIsGroupMode(false);
+    setCoverItemId(null);
+    setCollectionTitle('');
+    setCollectionCategory('Hero');
+    setCollectionTags([]);
     setWebsiteUrl('');
     setTags('');
     setDescription('');
     setErrorMsg('');
+    setShowDiscardConfirm(false);
     cancelledRef.current.clear();
   };
 
-  const forceClose = () => { resetForm(); onClose(); };
-
-  const attemptClose = () => {
+  // Regular close (backdrop, X, ESC) preserves draft completely
+  const handleCloseDrawer = () => {
     if (isSubmitting) return;
-    forceClose();
+    onClose();
+  };
+
+  // Cancel button handler: confirms before discarding unfinished draft
+  const handleCancelClick = () => {
+    if (isSubmitting) return;
+    if (isDirty && !initialSection) {
+      setShowDiscardConfirm(true);
+    } else {
+      handleCloseDrawer();
+    }
+  };
+
+  // Explicit discard confirmation handler
+  const handleConfirmDiscard = async () => {
+    setShowDiscardConfirm(false);
+    await clearDraft('section_upload_draft');
+    resetForm();
+    onClose();
   };
 
   // ── File processing ──
@@ -427,6 +1152,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
         filename: file.name,
         title: defaultTitle || 'Section',
         category: classified?.category || 'Hero',
+        tags: Array.isArray(classified?.tags) ? classified.tags : [],
         isVideo,
         previewUrl: URL.createObjectURL(file),
         status: 'uploading',
@@ -452,6 +1178,8 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
 
   const processItem = async (item) => {
     if (cancelledRef.current.has(item.id)) return;
+    if (item.status === 'done' && item.imageUrl) return;
+    if (!item.file) return;
 
     // Step 1: Upload full file to Supabase storage
     const fileExt = item.file.name.split('.').pop() || (item.isVideo ? 'mp4' : 'png');
@@ -524,7 +1252,21 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
     setQueue(prev => {
       const item = prev.find(q => q.id === id);
       if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
-      return prev.filter(q => q.id !== id);
+      const remaining = prev.filter(q => q.id !== id);
+      if (coverItemId === id) {
+        setCoverItemId(remaining[0]?.id || null);
+      }
+      return remaining;
+    });
+  };
+
+  const handleReorderCollection = (sourceIndex, targetIndex) => {
+    setQueue(prev => {
+      if (sourceIndex < 0 || sourceIndex >= prev.length || targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const copy = [...prev];
+      const [moved] = copy.splice(sourceIndex, 1);
+      copy.splice(targetIndex, 0, moved);
+      return copy;
     });
   };
 
@@ -534,6 +1276,10 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
 
   const updateTitle = (id, title) => {
     setQueue(prev => prev.map(q => q.id === id ? { ...q, title } : q));
+  };
+
+  const updateTags = (id, tags) => {
+    setQueue(prev => prev.map(q => q.id === id ? { ...q, tags } : q));
   };
 
   // ── Save Draft or Publish ──
@@ -547,8 +1293,94 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
     try {
+      // ── Group Mode: Publish or Edit as 1 Unified Collection Record ──
+      if (isGroupMode && publishable.length > 0) {
+        const coverItem = publishable.find(q => q.id === coverItemId) || publishable[0];
+        const finalTitle = (collectionTitle || coverItem.title || coverItem.filename?.replace(/\.[^/.]+$/, '') || 'Collection').trim();
+        const finalCategory = collectionCategory || coverItem.category || 'Hero';
+        const finalGroupTags = (Array.isArray(collectionTags) && collectionTags.length > 0)
+          ? collectionTags
+          : tagList;
+
+        const mediaItems = publishable.map(item => ({
+          url: item.imageUrl,
+          thumbnailUrl: item.thumbnailUrl || item.imageUrl,
+          title: item.title || item.filename?.replace(/\.[^/.]+$/, '') || 'Screen',
+          category: item.category || finalCategory,
+          tags: (Array.isArray(item.tags) && item.tags.length > 0) ? item.tags : finalGroupTags,
+          isVideo: item.isVideo || false,
+          filename: item.filename || '',
+          isCover: item.id === coverItem.id
+        }));
+
+        if (initialSection?.id) {
+          const updatePayload = {
+            section_type: finalCategory,
+            section_title: finalTitle,
+            image_url: coverItem.imageUrl || initialSection.image_url,
+            thumbnail_url: coverItem.thumbnailUrl || initialSection.thumbnail_url || coverItem.imageUrl,
+            page_url: websiteUrl.trim() || null,
+            website_url: websiteUrl.trim() || null,
+            tags: finalGroupTags,
+            description: description.trim() || null,
+            status: targetStatus,
+            media: mediaItems,
+          };
+
+          const { error } = await supabase
+            .from('website_sections')
+            .update(updatePayload)
+            .eq('id', initialSection.id);
+
+          if (error) throw error;
+
+          if (onUploadSuccess) {
+            onUploadSuccess({ 
+              count: 1, 
+              status: targetStatus, 
+              isEdit: true, 
+              updatedSection: { ...initialSection, ...updatePayload } 
+            });
+          }
+          resetForm();
+          onClose();
+          return;
+        }
+
+        const groupInsert = {
+          section_type: finalCategory,
+          section_title: finalTitle,
+          image_url: coverItem.imageUrl,
+          thumbnail_url: coverItem.thumbnailUrl || coverItem.imageUrl,
+          page_url: websiteUrl.trim() || null,
+          website_url: websiteUrl.trim() || null,
+          tags: finalGroupTags,
+          description: description.trim() || null,
+          is_standalone: true,
+          status: targetStatus,
+          submitted_by: user?.id || null,
+          sort_order: 0,
+          website_id: null,
+          media: mediaItems,
+        };
+
+        const { error } = await supabase.from('website_sections').insert([groupInsert]);
+        if (error) throw error;
+
+        if (onUploadSuccess) onUploadSuccess({ count: 1, status: targetStatus });
+        await clearDraft('section_upload_draft');
+        resetForm();
+        onClose();
+        return;
+      }
+
+      // ── Standalone Mode: Publish or Edit as Individual Records ──
       if (initialSection?.id) {
         const item = publishable[0];
+        const finalTags = (Array.isArray(item.tags) && item.tags.length > 0)
+          ? item.tags
+          : tagList;
+
         const updatePayload = {
           section_type: item.category || 'Hero',
           section_title: (item.title || item.filename?.replace(/\.[^/.]+$/, '') || '').trim() || 'Section',
@@ -556,7 +1388,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
           thumbnail_url: item.thumbnailUrl || initialSection.thumbnail_url || item.imageUrl,
           page_url: websiteUrl.trim() || null,
           website_url: websiteUrl.trim() || null,
-          tags: tagList,
+          tags: finalTags,
           description: description.trim() || null,
           status: targetStatus,
         };
@@ -576,31 +1408,41 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
             updatedSection: { ...initialSection, ...updatePayload } 
           });
         }
-        forceClose();
+        resetForm();
+        onClose();
         return;
       }
 
-      const inserts = publishable.map(item => ({
-        section_type: item.category || 'Hero',
-        section_title: (item.title || item.filename.replace(/\.[^/.]+$/, '')).trim() || 'Section',
-        image_url: item.imageUrl,
-        thumbnail_url: item.thumbnailUrl || item.imageUrl,
-        page_url: websiteUrl.trim() || null,
-        website_url: websiteUrl.trim() || null,
-        tags: tagList,
-        description: description.trim() || null,
-        is_standalone: true,
-        status: targetStatus, // 'Approved' for published, 'Draft' for draft
-        submitted_by: user?.id || null,
-        sort_order: 0,
-        website_id: null,
-      }));
+      const inserts = publishable.map(item => {
+        const itemTags = (Array.isArray(item.tags) && item.tags.length > 0)
+          ? item.tags
+          : tagList;
+
+        return {
+          section_type: item.category || 'Hero',
+          section_title: (item.title || item.filename.replace(/\.[^/.]+$/, '')).trim() || 'Section',
+          image_url: item.imageUrl,
+          thumbnail_url: item.thumbnailUrl || item.imageUrl,
+          page_url: websiteUrl.trim() || null,
+          website_url: websiteUrl.trim() || null,
+          tags: itemTags,
+          description: description.trim() || null,
+          is_standalone: true,
+          status: targetStatus, // 'Approved' for published, 'Draft' for draft
+          submitted_by: user?.id || null,
+          sort_order: 0,
+          website_id: null,
+          media: [],
+        };
+      });
 
       const { error } = await supabase.from('website_sections').insert(inserts);
       if (error) throw error;
 
       if (onUploadSuccess) onUploadSuccess({ count: inserts.length, status: targetStatus });
-      forceClose();
+      await clearDraft('section_upload_draft');
+      resetForm();
+      onClose();
     } catch (err) {
       console.error('[SectionUploadDrawer] Submit error:', err);
       setErrorMsg(err.message || 'Failed to save sections. Please try again.');
@@ -621,7 +1463,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
   const publishableCount = queue.filter(q => q.status === 'done' && q.imageUrl).length;
 
   const drawer = (
-    <div className="sud-backdrop" onClick={(e) => { if (e.target === e.currentTarget) attemptClose(); }}>
+    <div className="sud-backdrop" onClick={(e) => { if (e.target === e.currentTarget && !isSubmitting) handleCloseDrawer(); }}>
       <aside className="sud-panel" role="dialog" aria-modal="true" aria-labelledby="sud-title">
         {/* Header */}
         <div className="sud-header">
@@ -633,7 +1475,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
                 : 'Add screenshots or recordings to the Sections library.'}
             </p>
           </div>
-          <button type="button" className="sud-close-btn" onClick={attemptClose} disabled={isSubmitting}>
+          <button type="button" className="sud-close-btn" onClick={handleCloseDrawer} disabled={isSubmitting}>
             <X size={17} weight="bold" />
           </button>
         </div>
@@ -642,11 +1484,33 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
         <div className="sud-body">
           {errorMsg && <div className="sud-error-banner">{errorMsg}</div>}
 
-          {/* Dropzone */}
+          {/* Dropzone & Header with Micro-Toggle */}
           <div className="sud-section">
-            <label className="sud-label">
-              Files <span className="sud-required">*</span>
-            </label>
+            <div className="sud-files-header-row">
+              <label className="sud-label">
+                Files <span className="sud-required">*</span>
+              </label>
+              <div 
+                className={`sud-group-toggle-wrap ${isGroupMode ? 'is-active' : ''}`}
+                onClick={() => setIsGroupMode(g => !g)}
+                title="Toggle grouping all files into one collection"
+              >
+                <span className="sud-group-toggle-label">Group into collection</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isGroupMode}
+                  className={`sud-group-toggle-btn ${isGroupMode ? 'is-active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsGroupMode(g => !g);
+                  }}
+                  title="Toggle group mode"
+                >
+                  <span className="sud-group-toggle-thumb" />
+                </button>
+              </div>
+            </div>
             <div
               className={`sud-dropzone ${isDragOver ? 'is-drag-over' : ''}`}
               onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
@@ -672,29 +1536,47 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
             />
           </div>
 
-          {/* Upload queue */}
+          {/* Upload queue: Switch between Group Collection Card vs Standalone List */}
           {queue.length > 0 && (
             <div className="sud-section">
               <div className="sud-queue-header">
-                <label className="sud-label">Uploads ({queue.length})</label>
-                {queue.length > 0 && (
-                  <button type="button" className="sud-add-more" onClick={() => fileInputRef.current?.click()}>
-                    + Add more
-                  </button>
-                )}
+                <label className="sud-label">
+                  {isGroupMode ? `Collection (${queue.length} screens)` : `Uploads (${queue.length})`}
+                </label>
+                <button type="button" className="sud-add-more" onClick={() => fileInputRef.current?.click()}>
+                  + Add more
+                </button>
               </div>
-              <div className="sud-queue-list">
-                {queue.map(item => (
-                  <UploadQueueItem
-                    key={item.id}
-                    item={item}
-                    onRemove={removeItem}
-                    onCategoryChange={updateCategory}
-                    onTitleChange={updateTitle}
-                    onClassifyAI={handleClassifyAI}
-                  />
-                ))}
-              </div>
+
+              {isGroupMode ? (
+                <GroupCollectionCard
+                  queue={queue}
+                  coverItemId={coverItemId}
+                  onSelectCover={(id) => setCoverItemId(id)}
+                  onRemoveItem={removeItem}
+                  onReorder={handleReorderCollection}
+                  title={collectionTitle}
+                  onTitleChange={setCollectionTitle}
+                  category={collectionCategory}
+                  onCategoryChange={setCollectionCategory}
+                  tags={collectionTags}
+                  onTagsChange={setCollectionTags}
+                  onAddMore={() => fileInputRef.current?.click()}
+                />
+              ) : (
+                <div className="sud-queue-list">
+                  {queue.map(item => (
+                    <UploadQueueItem
+                      key={item.id}
+                      item={item}
+                      onRemove={removeItem}
+                      onCategoryChange={updateCategory}
+                      onTitleChange={updateTitle}
+                      onTagsChange={updateTags}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -753,7 +1635,7 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
 
         {/* Footer */}
         <div className="sud-footer">
-          <button type="button" className="sud-cancel-btn" onClick={attemptClose} disabled={isSubmitting}>
+          <button type="button" className="sud-cancel-btn" onClick={handleCancelClick} disabled={isSubmitting}>
             Cancel
           </button>
           <button
@@ -766,10 +1648,40 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
               ? <span>Saving…</span>
               : initialSection
                 ? <><Sparkle size={14} weight="fill" /> Save Changes</>
-                : <><Sparkle size={14} weight="fill" /> Publish Section{publishableCount > 1 ? 's' : ''}</>
+                : isGroupMode
+                  ? <><Sparkle size={14} weight="fill" /> Publish Collection ({publishableCount})</>
+                  : <><Sparkle size={14} weight="fill" /> Publish Section{publishableCount > 1 ? 's' : ''}</>
             }
           </button>
         </div>
+
+        {/* Discard Draft Confirmation Modal */}
+        {showDiscardConfirm && (
+          <div className="sud-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="sud-confirm-title">
+            <div className="sud-confirm-card">
+              <h3 id="sud-confirm-title" className="sud-confirm-title">Discard unfinished draft?</h3>
+              <p className="sud-confirm-desc">
+                You have uploaded media and draft details. Discarding will permanently remove this draft.
+              </p>
+              <div className="sud-confirm-actions">
+                <button
+                  type="button"
+                  className="sud-confirm-keep-btn"
+                  onClick={() => setShowDiscardConfirm(false)}
+                >
+                  Keep Editing
+                </button>
+                <button
+                  type="button"
+                  className="sud-confirm-discard-btn"
+                  onClick={handleConfirmDiscard}
+                >
+                  Discard Draft
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
     </div>
   );

@@ -115,6 +115,7 @@ export const SectionCard = ({
   page_url, 
   status,
   parentWebsite,
+  media,
   onToast,
   onEditSection,
   onUpdateSection,
@@ -382,6 +383,14 @@ export const SectionCard = ({
           />
         ) : (
           <img src={image_url} alt={sectionName} className="card-image section-card-image" loading="lazy" />
+        )}
+
+        {/* Collection Screens Count Badge */}
+        {media && Array.isArray(media) && media.length > 1 && (
+          <div className="section-card-count-badge" title={`${media.length} screens in collection`}>
+            <SquaresFour size={12} weight="bold" />
+            <span>{media.length}</span>
+          </div>
         )}
         
         {/* Card Overlay & Bottom Center Action Tabs Bar */}

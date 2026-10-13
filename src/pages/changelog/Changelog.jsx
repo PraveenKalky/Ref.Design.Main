@@ -3,6 +3,51 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.11.0',
+    date: 'Tuesday, October 13, 2026',
+    description: 'Introduced multi-screen section collections, persistent upload drafts, interactive filmstrip previews, universal video support, and card grid refinements.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Added Multi-Screen Section Collections to group multiple screens into a single collection card with cover screen selection and reordering.',
+          'Built an interactive filmstrip preview bar on the Section Detail page with thumbnail navigation and keyboard arrow shortcuts.',
+          'Added client-side draft auto-save via IndexedDB to preserve uploaded media, form fields, and collections across drawer closes and page refreshes.',
+          'Added universal video support with automatic inline looping across all card grids, UI/UX Tastes, and the Website Preview Panel.',
+          'Added searchable category and tag dropdowns with real-time filtering and custom tag creation in the Section Upload Drawer.',
+          'Integrated an Edit action directly into the Section Card options menu to update section details in place.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Added a screen count badge to Section cards to easily identify multi-screen collections at a glance.',
+          'Redesigned Section Card headers with single-line titles and automatic source website/brand attribution.',
+          'Upgraded Section Card hover actions into an interconnected quick-action bar with Save, Copy, Download, and Open links.',
+          'Built lightweight, centered micro-dialogs for renaming and deleting sections with Esc and Enter keyboard shortcuts.',
+          'Refined Sections Hero carousel momentum physics for smoother scroll acceleration and natural deceleration.',
+          'Optimized upload compression to preserve animations and full frame rates for animated GIFs, AVIFs, and video recordings.',
+          'Enabled lazy loading across all card grids for faster page rendering.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Added a discard draft confirmation modal to prevent accidental loss of unfinished uploads when closing the drawer.',
+          'Fixed carousel scrolling glitch when scrolling at the very top of the page.',
+          'Fixed background hover interference and scrolling issues by portaling modal dialogs directly to the document body.',
+          'Resolved video preview audio edge cases by strictly enforcing inline muted playback.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.10.0',
     date: 'Saturday, October 10, 2026',
     description: 'Introduced the Section Upload Drawer with video support, full editing workflows, and advanced Category Filters.',

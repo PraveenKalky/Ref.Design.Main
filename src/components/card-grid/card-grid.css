@@ -1411,3 +1411,31 @@ body.has-modal-open .section-card-container:hover .card-menu-btn {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* Collection Screens Count Badge */
+.section-card-count-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4.5px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3.5px 7.5px;
+  border-radius: 99px;
+  letter-spacing: -0.01em;
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+
+.section-card-count-badge svg {
+  color: #facc15;
+}

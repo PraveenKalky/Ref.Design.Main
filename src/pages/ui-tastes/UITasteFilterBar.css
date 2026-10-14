@@ -59,7 +59,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border: none !important;
   cursor: pointer;
   font-size: 13px;
@@ -69,7 +69,7 @@
 }
 
 .collapse-btn:hover {
-  background: #e0e0e0;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   transform: scale(1.08);
 }
 
@@ -79,7 +79,7 @@
 }
 
 [data-theme="dark"] .collapse-btn:hover {
-  background: #333333;
+  background: #252525;
 }
 
 .arrow-icon {
@@ -143,7 +143,7 @@
 .ui-taste-tabs-track {
   display: flex;
   align-items: center;
-  background: #f4f4f5;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border-radius: 9999px;
   padding: 3px;
   gap: 2px;
@@ -178,7 +178,7 @@
 }
 
 .ui-taste-tab-btn:hover {
-  background: #e4e4e7;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   color: #111111;
 }
 
@@ -193,7 +193,7 @@
   background: #1a1a1a;
 }
 [data-theme="dark"] .ui-taste-tab-btn:hover {
-  background: #2a2a2a;
+  background: #1a1a1a;
 }
 [data-theme="dark"] .ui-taste-tab-btn.is-active {
   background: #333333;
@@ -220,7 +220,7 @@
   border-radius: 9999px;
   border: none !important;
   outline: none;
-  background: #efefef;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   color: #111111;
   font-family: inherit;
   font-size: 13.5px;
@@ -235,11 +235,11 @@
 }
 
 .ui-taste-dropdown-btn:hover {
-  background: #e4e4e4;
+  background: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-taste-dropdown-btn.is-open {
-  background: #e0e0e0;
+  background: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-taste-dropdown-btn.is-active {
@@ -270,7 +270,7 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  background: #f0f0f0;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border-radius: 16px;
   padding: 6px;
   min-width: 175px;
@@ -407,7 +407,7 @@
   display: flex;
   align-items: center;
   height: 40px;
-  background: #efefef;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border-radius: 9999px;
   border: none !important;
   padding: 0 15px;
@@ -418,7 +418,7 @@
 
 .ui-taste-search-pill:focus-within {
   width: 230px;
-  background: #e5e5e5;
+  background: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-taste-search-icon {
@@ -535,7 +535,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--dv-surface-dark, #f0f0f2);
+  background: var(--ui-taste-control-bg, #F0F0F0);
   color: var(--dv-subtext, #666666);
   font-family: inherit;
   font-size: 12.5px;
@@ -587,7 +587,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #f0f0f0;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   padding: 6px 14px;
   border-radius: 9999px;
   height: 32px;
@@ -683,11 +683,11 @@
 }
 
 [data-theme="dark"] .ui-taste-dropdown-btn:hover {
-  background: #282828;
+  background: #1c1c1c;
 }
 
 [data-theme="dark"] .ui-taste-dropdown-btn.is-open {
-  background: #252525;
+  background: #1c1c1c;
 }
 
 [data-theme="dark"] .ui-taste-dropdown-btn.is-active {
@@ -722,7 +722,7 @@
 }
 
 [data-theme="dark"] .ui-taste-search-pill:focus-within {
-  background: #242424;
+  background: #1c1c1c;
 }
 
 [data-theme="dark"] .ui-taste-search-input {

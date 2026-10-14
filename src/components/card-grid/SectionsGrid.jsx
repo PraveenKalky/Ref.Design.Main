@@ -137,16 +137,42 @@ export const SectionCard = ({
   const [toasts, setToasts] = useState([]);
   const menuRef = useRef(null);
 
-  const isVideo = isVideoMedia(image_url);
+  const isVideo = isVideoMedia(image_url) || isVideoMedia(thumbnail_url);
   const videoRef = useRef(null);
+  const cardRef = useRef(null);
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
-    if (isVideo && videoRef.current) {
+    if (!isVideo) return;
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { rootMargin: '200px 0px', threshold: 0.05 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isVideo]);
+
+  useEffect(() => {
+    if (isVideo && isInView && videoRef.current) {
       videoRef.current.defaultMuted = true;
       videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {});
+      }
+    } else if (isVideo && !isInView && videoRef.current) {
+      videoRef.current.pause();
     }
-  }, [image_url, isVideo]);
+  }, [isInView, isVideo]);
 
   const addToast = (message, type = 'success') => {
     const toastId = Date.now() + Math.random();
@@ -367,22 +393,41 @@ export const SectionCard = ({
     triggerToast('Section deleted');
   };
 
+  const displayThumbUrl = thumbnail_url || image_url;
+
   return (
-    <div className="card-container section-card-container" style={{ textDecoration: 'none', position: 'relative' }}>
+    <div ref={cardRef} className="card-container section-card-container" style={{ textDecoration: 'none', position: 'relative' }}>
       <div className="card-image-wrapper section-card-image-wrapper">
         {isVideo ? (
-          <video 
-            ref={videoRef}
-            src={image_url} 
-            className="card-image section-card-image" 
-            autoPlay
-            muted 
-            playsInline 
-            loop
-            preload="auto"
-          />
+          isInView ? (
+            <video 
+              ref={videoRef}
+              src={image_url} 
+              poster={thumbnail_url || undefined}
+              className="card-image section-card-image" 
+              autoPlay
+              muted 
+              playsInline 
+              loop
+              preload="metadata"
+            />
+          ) : (
+            <img 
+              src={displayThumbUrl} 
+              alt={sectionName} 
+              className="card-image section-card-image" 
+              loading="lazy" 
+              decoding="async" 
+            />
+          )
         ) : (
-          <img src={image_url} alt={sectionName} className="card-image section-card-image" loading="lazy" />
+          <img 
+            src={displayThumbUrl} 
+            alt={sectionName} 
+            className="card-image section-card-image" 
+            loading="lazy" 
+            decoding="async" 
+          />
         )}
 
         {/* Collection Screens Count Badge */}

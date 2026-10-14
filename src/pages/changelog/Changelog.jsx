@@ -3,6 +3,44 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.12.0',
+    date: 'Wednesday, October 14, 2026',
+    description: 'Introduced the UI/UX Tastes Detail Modal, direct clipboard image pasting, viewport-optimized video playback, and Telegram bot scraping upgrades.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Built the UI/UX Tastes Detail Modal featuring full-resolution previews, platform links, engagement stats, and tag management.',
+          'Added direct clipboard pasting (Cmd+V / Ctrl+V and button) to the Section Upload Drawer to instantly upload screenshots without saving to disk.',
+          'Added in-place Edit, Rename, and Delete actions with confirmation modals for UI/UX Tastes cards.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Upgraded video cards with viewport-aware autoplay using IntersectionObserver to pause off-screen media and save bandwidth.',
+          'Overhauled UI/UX Tastes card metadata with clean single-line titles, platform badges, creator avatars, and relative save dates.',
+          'Implemented server-side pagination with in-memory caching on the Sections page for instant zero-latency back navigation.',
+          'Memoized Sections Hero carousel cards to prevent unnecessary re-renders during the 60 FPS animation loop.',
+          'Upgraded the Telegram Bot scraper with residential proxy fallbacks and multi-format media uploads for Instagram, X, and Dribbble.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Resolved ephemeral CDN link expirations by automatically saving social media images to permanent Supabase storage.',
+          'Fixed external image loading failures by adding an automated CORS-safe proxy fallback in media utilities.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.11.0',
     date: 'Tuesday, October 13, 2026',
     description: 'Introduced multi-screen section collections, persistent upload drafts, interactive filmstrip previews, universal video support, and card grid refinements.',

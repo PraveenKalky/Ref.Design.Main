@@ -325,20 +325,35 @@ async function tryInstagramFetch(url: string): Promise<{
   }
 }
 
-async function uploadToStorage(mediaUrl: string): Promise<string | null> {
+async function uploadToStorage(mediaUrl: string, platformHint: string = 'instagram'): Promise<string | null> {
   try {
     const res = await fetch(mediaUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       }
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[storage] Fetch mediaUrl failed: HTTP ${res.status}`);
+      return null;
+    }
     const contentType = res.headers.get('content-type') || 'image/jpeg';
     const buffer = await res.arrayBuffer();
-    if (buffer.byteLength === 0) return null;
+    if (buffer.byteLength === 0) {
+      console.error('[storage] Buffer byteLength is 0');
+      return null;
+    }
 
-    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-    const fileName = `instagram/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+    const ext = contentType.includes('png') ? 'png'
+      : contentType.includes('webp') ? 'webp'
+      : contentType.includes('gif') ? 'gif'
+      : contentType.includes('avif') ? 'avif'
+      : contentType.includes('mp4') ? 'mp4'
+      : contentType.includes('webm') ? 'webm'
+      : contentType.includes('quicktime') ? 'mov'
+      : 'jpg';
+
+    const safeFolder = platformHint.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'general';
+    const fileName = `${safeFolder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
     // Upload to verified public 'submissions' bucket
     let { data, error } = await supabase.storage.from('submissions').upload(fileName, buffer, {
@@ -393,11 +408,44 @@ async function fetchMetadata(url: string): Promise<{
       mediaUrl = insta.mediaUrl;
       fetchMethod = 'instagram-uncropped';
       if (insta.description) description = insta.description;
-      if (insta.title) title = insta.title;
+      if (insta.title && insta.title.trim().toLowerCase() !== 'instagram') title = insta.title;
       isVideo = insta.isVideo;
       console.log(`[instagram-uncropped] Extracted uncropped original media: ${mediaUrl.substring(0, 80)}`);
     } else {
-      errors.push('instagram-uncropped: could not extract uncropped candidate from HTML');
+      errors.push('instagram-uncropped: could not extract uncropped candidate from direct fetch');
+      // Fallback to residential scraping proxy for Instagram
+      const scraperHtml = await tryScrapingService(url);
+      if (scraperHtml) {
+        const candidateMatches = [...scraperHtml.matchAll(/"candidates"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/g)];
+        for (const m of candidateMatches) {
+          try {
+            const raw = m[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+            const candidates = JSON.parse(raw);
+            if (Array.isArray(candidates) && candidates.length > 0) {
+              const validCandidates = candidates.filter((c: any) => 
+                c.url && !c.url.includes('profile_pic') && !c.url.includes('stp=c') && !c.url.includes('s150x150')
+              );
+              if (validCandidates.length > 0) {
+                validCandidates.sort((a: any, b: any) => ((b.width || 0) * (b.height || 0)) - ((a.width || 0) * (a.height || 0)));
+                mediaUrl = validCandidates[0].url;
+                fetchMethod = 'instagram-scraper-uncropped';
+                break;
+              }
+            }
+          } catch (e) {}
+        }
+        if (!mediaUrl) {
+          const ogImg = scraperHtml.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
+          if (ogImg && ogImg[1] && !ogImg[1].includes('profile_pic')) {
+            mediaUrl = decodeHTMLEntities(ogImg[1]);
+            fetchMethod = 'instagram-scraper-og';
+          }
+        }
+        const titleMatch = scraperHtml.match(/<title>([^<]+)<\/title>/i);
+        if (titleMatch && titleMatch[1] && titleMatch[1].trim().toLowerCase() !== 'instagram') {
+          title = decodeHTMLEntities(titleMatch[1].trim());
+        }
+      }
     }
   }
 
@@ -471,8 +519,8 @@ async function fetchMetadata(url: string): Promise<{
     isVideo = ml.isVideo;
   }
 
-  // ── Strategy 3: Direct OGP (skip Dribbble) ──
-  if (!mediaUrl && !isDribbble) {
+  // ── Strategy 3: Direct OGP (skip Dribbble & Instagram) ──
+  if (!mediaUrl && !isDribbble && !isInstagram) {
     const direct = await tryDirectFetch(url);
     if (direct.mediaUrl) {
       mediaUrl = direct.mediaUrl;
@@ -482,11 +530,11 @@ async function fetchMetadata(url: string): Promise<{
       errors.push('direct-ogp: no og:image found or page blocked scraping');
     }
     if (!description && direct.description) description = direct.description;
-    if (title === 'imported_post' && direct.title) title = direct.title;
+    if (title === 'imported_post' && direct.title && direct.title.trim().toLowerCase() !== 'instagram') title = direct.title;
   }
 
-  // ── Strategy 4: thum.io screenshot (last resort for Dribbble without API token, or any other failure) ──
-  if (!mediaUrl && !isDribbble) {
+  // ── Strategy 4: thum.io screenshot (skip Dribbble & Instagram) ──
+  if (!mediaUrl && !isDribbble && !isInstagram) {
     mediaUrl = getThumioUrl(url);
     fetchMethod = 'screenshot-thumio';
     console.log(`[thum.io] Using screenshot fallback: ${mediaUrl}`);
@@ -502,15 +550,20 @@ async function fetchMetadata(url: string): Promise<{
   }
 
   // ── NEW: Resolve ephemeral Instagram CDN URLs to permanent storage ──
-  if (mediaUrl && (mediaUrl.includes('cdninstagram.com') || url.includes('instagram.com'))) {
+  // NEVER upload a thum.io or login screenshot to permanent storage
+  if (mediaUrl && !mediaUrl.includes('thum.io') && (mediaUrl.includes('cdninstagram.com') || (url.includes('instagram.com') && !mediaUrl.includes('thum.io')))) {
     console.log(`[fetchMetadata] Uploading ephemeral Instagram URL to Storage: ${mediaUrl}`);
-    const permanentUrl = await uploadToStorage(mediaUrl);
+    const permanentUrl = await uploadToStorage(mediaUrl, 'instagram');
     if (permanentUrl) {
       mediaUrl = permanentUrl;
       console.log(`[fetchMetadata] Successfully resolved permanent URL: ${mediaUrl}`);
     } else {
       console.warn(`[fetchMetadata] Failed to upload Instagram media to storage, falling back to ephemeral URL.`);
     }
+  }
+
+  if (title === 'Instagram' || title === 'imported_post') {
+    title = isInstagram ? 'Instagram Post' : 'Design Inspiration';
   }
 
   return { mediaUrl, description, title, isVideo, fetchMethod, error: errorSummary };

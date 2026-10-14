@@ -43,6 +43,60 @@ const AnimatedText = ({ text }) => {
   );
 };
 
+// ── Memoized Hero Carousel Card Component ──
+// Isolates card rendering and video playback controls to completely eliminate
+// inline-ref thrashing and unnecessary re-renders during 60 FPS animation.
+const HeroCarouselCard = React.memo(({ sec, onCardClick }) => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (!sec.isVideo || !videoRef.current) return;
+    const v = videoRef.current;
+    v.muted = true;
+    v.defaultMuted = true;
+    const playPromise = v.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {});
+    }
+  }, [sec.isVideo, sec.mediaUrl]);
+
+  return (
+    <div 
+      className="hero-carousel-card"
+      onClick={() => onCardClick(sec.id)}
+      title={sec.section_title}
+    >
+      <div className="hero-carousel-image-wrap">
+        {sec.isVideo ? (
+          <video 
+            ref={videoRef}
+            src={sec.mediaUrl} 
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            preload="auto"
+            disablePictureInPicture
+            disableRemotePlayback
+            className="hero-carousel-image" 
+          />
+        ) : (
+          <img 
+            src={sec.mediaUrl} 
+            alt={sec.section_title} 
+            loading="eager"
+            decoding="async"
+            className="hero-carousel-image" 
+          />
+        )}
+      </div>
+      <div className="hero-carousel-title-wrap">
+        <span className="hcc-title">{sec.section_title || sec.section_type || 'Section'}</span>
+      </div>
+    </div>
+  );
+});
+
 // Curated category tab mapping matching Ref.Design filter architecture
 const SECTION_TABS = [
   { id: 'popular', label: 'Popular Sections' },
@@ -95,12 +149,19 @@ export default function SectionsPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(() => Boolean(searchParams.get('q')));
   const [sourceFilter, setSourceFilter] = useState('all'); // 'all' | 'website' | 'standalone'
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'az'
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const p = parseInt(searchParams.get('page'), 10);
+    return !isNaN(p) && p > 0 ? p : 1;
+  });
+  const [totalMatchingSections, setTotalMatchingSections] = useState(0);
+  const [categoryCounts, setCategoryCounts] = useState({});
+
+  // In-memory query cache for 0ms instant back-navigation
+  const queryCacheRef = useRef({});
 
   // Data states
   const [sections, setSections] = useState([]);
   const [carouselData, setCarouselData] = useState([]);
-  const [publishedPageSections, setPublishedPageSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingSection, setEditingSection] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -108,6 +169,7 @@ export default function SectionsPage() {
 
   // Carousel animation & scroll-responsiveness refs
   const carouselTrackRef = useRef(null);
+  const halfWidthRef = useRef(0);
   const isCarouselHoveredRef = useRef(false);
   const scrollPosRef = useRef(0);
   const currentVelocityRef = useRef(0.05); // initialized at 50% slower base velocity
@@ -124,12 +186,27 @@ export default function SectionsPage() {
     }, 4000);
   }, []);
 
-  // Fetch sections from Supabase (combines website_sections + website_pages media)
+  // ── Server-Side Paginated Sections Query (Strictly 24 items per page) ──
   const fetchSections = useCallback(async () => {
     setLoading(true);
+    const cacheKey = JSON.stringify({
+      page: currentPage,
+      categories: [...selectedCategories].sort(),
+      source: sourceFilter,
+      search: searchQuery.trim(),
+      sort: sortBy
+    });
+
+    if (queryCacheRef.current[cacheKey]) {
+      const cached = queryCacheRef.current[cacheKey];
+      setSections(cached.data);
+      setTotalMatchingSections(cached.count);
+      setLoading(false);
+      return;
+    }
+
     try {
-      // 1. Fetch from website_sections table
-      const { data: dbSections } = await supabase
+      let query = supabase
         .from('website_sections')
         .select(`
           id,
@@ -151,10 +228,47 @@ export default function SectionsPage() {
             normalised_url,
             logo_url
           )
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' });
 
-      let combined = Array.isArray(dbSections) ? dbSections.map(s => {
+      // 1. Source filter
+      if (sourceFilter === 'standalone') {
+        query = query.or('is_standalone.eq.true,website_id.is.null');
+      } else if (sourceFilter === 'website') {
+        query = query.and('is_standalone.eq.false,website_id.not.is.null');
+      }
+
+      // 2. Categories filter
+      if (selectedCategories.length > 0) {
+        const orClauses = selectedCategories
+          .map(cat => `section_type.ilike.%${cat}%,section_title.ilike.%${cat}%`)
+          .join(',');
+        query = query.or(orClauses);
+      }
+
+      // 3. Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim();
+        query = query.or(`section_title.ilike.%${q}%,section_type.ilike.%${q}%,description.ilike.%${q}%`);
+      }
+
+      // 4. Sort
+      if (sortBy === 'oldest') {
+        query = query.order('created_at', { ascending: true });
+      } else if (sortBy === 'az') {
+        query = query.order('section_title', { ascending: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      // 5. Server-side range pagination (strictly 24 items)
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+
+      const mapped = Array.isArray(data) ? data.map(s => {
         const classification = classifySection(s.section_title || s.section_type || '');
         return {
           ...s,
@@ -166,62 +280,121 @@ export default function SectionsPage() {
         };
       }) : [];
 
-      // Only fetch standalone sections for the main grid
-      setSections(combined);
-
-      // Fetch from website_pages to extract published sections and populate the carousel
-      const { data: pagesData } = await supabase
-        .from('website_pages')
-        .select(`id, url, media, created_at, page_title`)
-        .limit(50);
-
-      const carouselItems = [];
-      const pageSections = [];
-      if (pagesData && Array.isArray(pagesData)) {
-        pagesData.forEach(page => {
-          if (Array.isArray(page.media)) {
-            page.media.forEach((m) => {
-              if (m.url) {
-                let title = (m && typeof m === 'object' && m.title && m.title !== 'Deposit' && m.title !== 'Deposite')
-                  ? m.title : (m.filename || 'Section');
-                
-                // Clean up title (remove extension if filename)
-                title = title.replace(/\.[^/.]+$/, "");
-
-                const classification = classifySection(title);
-                pageSections.push({
-                  section_title: title,
-                  section_type: classification.category || 'Section',
-                  category: classification.category,
-                  tags: classification.tags || []
-                });
-
-                if (carouselItems.length < 10) {
-                  carouselItems.push({
-                    id: m.url,
-                    section_title: title,
-                    image_url: m.url,
-                    thumbnail_url: m.thumbnailUrl || m.url
-                  });
-                }
-              }
-            });
-          }
-        });
-      }
-      setCarouselData(carouselItems);
-      setPublishedPageSections(pageSections);
-      
+      queryCacheRef.current[cacheKey] = { data: mapped, count: count || 0 };
+      setSections(mapped);
+      setTotalMatchingSections(count || 0);
     } catch (err) {
-      console.error('Unexpected error fetching sections:', err);
+      console.error('Error fetching paginated sections:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, selectedCategories, sourceFilter, searchQuery, sortBy]);
 
   useEffect(() => {
     fetchSections();
   }, [fetchSections]);
+
+  // ── Hero Carousel Data (Fetched once on mount) ──
+  useEffect(() => {
+    let isMounted = true;
+    const fetchHeroData = async () => {
+      try {
+        const { data } = await supabase
+          .from('website_sections')
+          .select('id, section_type, section_title, image_url, thumbnail_url, media, status, created_at')
+          .order('created_at', { ascending: false })
+          .limit(14);
+
+        if (!isMounted || !data) return;
+
+        let carouselItems = data
+          .filter(s => s.status !== 'Draft' && (s.image_url || s.thumbnail_url || (Array.isArray(s.media) && s.media.length > 0)))
+          .map(sec => {
+            let mediaUrl = sec.image_url || sec.thumbnail_url;
+            let thumbnailUrl = sec.thumbnail_url || mediaUrl;
+            let isVideo = isVideoMedia(mediaUrl);
+
+            // For multi-screen collections, use the selected cover media
+            if (Array.isArray(sec.media) && sec.media.length > 0) {
+              const cover = sec.media.find(m => m.isCover) || sec.media[0];
+              if (cover && (cover.url || cover.previewUrl)) {
+                mediaUrl = cover.url || cover.previewUrl;
+                thumbnailUrl = cover.thumbnailUrl || sec.thumbnail_url || mediaUrl;
+                isVideo = cover.type === 'video' || isVideoMedia(mediaUrl);
+              }
+            }
+
+            return {
+              id: sec.id,
+              section_title: sec.section_title || sec.section_type || 'Section',
+              section_type: sec.section_type || 'Section',
+              mediaUrl,
+              thumbnailUrl,
+              isVideo,
+              created_at: sec.created_at
+            };
+          });
+
+        if (carouselItems.length > 0 && carouselItems.length < 8) {
+          const original = [...carouselItems];
+          while (carouselItems.length < 8) {
+            carouselItems = [...carouselItems, ...original];
+          }
+        }
+
+        if (isMounted) {
+          setCarouselData(carouselItems);
+        }
+      } catch (err) {
+        console.error('Failed to load hero carousel media:', err);
+      }
+    };
+
+    fetchHeroData();
+    return () => { isMounted = false; };
+  }, []);
+
+  // ── Category Taxonomy Counts (Lightweight metadata fetched once) ──
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTaxonomy = async () => {
+      try {
+        const { data } = await supabase
+          .from('website_sections')
+          .select('section_type, section_title, tags');
+
+        if (!isMounted || !data) return;
+
+        const counts = {};
+        data.forEach(sec => {
+          const type = (sec.section_type || '').trim();
+          const title = (sec.section_title || '').trim();
+          const tags = Array.isArray(sec.tags) ? sec.tags : [];
+          const terms = [type, title, ...tags].filter(Boolean);
+
+          ALL_SECTION_CATEGORIES.forEach(c => {
+            const cLower = c.toLowerCase();
+            const matched = terms.some(t => {
+              const tLower = t.toLowerCase();
+              return tLower === cLower || tLower.includes(cLower) || cLower.includes(tLower);
+            });
+            if (matched) {
+              counts[c] = (counts[c] || 0) + 1;
+            }
+          });
+        });
+
+        if (isMounted) {
+          setCategoryCounts(counts);
+        }
+      } catch (err) {
+        console.error('Failed to load category taxonomy:', err);
+      }
+    };
+
+    fetchTaxonomy();
+    return () => { isMounted = false; };
+  }, []);
 
   // ── Scroll-Responsive Infinite Carousel Loop (Craftwork-Inspired) ──
   useEffect(() => {
@@ -229,6 +402,28 @@ export default function SectionsPage() {
 
     const track = carouselTrackRef.current;
     if (!track) return;
+
+    // Cache halfWidth without forcing layout reflow on every animation frame
+    const updateDimensions = () => {
+      if (carouselTrackRef.current) {
+        const measured = carouselTrackRef.current.scrollWidth / 2;
+        if (measured > 0) {
+          halfWidthRef.current = measured;
+        }
+      }
+    };
+
+    updateDimensions();
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateDimensions();
+      });
+      resizeObserver.observe(track);
+    } else {
+      window.addEventListener('resize', updateDimensions);
+    }
 
     let reqId;
     let lastTime = performance.now();
@@ -261,9 +456,18 @@ export default function SectionsPage() {
       const dt = Math.min(32, Math.max(8, now - lastTime));
       lastTime = now;
 
-      const halfWidth = track.scrollWidth / 2;
+      let halfWidth = halfWidthRef.current;
+      if (halfWidth <= 0) {
+        updateDimensions();
+        halfWidth = halfWidthRef.current;
+        if (halfWidth <= 0) {
+          reqId = requestAnimationFrame(animate);
+          return;
+        }
+      }
+
       // Exactly 50% slower default speed: full cycle takes 80s instead of 40s
-      const baseVelocity = halfWidth > 0 ? halfWidth / 80000 : 0.05;
+      const baseVelocity = halfWidth / 80000;
 
       // Smooth decay of scroll velocity towards 0 when scrolling stops
       scrollVelocityRef.current *= 0.88;
@@ -292,12 +496,10 @@ export default function SectionsPage() {
       scrollPosRef.current += currentVelocityRef.current * dt;
 
       // Mathematically seamless infinite loop wrap in both directions
-      if (halfWidth > 0) {
-        if (scrollPosRef.current >= halfWidth) {
-          scrollPosRef.current %= halfWidth;
-        } else if (scrollPosRef.current < 0) {
-          scrollPosRef.current = ((scrollPosRef.current % halfWidth) + halfWidth) % halfWidth;
-        }
+      if (scrollPosRef.current >= halfWidth) {
+        scrollPosRef.current %= halfWidth;
+      } else if (scrollPosRef.current < 0) {
+        scrollPosRef.current = ((scrollPosRef.current % halfWidth) + halfWidth) % halfWidth;
       }
 
       track.style.transform = `translate3d(${-scrollPosRef.current}px, 0, 0)`;
@@ -309,37 +511,14 @@ export default function SectionsPage() {
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else {
+        window.removeEventListener('resize', updateDimensions);
+      }
       if (reqId) cancelAnimationFrame(reqId);
     };
   }, [carouselData.length]);
-
-  // Dynamic category counts calculated from actual published section data
-  const categoryCounts = useMemo(() => {
-    const counts = {};
-    const allPublished = [...sections, ...publishedPageSections];
-
-    allPublished.forEach(sec => {
-      const type = (sec.section_type || '').trim();
-      const title = (sec.section_title || '').trim();
-      const cat = (sec.category || '').trim();
-      const tags = Array.isArray(sec.tags) ? sec.tags : [];
-
-      const terms = [type, title, cat, ...tags].filter(Boolean);
-
-      ALL_SECTION_CATEGORIES.forEach(c => {
-        const cLower = c.toLowerCase();
-        const matched = terms.some(t => {
-          const tLower = t.toLowerCase();
-          return tLower === cLower || tLower.includes(cLower) || cLower.includes(tLower);
-        });
-        if (matched) {
-          counts[c] = (counts[c] || 0) + 1;
-        }
-      });
-    });
-
-    return counts;
-  }, [sections, publishedPageSections]);
 
   // Toggle category selection
   const toggleCategory = (cat) => {
@@ -353,6 +532,7 @@ export default function SectionsPage() {
       } else {
         newParams.set('category', next[0]);
       }
+      newParams.delete('page');
       setSearchParams(newParams);
       return next;
     });
@@ -369,9 +549,7 @@ export default function SectionsPage() {
     setSourceFilter('all');
     setSortBy('newest');
     setCurrentPage(1);
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete('category');
-    newParams.delete('q');
+    const newParams = new URLSearchParams();
     setSearchParams(newParams);
   };
 
@@ -382,61 +560,6 @@ export default function SectionsPage() {
       setIsExpanded(true);
     }
   };
-
-  // Filter & Search Logic
-  const filteredSections = useMemo(() => {
-    let result = [...sections];
-
-    // 1. Category Filter (multi-select)
-    if (selectedCategories.length > 0) {
-      const selectedLower = selectedCategories.map(c => c.toLowerCase());
-      result = result.filter(s => {
-        const typeLower = (s.section_type || '').toLowerCase();
-        const titleLower = (s.section_title || '').toLowerCase();
-        const categoryLower = (s.category || '').toLowerCase();
-        const tagsLower = Array.isArray(s.tags) ? s.tags.map(t => t.toLowerCase()) : [];
-        return selectedLower.some(cat => 
-          typeLower.includes(cat) || 
-          categoryLower.includes(cat) ||
-          titleLower.includes(cat) ||
-          tagsLower.some(t => t.includes(cat))
-        );
-      });
-    }
-
-    // 2. Source Filter
-    if (sourceFilter === 'standalone') {
-      result = result.filter(s => s.is_standalone === true || !s.submissions);
-    } else if (sourceFilter === 'website') {
-      result = result.filter(s => s.is_standalone !== true && !!s.submissions);
-    }
-
-    // 3. Search Query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(s => {
-        const titleMatch = (s.section_title || '').toLowerCase().includes(q);
-        const typeMatch = (s.section_type || '').toLowerCase().includes(q);
-        const websiteMatch = s.submissions?.title?.toLowerCase().includes(q) || 
-                             s.submissions?.normalised_url?.toLowerCase().includes(q) ||
-                             (s.website_url || '').toLowerCase().includes(q);
-        const tagsMatch = Array.isArray(s.tags) && s.tags.some(t => t.toLowerCase().includes(q));
-        const descMatch = (s.description || '').toLowerCase().includes(q);
-        return titleMatch || typeMatch || websiteMatch || tagsMatch || descMatch;
-      });
-    }
-
-    // 4. Sort
-    if (sortBy === 'oldest') {
-      result.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
-    } else if (sortBy === 'az') {
-      result.sort((a, b) => (a.section_title || a.section_type || '').localeCompare(b.section_title || b.section_type || ''));
-    } else {
-      result.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    }
-
-    return result;
-  }, [sections, selectedCategories, sourceFilter, searchQuery, sortBy]);
 
   // Current tab items to display in expanded drawer
   const currentTabLabel = SECTION_TABS.find(t => t.id === activeTab)?.label || 'Popular Sections';
@@ -460,30 +583,34 @@ export default function SectionsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Pagination calculation
-  const totalPages = Math.ceil(filteredSections.length / ITEMS_PER_PAGE);
-  const currentCards = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredSections.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredSections, currentPage]);
+  // Server-side pagination calculation
+  const totalPages = Math.max(1, Math.ceil(totalMatchingSections / ITEMS_PER_PAGE));
 
-  // Distribute cards round-robin across columns for natural left-to-right reading order
+  // Distribute server-paginated cards round-robin across columns for natural left-to-right reading order
   const columns = useMemo(() => {
     const cols = Array.from({ length: columnCount }, () => []);
-    currentCards.forEach((sec, index) => {
+    sections.forEach((sec, index) => {
       cols[index % columnCount].push(sec);
     });
     return cols;
-  }, [currentCards, columnCount]);
+  }, [sections, columnCount]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 580, behavior: 'smooth' });
+    const newParams = new URLSearchParams(searchParams);
+    if (page === 1) newParams.delete('page');
+    else newParams.set('page', page);
+    setSearchParams(newParams);
+    if (filterBarRef.current) {
+      filterBarRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 580, behavior: 'smooth' });
+    }
   };
 
-  const handleCardClick = (id) => {
+  const handleCardClick = useCallback((id) => {
     navigate(`/sections/${id}`);
-  };
+  }, [navigate]);
 
   return (
     <div className="sections-page">
@@ -550,70 +677,20 @@ export default function SectionsPage() {
               {/* Render two identical groups of cards to create a mathematically perfect infinite loop */}
               <div className="carousel-group">
                 {carouselData.map((sec, idx) => (
-                  <div 
-                    key={`carousel-g1-${sec.id}-${idx}`} 
-                    className="hero-carousel-card"
-                    onClick={() => handleCardClick(sec.id)}
-                    title={sec.section_title}
-                  >
-                    <div className="hero-carousel-image-wrap">
-                      {isVideoMedia(sec.image_url || sec.thumbnail_url) ? (
-                        <video 
-                          src={sec.image_url || sec.thumbnail_url} 
-                          autoPlay 
-                          muted 
-                          loop 
-                          playsInline 
-                          preload="auto"
-                          className="hero-carousel-image" 
-                        />
-                      ) : (
-                        <img 
-                          src={sec.image_url || sec.thumbnail_url} 
-                          alt={sec.section_title} 
-                          loading="lazy"
-                          className="hero-carousel-image"
-                        />
-                      )}
-                    </div>
-                    <div className="hero-carousel-title-wrap">
-                      <span className="hcc-title">{sec.section_title || sec.section_type || 'Section'}</span>
-                    </div>
-                  </div>
+                  <HeroCarouselCard 
+                    key={`carousel-g1-${sec.id}-${idx}`}
+                    sec={sec}
+                    onCardClick={handleCardClick}
+                  />
                 ))}
               </div>
               <div className="carousel-group">
                 {carouselData.map((sec, idx) => (
-                  <div 
-                    key={`carousel-g2-${sec.id}-${idx}`} 
-                    className="hero-carousel-card"
-                    onClick={() => handleCardClick(sec.id)}
-                    title={sec.section_title}
-                  >
-                    <div className="hero-carousel-image-wrap">
-                      {isVideoMedia(sec.image_url || sec.thumbnail_url) ? (
-                        <video 
-                          src={sec.image_url || sec.thumbnail_url} 
-                          autoPlay 
-                          muted 
-                          loop 
-                          playsInline 
-                          preload="auto"
-                          className="hero-carousel-image" 
-                        />
-                      ) : (
-                        <img 
-                          src={sec.image_url || sec.thumbnail_url} 
-                          alt={sec.section_title} 
-                          loading="lazy"
-                          className="hero-carousel-image"
-                        />
-                      )}
-                    </div>
-                    <div className="hero-carousel-title-wrap">
-                      <span className="hcc-title">{sec.section_title || sec.section_type || 'Section'}</span>
-                    </div>
-                  </div>
+                  <HeroCarouselCard 
+                    key={`carousel-g2-${sec.id}-${idx}`}
+                    sec={sec}
+                    onCardClick={handleCardClick}
+                  />
                 ))}
               </div>
             </div>
@@ -797,15 +874,16 @@ export default function SectionsPage() {
       {/* ── Main Full-Width Grid (Matching Home & Websites Pages) ── */}
       <section className="card-grid-section sections-main-grid-section">
         {/* Active Search & Source Filter Reminder Bar */}
-        {(searchQuery || sourceFilter !== 'all') && (
+        {(searchQuery || sourceFilter !== 'all' || selectedCategories.length > 0) && (
           <div className="sections-filter-status-bar">
             <span>
-              Showing {filteredSections.length} section{filteredSections.length !== 1 ? 's' : ''}
+              Showing {totalMatchingSections} section{totalMatchingSections !== 1 ? 's' : ''}
               {searchQuery && <> matching <strong>"{searchQuery}"</strong></>}
               {sourceFilter !== 'all' && <> from <strong>{sourceFilter === 'website' ? 'Websites' : 'Standalone Uploads'}</strong></>}
+              {selectedCategories.length > 0 && <> in <strong>{selectedCategories.join(', ')}</strong></>}
             </span>
             <button type="button" onClick={clearAllFilters} className="sections-status-reset">
-              Reset search & source
+              Reset all filters
             </button>
           </div>
         )}
@@ -816,7 +894,7 @@ export default function SectionsPage() {
             <div className="sections-loading-spinner" />
             <p>Loading sections library...</p>
           </div>
-        ) : currentCards.length === 0 ? (
+        ) : sections.length === 0 ? (
           <div className="sections-empty-container">
             <div className="sections-empty-state">
               <h3>No sections found</h3>
@@ -855,9 +933,12 @@ export default function SectionsPage() {
                       }}
                       onUpdateSection={(id, updated) => {
                         setSections(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
+                        queryCacheRef.current = {};
                       }}
                       onDeleteSection={(id) => {
                         setSections(prev => prev.filter(s => s.id !== id));
+                        setTotalMatchingSections(prev => Math.max(0, prev - 1));
+                        queryCacheRef.current = {};
                       }}
                     />
                   </div>
@@ -873,6 +954,8 @@ export default function SectionsPage() {
             <Pagination 
               currentPage={currentPage}
               totalPages={totalPages}
+              totalItems={totalMatchingSections}
+              itemsPerPage={ITEMS_PER_PAGE}
               onPageChange={handlePageChange}
             />
           </div>

@@ -65,11 +65,15 @@ export default function Pagination({
   };
 
   const paginationGroup = getPaginationGroup();
+  const startItem = totalItems > 0 ? (current - 1) * itemsPerPage + 1 : 0;
+  const endItem = totalItems > 0 ? Math.min(totalItems, current * itemsPerPage) : 0;
 
   return (
     <div className="pagination-wrapper">
       <div className="pagination-label">
-        PAGE {current} OF {finalTotalPages}
+        {totalItems > 0 
+          ? `Showing ${startItem}–${endItem} of ${totalItems} sections` 
+          : `PAGE ${current} OF ${finalTotalPages}`}
       </div>
       <div className="pagination">
         <button 

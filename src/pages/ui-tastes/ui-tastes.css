@@ -2,7 +2,17 @@
    UI/UX Tastes Page
    ═══════════════════════════════════════════ */
 
+:root {
+  --ui-taste-control-bg: #F0F0F0;
+}
+
+[data-theme="dark"] {
+  --ui-taste-control-bg: #1c1c1c;
+}
+
 .ui-tastes-page {
+  --ui-taste-control-bg: #F0F0F0;
+  --input-bg: #F0F0F0;
   width: 100%;
   min-height: 100vh;
   background-color: var(--background, #ffffff);
@@ -10,6 +20,10 @@
   padding-bottom: 120px;
 }
 
+[data-theme="dark"] .ui-tastes-page {
+  --ui-taste-control-bg: #1c1c1c;
+  --input-bg: #1c1c1c;
+}
 
 .ui-tastes-container {
   width: 100%;
@@ -40,7 +54,7 @@
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  background: var(--input-bg, #f0f0f0);
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border: none !important;
   border-radius: 9999px;
   padding: 0 4px 0 18px;
@@ -52,7 +66,7 @@
 }
 
 .ui-tastes-input-wrapper:focus-within {
-  background: #e6e6e6;
+  background: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-tastes-url-input {
@@ -83,7 +97,7 @@
   gap: 8px;
   padding: 0 15px;
   height: 40px;
-  background: #ffffff;
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border: none !important;
   border-radius: 9999px;
   font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
@@ -99,7 +113,7 @@
 }
 
 .ui-tastes-category-trigger:hover {
-  background: #f7f7f7;
+  background: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-tastes-category-menu {
@@ -110,6 +124,7 @@
   max-height: 320px;
   overflow-y: auto;
   scrollbar-width: thin;
+  background: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-tastes-category-menu.open {
@@ -161,7 +176,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: var(--input-bg, #f0f0f0);
+  background-color: var(--ui-taste-control-bg, #F0F0F0);
   color: var(--text-color, #111111);
   border: none !important;
   border-radius: 9999px;
@@ -180,7 +195,7 @@
 
 .ui-tastes-upload-btn:hover {
   transform: scale(1.02);
-  background-color: #e4e4e4;
+  background-color: var(--ui-taste-control-bg, #F0F0F0);
 }
 
 .ui-tastes-upload-btn:active {
@@ -314,34 +329,393 @@
 .taste-card-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 4px;
+  gap: 8px;
+  padding: 4px 2px 2px 2px;
 }
 
-.taste-card-header {
+/* Row 1: Creator Row (Avatar + Name on left, Platform Icon + Handle on right) */
+.taste-card-author-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
-.taste-card-username {
+.taste-card-author-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.taste-card-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.taste-card-avatar-fallback {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  color: #111111;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="dark"] .taste-card-avatar-fallback {
+  background-color: #27272a;
+  color: #f4f4f5;
+}
+
+.taste-card-author-name {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-color, #111111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
-.taste-card-platform {
-  color: #888888;
+[data-theme="dark"] .taste-card-author-name {
+  color: #ffffff;
 }
 
-.taste-card-description {
-  font-size: 14px;
-  color: #666666;
-  line-height: 1.4;
+.taste-card-author-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: #8e8e93;
+}
+
+[data-theme="dark"] .taste-card-author-right {
+  color: #a1a1aa;
+}
+
+.taste-card-platform-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.taste-card-handle {
+  font-size: 13px;
+  font-weight: 400;
+  color: inherit;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Row 2: Short Description (max 2 lines with ellipsis) */
+.taste-card-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.42;
+  color: #4b5563;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
+}
+
+[data-theme="dark"] .taste-card-desc {
+  color: #a1a1aa;
+}
+
+/* Row 3: Footer Row (Engagement counts on left, Date on right) */
+.taste-card-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.taste-card-engagement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.taste-card-stat {
+  display: flex;
+  align-items: center;
+  gap: 4.5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+[data-theme="dark"] .taste-card-stat {
+  color: #8e8e93;
+}
+
+.taste-stat-icon {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.taste-card-date {
+  font-size: 12px;
+  font-weight: 400;
+  color: #8e8e93;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+[data-theme="dark"] .taste-card-date {
+  color: #71717a;
+}
+
+/* Hover reveal for Card 3-dot Menu Button */
+.taste-card:hover .card-menu-btn,
+.taste-card-media-wrapper:hover .card-menu-btn,
+.card-menu-btn.active {
+  opacity: 1 !important;
+}
+
+@media (hover: none) {
+  .card-menu-btn {
+    opacity: 0.85 !important;
+  }
+}
+
+/* ── UI/UX Tastes Edit Inspiration Modal ── */
+.taste-edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: sectionModalFade 0.2s ease-out;
+}
+
+.taste-edit-modal-card {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  color: #111827;
+  animation: cardDropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .taste-edit-modal-card {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.7);
+  color: #f4f4f5;
+}
+
+.taste-edit-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .taste-edit-modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.taste-edit-modal-header h3 {
+  margin: 0;
+  font-family: 'PolySans Neutral', 'PolySans Trial', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.taste-edit-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.15s ease;
+}
+
+.taste-edit-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+[data-theme="dark"] .taste-edit-modal-close {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .taste-edit-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.taste-edit-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.taste-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taste-edit-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+[data-theme="dark"] .taste-edit-field label {
+  color: #d1d5db;
+}
+
+.taste-edit-input,
+.taste-edit-select,
+.taste-edit-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  background: #f4f4f5;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  color: #111827;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.taste-edit-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.taste-edit-input:focus,
+.taste-edit-select:focus,
+.taste-edit-textarea:focus {
+  border-color: #000000;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .taste-edit-input,
+[data-theme="dark"] .taste-edit-select,
+[data-theme="dark"] .taste-edit-textarea {
+  background: #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .taste-edit-input:focus,
+[data-theme="dark"] .taste-edit-select:focus,
+[data-theme="dark"] .taste-edit-textarea:focus {
+  border-color: #ffffff;
+  background: #202023;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.taste-edit-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .taste-edit-modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.taste-edit-btn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.taste-edit-btn-cancel {
+  background: transparent;
+  color: #4b5563;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.taste-edit-btn-cancel:hover {
+  background: #f4f4f5;
+  color: #111827;
+}
+
+[data-theme="dark"] .taste-edit-btn-cancel {
+  color: #a1a1aa;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .taste-edit-btn-cancel:hover {
+  background: #27272a;
+  color: #ffffff;
+}
+
+.taste-edit-btn-save {
+  background: #000000;
+  color: #ffffff;
+}
+
+.taste-edit-btn-save:hover {
+  background: #27272a;
+}
+
+[data-theme="dark"] .taste-edit-btn-save {
+  background: #ffffff;
+  color: #000000;
+}
+
+[data-theme="dark"] .taste-edit-btn-save:hover {
+  background: #e4e4e7;
 }
 
 [data-theme="dark"] .ui-tastes-input-wrapper {
@@ -494,7 +868,7 @@
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   border: 1px solid var(--border-color, #e5e5e5);
-  background: var(--input-bg, #f5f5f5);
+  background: var(--ui-taste-control-bg, #F0F0F0);
   color: var(--text-color, #111111);
   font-family: inherit;
   font-size: 13px;
@@ -504,7 +878,7 @@
 }
 
 .ui-tastes-empty-reset-btn:hover {
-  background: var(--hover-bg, #eeeeee);
+  background: var(--ui-taste-control-bg, #F0F0F0);
   border-color: var(--text-color, #111111);
 }
 
@@ -515,5 +889,36 @@
   }
 }
 
-
-
+/* ── Dark Theme Overrides ── */
+[data-theme="dark"] .ui-tastes-input-wrapper {
+  background: #1c1c1c;
+}
+[data-theme="dark"] .ui-tastes-input-wrapper:focus-within {
+  background: #1c1c1c;
+}
+[data-theme="dark"] .ui-tastes-category-trigger {
+  background: #252525;
+  color: #f0f0f0;
+}
+[data-theme="dark"] .ui-tastes-category-trigger:hover {
+  background: #252525;
+}
+[data-theme="dark"] .ui-tastes-category-menu {
+  background: #1c1c1c;
+}
+[data-theme="dark"] .ui-tastes-upload-btn {
+  background-color: #1c1c1c;
+  color: #f0f0f0;
+}
+[data-theme="dark"] .ui-tastes-upload-btn:hover {
+  background-color: #1c1c1c;
+}
+[data-theme="dark"] .ui-tastes-empty-reset-btn {
+  background: #1c1c1c;
+  color: #f0f0f0;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .ui-tastes-empty-reset-btn:hover {
+  background: #1c1c1c;
+  border-color: #ffffff;
+}

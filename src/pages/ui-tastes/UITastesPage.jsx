@@ -67,12 +67,18 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     // Initial fetch
     fetchPosts();
 
-    // Subscribe to real-time changes so the page updates immediately when the Telegram bot inserts a row
+    // Subscribe to real-time changes so the page updates immediately when records change
     const subscription = supabase
       .channel('ui_tastes_changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ui_tastes' }, (payload) => {
         setPosts((currentPosts) => [payload.new, ...currentPosts]);
         migratePlaceholders([payload.new]);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'ui_tastes' }, (payload) => {
+        setPosts((currentPosts) => currentPosts.filter(p => p.id !== payload.old.id));
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ui_tastes' }, (payload) => {
+        setPosts((currentPosts) => currentPosts.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
       })
       .subscribe();
 
@@ -82,6 +88,19 @@ export default function UITastesPage({ savedItems, toggleSave }) {
       supabase.removeChannel(subscription);
     };
   }, []);
+
+  const handleUpdatePost = (postId, updates) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, ...updates };
+      }
+      return p;
+    }));
+  };
+
+  const handleDeletePost = (postId) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  };
 
   const scrapeWithExtension = (url, id = null) => {
     return new Promise((resolve, reject) => {
@@ -116,7 +135,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   const fetchPosts = async () => {
     const { data, error } = await supabase
       .from('ui_tastes')
-      .select('*')
+      .select('id, url, platform, username, description, media_url, is_video, category, created_at')
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -437,6 +456,9 @@ export default function UITastesPage({ savedItems, toggleSave }) {
                   isSaved={savedItems ? savedItems[post.id] : false}
                   toggleSave={toggleSave}
                   isResolving={resolvingIds.has(post.id)}
+                  onUpdatePost={handleUpdatePost}
+                  onDeletePost={handleDeletePost}
+                  onToast={addToast}
                 />
               </div>
             ))}

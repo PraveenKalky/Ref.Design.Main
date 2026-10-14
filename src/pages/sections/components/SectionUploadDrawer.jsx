@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Check, CaretDown, Sparkle, MagnifyingGlass, Plus, Star } from '@phosphor-icons/react';
+import { X, Check, CaretDown, Sparkle, MagnifyingGlass, Plus, Star, ClipboardText } from '@phosphor-icons/react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import { uploadWithProgress } from '../../../utils/uploadXHR';
@@ -747,7 +747,6 @@ function GroupCollectionCard({
 
         {/* Cover Indicator Badge */}
         <div className="sud-cover-pill">
-          <Star size={11} weight="fill" />
           <span>Cover ({coverIndex >= 0 ? coverIndex + 1 : 1} of {queue.length})</span>
         </div>
 
@@ -1458,6 +1457,90 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
     if (e.dataTransfer.files?.length) processFiles(e.dataTransfer.files);
   };
 
+  // ── Global paste handler (Ctrl+V / Cmd+V) ──
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleWindowPaste = (e) => {
+      // Don't intercept if user is typing text into an input or textarea and clipboard has only text
+      const target = e.target;
+      const isInput = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      );
+
+      const items = e.clipboardData?.items;
+      const files = [];
+
+      if (items && items.length > 0) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
+            const blob = item.getAsFile();
+            if (blob) {
+              const ext = (item.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+              const cleanName = (blob.name && blob.name !== 'image.png' && blob.name !== 'blob')
+                ? blob.name
+                : `screenshot-${Date.now()}.${ext}`;
+              const file = new File([blob], cleanName, { type: blob.type });
+              files.push(file);
+            }
+          }
+        }
+      }
+
+      // Fallback to clipboardData.files
+      if (files.length === 0 && e.clipboardData?.files?.length) {
+        for (let i = 0; i < e.clipboardData.files.length; i++) {
+          const f = e.clipboardData.files[i];
+          if (f.type.startsWith('image/') || f.type.startsWith('video/')) {
+            files.push(f);
+          }
+        }
+      }
+
+      if (files.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        processFiles(files);
+      }
+    };
+
+    window.addEventListener('paste', handleWindowPaste);
+    return () => window.removeEventListener('paste', handleWindowPaste);
+  }, [isOpen, processFiles]);
+
+  // ── Click-to-paste button handler ──
+  const handlePasteFromClipboard = async () => {
+    setErrorMsg('');
+    try {
+      if (!navigator.clipboard?.read) {
+        setErrorMsg('Clipboard API not supported in this browser. Please use Cmd+V / Ctrl+V.');
+        return;
+      }
+      const clipboardItems = await navigator.clipboard.read();
+      const files = [];
+      for (const item of clipboardItems) {
+        const imageType = item.types.find(t => t.startsWith('image/') || t.startsWith('video/'));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          const ext = (imageType.split('/')[1] || 'png').replace('jpeg', 'jpg');
+          const file = new File([blob], `screenshot-${Date.now()}.${ext}`, { type: imageType });
+          files.push(file);
+        }
+      }
+      if (files.length > 0) {
+        processFiles(files);
+      } else {
+        setErrorMsg('No image found on clipboard. Copy an image or screenshot first, then click Paste.');
+      }
+    } catch (err) {
+      console.warn('Clipboard read failed:', err);
+      setErrorMsg('Could not access clipboard. Please press Cmd+V / Ctrl+V to paste directly.');
+    }
+  };
+
   if (!isOpen) return null;
 
   const publishableCount = queue.filter(q => q.status === 'done' && q.imageUrl).length;
@@ -1523,8 +1606,19 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
                   <path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z" />
                 </svg>
               </div>
-              <p className="sud-dropzone-main">Choose files or drag & drop here.</p>
-              <p className="sud-dropzone-sub">PNG, JPG, WEBP, GIF, AVIF, MP4, WEBM • Max {MAX_SIZE_MB}MB each</p>
+              <p className="sud-dropzone-main">Drop or click to upload</p>
+              <p className="sud-dropzone-sub">PNG, JPG, WebP · Paste with Ctrl+V / Cmd+V</p>
+            </div>
+            <div className="sud-paste-row">
+              <button
+                type="button"
+                className="sud-paste-btn"
+                onClick={handlePasteFromClipboard}
+                title="Paste image from clipboard (Cmd+V)"
+              >
+                <ClipboardText size={15} weight="bold" />
+                <span>Paste · ⌘V or click</span>
+              </button>
             </div>
             <input
               ref={fileInputRef}

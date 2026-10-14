@@ -531,20 +531,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 0;
   margin-bottom: 24px;
-  background: var(--dv-surface-dark, #fafafa);
-  border-radius: 12px;
-  corner-shape: squircle;
-  -webkit-corner-shape: squircle;
-  border: 1px solid var(--dv-border, rgba(0, 0, 0, 0.06));
+  background: transparent;
+  border: none;
   font-size: 13px;
   color: var(--dv-text-ghost, #666666);
 }
 
 [data-theme="dark"] .sections-filter-status-bar {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.06);
+  background: transparent;
+  border: none;
 }
 
 .sections-status-reset {
@@ -700,18 +697,27 @@
   overflow: hidden;
   display: flex;
   z-index: 2;
+  contain: paint layout;
 }
 
 .hero-scrolling-track {
   display: flex;
   width: max-content;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  contain: layout;
 }
 
 .carousel-group {
   display: flex;
   gap: 20px;
   padding-right: 20px; /* seamless spacing before the next group starts */
+  flex-shrink: 0;
+  contain: layout;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .hero-carousel-card {
@@ -722,10 +728,10 @@
   gap: 12px;
   cursor: pointer;
   flex-shrink: 0;
-  border-radius: 20px;
-  corner-shape: squircle;
-  -webkit-corner-shape: squircle;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .hero-carousel-image-wrap {
@@ -735,10 +741,11 @@
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   overflow: hidden;
-  background: #111;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: translateZ(0); /* Prevents WebKit corner bleeding on transform */
+  background: transparent;
+  box-shadow: none;
+  isolation: isolate;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .hero-carousel-image-wrap img,
@@ -747,24 +754,32 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
+  display: block;
   border-radius: 20px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.hero-carousel-image-wrap video {
+  pointer-events: none;
 }
 
 .hero-carousel-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-8px) translateZ(0);
 }
 
 .hero-carousel-card:hover .hero-carousel-image-wrap {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 .hero-carousel-card:hover img,
 .hero-carousel-card:hover video,
 .hero-carousel-card:hover .hero-carousel-image {
-  transform: scale(1.05);
+  transform: scale(1.05) translateZ(0);
 }
 
 .hero-carousel-title-wrap {

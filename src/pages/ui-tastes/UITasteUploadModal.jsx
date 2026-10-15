@@ -17,6 +17,7 @@ import {
 } from '@phosphor-icons/react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { ConfirmationModal } from '../../components/modal/Modal';
 import './UITasteUploadModal.css';
 
 export const UI_TASTE_CATEGORIES = [
@@ -77,6 +78,7 @@ export default function UITasteUploadModal({
   const [isDragOver, setIsDragOver] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const fileInputRef = useRef(null);
   const categoryDropdownRef = useRef(null);
 
@@ -125,12 +127,16 @@ export default function UITasteUploadModal({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen && !isSubmitting) {
-        attemptClose();
+        if (showDiscardConfirm) {
+          setShowDiscardConfirm(false);
+        } else {
+          attemptClose();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isSubmitting, isDirty]);
+  }, [isOpen, isSubmitting, isDirty, showDiscardConfirm]);
 
   if (!isOpen) return null;
 
@@ -152,13 +158,15 @@ export default function UITasteUploadModal({
   const attemptClose = () => {
     if (isSubmitting) return;
     if (isDirty) {
-      const confirmDismiss = window.confirm('You have unsaved changes. Discard and close the upload drawer?');
-      if (confirmDismiss) {
-        forceClose();
-      }
+      setShowDiscardConfirm(true);
     } else {
       forceClose();
     }
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardConfirm(false);
+    forceClose();
   };
 
   const handleBackdropClick = (e) => {
@@ -650,6 +658,17 @@ export default function UITasteUploadModal({
           </button>
         </div>
       </aside>
+
+      {/* Discard Draft Confirmation Modal (Standardized) */}
+      <ConfirmationModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={handleConfirmDiscard}
+        title="Discard Upload?"
+        description="You have unsaved changes in this inspiration upload. Closing now will discard all selected files and tags."
+        confirmText="Discard Draft"
+        size="md"
+      />
     </div>
   );
 

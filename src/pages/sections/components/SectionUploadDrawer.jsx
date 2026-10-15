@@ -8,6 +8,7 @@ import { sanitizeSectionName } from '../../admin/components/PageMediaUploader';
 import { ALL_SECTION_CATEGORIES, GEMINI_SECTION_CATEGORIES } from '../../../data/section-categories';
 import { classifySection } from '../../../utils/sectionTaxonomy';
 import { saveDraft, loadDraft, clearDraft } from '../../../utils/draftStorage';
+import { ConfirmationModal } from '../../../components/modal/Modal';
 import './section-upload-drawer.css';
 
 // ─────────────────────────────────────────────
@@ -1750,32 +1751,16 @@ export default function SectionUploadDrawer({ isOpen, onClose, onUploadSuccess, 
         </div>
 
         {/* Discard Draft Confirmation Modal */}
-        {showDiscardConfirm && (
-          <div className="sud-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="sud-confirm-title">
-            <div className="sud-confirm-card">
-              <h3 id="sud-confirm-title" className="sud-confirm-title">Discard unfinished draft?</h3>
-              <p className="sud-confirm-desc">
-                You have uploaded media and draft details. Discarding will permanently remove this draft.
-              </p>
-              <div className="sud-confirm-actions">
-                <button
-                  type="button"
-                  className="sud-confirm-keep-btn"
-                  onClick={() => setShowDiscardConfirm(false)}
-                >
-                  Keep Editing
-                </button>
-                <button
-                  type="button"
-                  className="sud-confirm-discard-btn"
-                  onClick={handleConfirmDiscard}
-                >
-                  Discard Draft
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmationModal
+          isOpen={showDiscardConfirm}
+          onClose={() => setShowDiscardConfirm(false)}
+          onConfirm={handleConfirmDiscard}
+          title="Discard unfinished draft?"
+          description="You have uploaded media and draft details. Discarding will permanently remove this draft."
+          confirmText="Discard Draft"
+          cancelText="Keep Editing"
+          isDanger={true}
+        />
       </aside>
     </div>
   );

@@ -1,4 +1,5 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase.js';
+import { detectPlatform } from './platformIcons.jsx';
 
 /**
  * Decodes HTML entities like &#x1f62e;, &quot;, &#039;, etc.
@@ -103,33 +104,10 @@ export function getCleanTasteTitle(post) {
 
 /**
  * Normalizes platform name for consistent display:
- * Instagram, Dribbble, Behance, X, Pinterest, or Web.
+ * Instagram, Dribbble, LinkedIn, Behance, X, Pinterest, or Web.
  */
 export function getDisplayPlatform(platform, url) {
-  if (platform) {
-    const p = platform.trim();
-    const lower = p.toLowerCase();
-    if (lower === 'twitter' || lower === 'x') return 'X';
-    if (lower === 'instagram') return 'Instagram';
-    if (lower === 'dribbble') return 'Dribbble';
-    if (lower === 'behance') return 'Behance';
-    if (lower === 'pinterest') return 'Pinterest';
-    if (lower === 'linkedin') return 'LinkedIn';
-    if (lower === 'youtube') return 'YouTube';
-    if (lower === 'web' || lower === 'website') return 'Web';
-    return p.charAt(0).toUpperCase() + p.slice(1);
-  }
-
-  if (url) {
-    if (url.includes('instagram.com')) return 'Instagram';
-    if (url.includes('dribbble.com')) return 'Dribbble';
-    if (url.includes('behance.net')) return 'Behance';
-    if (url.includes('x.com') || url.includes('twitter.com')) return 'X';
-    if (url.includes('pinterest.com')) return 'Pinterest';
-    if (url.includes('linkedin.com')) return 'LinkedIn';
-  }
-
-  return 'Web';
+  return detectPlatform(url, platform);
 }
 
 /**
@@ -175,8 +153,113 @@ export function formatTimeAgo(dateString, isSaved = false) {
 }
 
 /**
+ * Cleans the raw username string to display ONLY the creator's actual name.
+ * Strips captions, quotes, "on Instagram", taglines after "|" or "•", bylines, etc.
+ */
+export function cleanCreatorName(raw, platform, handle) {
+  if (!raw) return handle ? handle.replace(/^@/, '') : (platform || 'Creator');
+  let str = decodeHtmlEntities(raw).trim();
+
+  // 1. Remove "(@handle) on X" or "... on Platform: ..."
+  // Note: [\s\S]* ensures matching across newlines in Instagram captions
+  str = str.replace(/\s*\(@[a-zA-Z0-9_.]+\)\s*on\s+(?:X|Twitter|Instagram|Dribbble|Behance|LinkedIn)[\s\S]*$/i, '');
+  str = str.replace(/\s+on\s+(?:Instagram|Dribbble|Behance|X|Twitter|Pinterest|LinkedIn)[\s\S]*$/i, '');
+
+  // 2. Dribbble "Title by Author"
+  if (/\s+by\s+/i.test(str)) {
+    const byParts = str.split(/\s+by\s+/i);
+    if (byParts[1]) str = byParts[1];
+  }
+
+  // 3. Remove professional titles, subtitles, and taglines after separators (| , • , · , — , –)
+  // Pipe separator check: e.g. "Ikram Rana | AI Tool & Automation" or "Daily Productivity ... | Mohammad Ali"
+  if (str.includes('|')) {
+    const parts = str.split('|').map(p => p.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const left = parts[0];
+      const right = parts[1];
+      if (left.split(/\s+/).length <= 4 && !/ui|ux|design|dashboard|website|app|tool|expert|automation/i.test(left)) {
+        str = left;
+      } else if (right.split(/\s+/).length <= 4 && !/ui|ux|design|dashboard|website|app|tool|expert|automation/i.test(right)) {
+        str = right;
+      } else {
+        str = left;
+      }
+    }
+  }
+
+  // Bullet or middle dot separator: e.g. "Marina Budarina • Design & Art"
+  if (/[•·]/.test(str)) {
+    str = str.split(/[•·]/)[0].trim();
+  }
+
+  // Dash separator with spaces: "Author Name - UX Designer"
+  if (/\s+[-–—]\s+/.test(str)) {
+    const parts = str.split(/\s+[-–—]\s+/);
+    if (parts[0] && parts[0].length >= 2) {
+      str = parts[0].trim();
+    }
+  }
+
+  // 4. File names: e.g. "Screenrecorder-2026-04-22...mp4"
+  if (/\.(mp4|webm|mov|png|jpe?g|webp)$/i.test(str)) {
+    str = str.replace(/\.(mp4|webm|mov|png|jpe?g|webp)$/i, '');
+    if (/screenrecorder|screenshot/i.test(str)) {
+      str = 'Screen Recording';
+    }
+  }
+
+  // Strip decorative symbols (✦, ★, ✨, 🔥, etc.) and quotes / trailing colons / commas
+  str = str.replace(/[✦★✨🔥]/g, '').replace(/\uFFFD/g, '').replace(/^["“'\s]+|["”'\s:,]+$/g, '').trim();
+
+  // If hashtag spam or generic placeholder, fallback to handle or platform
+  if (!str || str.startsWith('#') || str.toLowerCase() === 'instagram' || str.toLowerCase() === 'imported_post' || str.toLowerCase() === 'dribbble') {
+    return handle ? handle.replace(/^@/, '') : (platform || 'Creator');
+  }
+
+  return str;
+}
+
+/**
+ * Parses numerical count strings like "11K", "91K", "3,846", "1.5M", or raw integers into numbers.
+ */
+export function parseCount(val) {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'number') return isNaN(val) ? null : val;
+  const str = String(val).trim().replace(/,/g, '');
+  const match = str.match(/^([\d.]+)\s*([kKmMbB])?$/);
+  if (!match) {
+    const parsed = parseInt(str, 10);
+    return isNaN(parsed) ? null : parsed;
+  }
+  let num = parseFloat(match[1]);
+  const unit = match[2]?.toLowerCase();
+  if (unit === 'k') num *= 1000;
+  else if (unit === 'm') num *= 1000000;
+  else if (unit === 'b') num *= 1000000000;
+  return Math.round(num);
+}
+
+/**
+ * Formats a number compactly for the engagement row (e.g. 11K, 3.8K, 207).
+ */
+export function formatStatCount(num) {
+  if (num === null || num === undefined || isNaN(num)) return null;
+  if (num >= 1000000) {
+    const val = (num / 1000000).toFixed(1).replace(/\.0$/, '');
+    return `${val}M`;
+  }
+  if (num >= 1000) {
+    const val = (num / 1000).toFixed(1).replace(/\.0$/, '');
+    return `${val}K`;
+  }
+  return num.toLocaleString();
+}
+
+/**
  * Parses rich social metadata from post records for Layout 1 display:
  * Avatar, Display Name, @handle, 2-line description, Likes, Comments, and Date.
+ * Strips likes, comments, and author-date prefixes completely from the description row.
  */
 export function parseSocialPost(post) {
   if (!post) {
@@ -202,52 +285,60 @@ export function parseSocialPost(post) {
   let postDate = null;
   let cleanDesc = decodeHtmlEntities(post.description || '').trim();
 
-  // 1. Instagram metadata extraction from description
-  // e.g.: 59 likes, 34 comments - x9_creatives on October 9, 2026: "He said..."
-  const instaMetaMatch = cleanDesc.match(/^([\d,]+)\s+likes,\s+([\d,]+)\s+comments\s+-\s+([^\s]+)\s+on\s+([^:]+):\s*["“]?([\s\S]*)$/i);
-  if (instaMetaMatch) {
-    if (likes === null) likes = parseInt(instaMetaMatch[1].replace(/,/g, ''), 10);
-    if (comments === null) comments = parseInt(instaMetaMatch[2].replace(/,/g, ''), 10);
-    handle = '@' + instaMetaMatch[3].replace(/^@/, '');
-    postDate = instaMetaMatch[4].trim();
-    cleanDesc = instaMetaMatch[5].replace(/["”]$/, '').trim();
-  }
-
-  // Check for likes-only: e.g. 59 likes - username: "..."
-  const instaLikesOnly = cleanDesc.match(/^([\d,]+)\s+likes\s+-\s+([^\s]+):\s*["“]?([\s\S]*)$/i);
-  if (instaLikesOnly) {
-    if (likes === null) likes = parseInt(instaLikesOnly[1].replace(/,/g, ''), 10);
-    if (!handle) handle = '@' + instaLikesOnly[2].replace(/^@/, '');
-    cleanDesc = instaLikesOnly[3].replace(/["”]$/, '').trim();
+  // 1. Social metadata extraction from description (Instagram, Threads, etc.)
+  // Pattern A: Likes + Comments + Handle + Date:
+  // e.g. "11K likes, 207 comments - arreeeyaarrr on June 22, 2026: \"...\""
+  const matchA = cleanDesc.match(/^([\d,.]+[kKmMbB]?)\s+likes,\s+([\d,.]+[kKmMbB]?)\s+comments\s*-\s*([^\s]+)\s+on\s+([^:]+):\s*["“]?([\s\S]*)$/i);
+  if (matchA) {
+    if (likes === null) likes = parseCount(matchA[1]);
+    if (comments === null) comments = parseCount(matchA[2]);
+    handle = '@' + matchA[3].replace(/^@/, '');
+    postDate = matchA[4].trim();
+    cleanDesc = matchA[5];
+  } else {
+    // Pattern B: Likes + Handle + Date (no comments):
+    const matchB = cleanDesc.match(/^([\d,.]+[kKmMbB]?)\s+likes\s*-\s*([^\s]+)\s+on\s+([^:]+):\s*["“]?([\s\S]*)$/i);
+    if (matchB) {
+      if (likes === null) likes = parseCount(matchB[1]);
+      handle = '@' + matchB[2].replace(/^@/, '');
+      postDate = matchB[3].trim();
+      cleanDesc = matchB[4];
+    } else {
+      // Pattern C: Likes + Comments + Handle (no date):
+      const matchC = cleanDesc.match(/^([\d,.]+[kKmMbB]?)\s+likes,\s+([\d,.]+[kKmMbB]?)\s+comments\s*-\s*([^\s:]+):\s*["“]?([\s\S]*)$/i);
+      if (matchC) {
+        if (likes === null) likes = parseCount(matchC[1]);
+        if (comments === null) comments = parseCount(matchC[2]);
+        handle = '@' + matchC[3].replace(/^@/, '');
+        cleanDesc = matchC[4];
+      } else {
+        // Pattern D: Likes only (no comments, no date):
+        const matchD = cleanDesc.match(/^([\d,.]+[kKmMbB]?)\s+likes\s*-\s*([^\s:]+):\s*["“]?([\s\S]*)$/i);
+        if (matchD) {
+          if (likes === null) likes = parseCount(matchD[1]);
+          handle = '@' + matchD[2].replace(/^@/, '');
+          cleanDesc = matchD[3];
+        } else {
+          // Pattern E: Author on Date (no likes/comments):
+          // e.g. "sumedhhkumar.ai on July 27, 2026: \"...\""
+          const matchE = cleanDesc.match(/^([a-zA-Z0-9_.]+)\s+on\s+([A-Za-z]+\s+\d{1,2}(?:,\s*\d{4})?):\s*["“]?([\s\S]*)$/i);
+          if (matchE) {
+            if (!handle) handle = '@' + matchE[1].replace(/^@/, '');
+            postDate = matchE[2].trim();
+            cleanDesc = matchE[3];
+          }
+        }
+      }
+    }
   }
 
   // 2. Author and handle extraction from post.username
   let rawUsername = decodeHtmlEntities(post.username || '').trim();
 
-  // Format: Name (@handle) on X
-  const xMatch = rawUsername.match(/^(.+?)\s+\((@[^)]+)\)\s+on\s+X$/i);
-  if (xMatch) {
-    displayName = xMatch[1].trim();
-    handle = xMatch[2].trim();
-  } else {
-    // Format: Name on Platform
-    const onPlatformMatch = rawUsername.match(/^(.+?)\s+on\s+(Instagram|Dribbble|Behance|X|Twitter|Pinterest|LinkedIn)(\s*:.*)?$/i);
-    if (onPlatformMatch) {
-      displayName = onPlatformMatch[1].trim();
-    } else if (rawUsername.startsWith('@')) {
-      handle = rawUsername;
-      displayName = rawUsername.substring(1);
-    } else if (rawUsername && rawUsername.toLowerCase() !== 'instagram' && rawUsername.toLowerCase() !== 'imported_post') {
-      displayName = rawUsername;
-    }
-  }
-
-  // Dribbble by-line check: "Project Title by Creator Name"
-  if (displayName.includes(' by ')) {
-    const byParts = displayName.split(/\s+by\s+/i);
-    if (byParts[1]) {
-      displayName = byParts[1].trim();
-    }
+  // Extract handle from username if present: e.g. "Romario (@bateshkaaa) on X"
+  const xMatch = rawUsername.match(/\((@[a-zA-Z0-9_.]+)\)/);
+  if (xMatch && !handle) {
+    handle = xMatch[1];
   }
 
   // If handle still empty, check URL
@@ -266,20 +357,29 @@ export function parseSocialPost(post) {
     }
   }
 
-  // Prevent hashtag strings from appearing as display name
-  if (displayName.startsWith('#') || displayName.toLowerCase() === 'instagram' || displayName.toLowerCase() === 'imported_post') {
-    displayName = handle ? handle.replace(/^@/, '') : (displayPlatform || 'Creator');
-  }
+  // Clean creator display name strictly to the creator's actual name
+  displayName = cleanCreatorName(rawUsername, displayPlatform, handle);
 
   if (!displayName) {
     displayName = handle ? handle.replace(/^@/, '') : 'Creator';
   }
 
-  // 3. Clean Description (strip tags, auto-saved markers, repeated quotes)
+  // 3. Robust Description Sanitization
+  // Strip any remaining likes/comments counts or author/date prefixes
+  cleanDesc = cleanDesc
+    .replace(/^[\d,.]+[kKmMbB]?\s+likes[,\s\d.kKmMbB]*comments\s*-\s*[^:]+:\s*["“]?/i, '')
+    .replace(/^[\d,.]+[kKmMbB]?\s+likes\s*-\s*[^:]+:\s*["“]?/i, '')
+    .replace(/^[a-zA-Z0-9_.]+\s+on\s+[A-Za-z]+\s+\d{1,2}(?:,\s*\d{4})?:\s*["“]?/i, '');
+
+  // Strip Dribbble boilerplate and author credit
+  cleanDesc = cleanDesc.replace(/\.?\s*Connect with them on Dribbble;?[\s\S]*$/i, '');
+  cleanDesc = cleanDesc.replace(/\s+designed by\s+.*$/i, '');
+
+  // Strip Telegram auto-save & metadata tags
   cleanDesc = cleanDesc
     .replace(/^Auto-saved via Telegram\.?/i, '')
     .replace(/^\[Tags:[^\]]+\]\s*/i, '')
-    .replace(/^["“]|["”]$/g, '')
+    .replace(/^["“'\s]+|["”'\s]+$/g, '')
     .trim();
 
   // If description was just title or identical to username, clear it
@@ -288,8 +388,8 @@ export function parseSocialPost(post) {
   }
 
   // 4. Determine clearly distinguished date
-  // If postDate is available -> post date e.g. "Oct 9" or "1w ago"
-  // If created_at is available -> saved date e.g. "Saved 1w ago"
+  // If postDate is available -> relative post date e.g. "6d ago" or "Oct 9"
+  // If created_at is available -> relative saved date e.g. "Saved 1w ago"
   let formattedDate = null;
   if (postDate) {
     formattedDate = formatTimeAgo(postDate, false);
@@ -392,3 +492,85 @@ export async function deleteTasteFromDB(post) {
     return { error: err };
   }
 }
+
+/**
+ * Permanently deletes multiple posts from ui_tastes and cleans associated media from storage
+ * only when the media is not shared by other posts.
+ * @param {Array<Object>} posts - Array of post objects to delete
+ * @returns {Promise<{ count: number, error: any }>}
+ */
+export async function deleteMultipleTastesFromDB(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) {
+    return { count: 0, error: new Error('No posts provided for deletion') };
+  }
+
+  const postIds = posts.map(p => p.id).filter(Boolean);
+  if (postIds.length === 0) {
+    return { count: 0, error: new Error('Invalid post IDs') };
+  }
+
+  try {
+    // 1. Collect all storage media & thumbnail URLs from the target posts
+    const candidateUrls = new Set();
+    posts.forEach(p => {
+      if (p.media_url && typeof p.media_url === 'string' && p.media_url.includes('/submissions/')) {
+        candidateUrls.add(p.media_url);
+      }
+      if (p.thumbnail_url && typeof p.thumbnail_url === 'string' && p.thumbnail_url.includes('/submissions/')) {
+        candidateUrls.add(p.thumbnail_url);
+      }
+    });
+
+    // 2. Verify files are not shared by other posts outside this batch
+    const filesToRemove = [];
+    for (const url of candidateUrls) {
+      try {
+        const { data: sharedPosts } = await supabase
+          .from('ui_tastes')
+          .select('id')
+          .eq('media_url', url)
+          .not('id', 'in', `(${postIds.join(',')})`)
+          .limit(1);
+
+        if (!sharedPosts || sharedPosts.length === 0) {
+          const { data: sharedSections } = await supabase
+            .from('website_sections')
+            .select('id')
+            .eq('image_url', url)
+            .limit(1);
+
+          if (!sharedSections || sharedSections.length === 0) {
+            const parts = url.split('/submissions/');
+            if (parts[1]) {
+              const storagePath = decodeURIComponent(parts[1].split('?')[0]);
+              filesToRemove.push(storagePath);
+            }
+          }
+        }
+      } catch (checkErr) {
+        console.warn('[deleteMultipleTastesFromDB] Storage ref check warning:', checkErr);
+      }
+    }
+
+    if (filesToRemove.length > 0) {
+      try {
+        await supabase.storage.from('submissions').remove(filesToRemove);
+      } catch (removeErr) {
+        console.warn('[deleteMultipleTastesFromDB] Storage remove warning:', removeErr);
+      }
+    }
+
+    // 3. Batch delete posts from ui_tastes table
+    const { error } = await supabase
+      .from('ui_tastes')
+      .delete()
+      .in('id', postIds);
+
+    if (error) throw error;
+    return { count: postIds.length, error: null };
+  } catch (err) {
+    console.error('[deleteMultipleTastesFromDB] Error deleting posts:', err);
+    return { count: 0, error: err };
+  }
+}
+

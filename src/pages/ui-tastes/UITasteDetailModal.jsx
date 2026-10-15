@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Bookmark, ExternalLink, Trash2, Edit2, X, Calendar, Tag, ShieldCheck } from 'lucide-react';
 import { isVideoMedia, getDisplayImageUrl } from '../../utils/mediaUtils';
 import { getCleanTasteTitle, getDisplayPlatform, deleteTasteFromDB } from '../../utils/tasteActions';
+import { ConfirmationModal } from '../../components/modal/Modal';
 import './UITasteDetailModal.css';
 
 export default function UITasteDetailModal({
@@ -208,52 +209,23 @@ export default function UITasteDetailModal({
         </div>
       </div>
 
-      {/* Delete Confirmation Sub-Modal */}
-      {showDeleteConfirm && (
-        <div
-          className="taste-delete-confirm-overlay"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowDeleteConfirm(false);
-          }}
-        >
-          <div className="taste-delete-confirm-card" onClick={(e) => e.stopPropagation()}>
-            <div className="taste-delete-confirm-header">
-              <h3>Delete inspiration?</h3>
-              <button
-                type="button"
-                className="taste-delete-confirm-close"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="taste-delete-confirm-body">
-              <p>
-                Are you sure you want to permanently delete <strong>"{title}"</strong>? This action cannot be undone and will remove associated media safely.
-              </p>
-            </div>
-            <div className="taste-delete-confirm-footer">
-              <button
-                type="button"
-                className="taste-delete-btn-cancel"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="taste-delete-btn-danger"
-                onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Permanently'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation Sub-Modal (Standardized) */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete inspiration?"
+        description={
+          <>
+            Are you sure you want to permanently delete <strong>"{title}"</strong>? This action cannot be undone and will remove associated media safely.
+          </>
+        }
+        confirmText="Delete Permanently"
+        confirmIcon={<Trash2 size={15} style={{ marginRight: 6 }} />}
+        isLoading={isDeleting}
+        loadingText="Deleting…"
+        size="md"
+      />
     </div>,
     document.body
   );

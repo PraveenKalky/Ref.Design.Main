@@ -398,13 +398,11 @@
 /* Modal */
 .pmu-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  z-index: 9999;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -414,7 +412,7 @@
 .pmu-modal-content {
   background-color: var(--dv-bg);
   border: 1px solid var(--dv-border);
-  border-radius: 12px;
+  border-radius: 20px;
   corner-shape: squircle;
   -webkit-corner-shape: squircle;
   width: 100%;
@@ -423,6 +421,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
 }
 
 .pmu-modal-header {

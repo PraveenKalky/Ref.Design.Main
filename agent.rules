@@ -10,3 +10,12 @@ Requirements:
 - New components must inherit this rule by default.
 - Existing components should be updated when touched.
 - Do not change component size, spacing, color, or layout just to apply smoothing.
+
+**Modal Backdrop & Button Action Spacing Rule**
+
+For all modals and confirmation dialogs across Ref.Design:
+- **10% Backdrop Transparency**: Reuse the standard Sections page backdrop overlay with **10% transparency** (`background: rgba(0, 0, 0, 0.1)`).
+- **Zero Blur**: **Never add background blur (`backdrop-filter: blur(...)`)** unless explicitly requested.
+- **Action Button 12px Gap**: Action buttons with icons must use `display: inline-flex`, `align-items: center`, `justify-content: center`, with a **consistent 12px gap** between the icon and text to prevent collisions, stacking, or wrapping.
+- **Figma Smooth Corners**: All modals and CTA buttons must preserve Figma-style smooth corners (`corner-shape: squircle; -webkit-corner-shape: squircle`).
+

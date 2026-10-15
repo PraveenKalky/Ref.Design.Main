@@ -922,3 +922,412 @@
   background: #1c1c1c;
   border-color: #ffffff;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Multi-Select Mode: Cards, Checkboxes & Outline
+   ───────────────────────────────────────────────────────────── */
+.taste-card.is-select-mode {
+  cursor: pointer;
+  user-select: none;
+}
+
+.taste-card.is-select-mode .taste-card-media-wrapper {
+  cursor: pointer;
+}
+
+/* Active Highlight Ring on Selected Card */
+.taste-card.is-selected .taste-card-media-wrapper {
+  outline: 3px solid #111111;
+  outline-offset: 3px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+
+[data-theme="dark"] .taste-card.is-selected .taste-card-media-wrapper {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+  box-shadow: 0 10px 28px rgba(255, 255, 255, 0.12);
+}
+
+/* Checkbox Indicator on Card Top-Left */
+.taste-card-select-checkbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 12;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #111111;
+}
+
+.taste-card-select-checkbox:hover {
+  transform: scale(1.12);
+  border-color: rgba(0, 0, 0, 0.75);
+  background: #ffffff;
+}
+
+.taste-card-select-checkbox.is-checked {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .taste-card-select-checkbox {
+  background: rgba(28, 28, 30, 0.94);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .taste-card-select-checkbox:hover {
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.9);
+  background: #27272a;
+}
+
+[data-theme="dark"] .taste-card-select-checkbox.is-checked {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #111111;
+  box-shadow: 0 3px 10px rgba(255, 255, 255, 0.3);
+}
+
+.taste-card-check-icon {
+  stroke-width: 3.2px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Floating Action Dock (Bottom Center)
+   ───────────────────────────────────────────────────────────── */
+.taste-bulk-dock-container {
+  position: fixed;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  pointer-events: none;
+  animation: bulkDockSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bulkDockSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.taste-bulk-dock {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 10px 8px 18px;
+  background: rgba(22, 22, 24, 0.94);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .taste-bulk-dock {
+  background: rgba(18, 18, 20, 0.95);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7);
+}
+
+.taste-bulk-dock-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.taste-bulk-dock-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111111;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.taste-bulk-dock-label {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #e4e4e7;
+}
+
+.taste-bulk-dock-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.taste-bulk-dock-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.taste-bulk-dock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.taste-bulk-dock-btn.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f4f4f5;
+}
+
+.taste-bulk-dock-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.taste-bulk-dock-btn.danger {
+  background: #E8323C;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(232, 50, 60, 0.35);
+}
+
+.taste-bulk-dock-btn.danger:hover:not(:disabled) {
+  background: #cf2730;
+  box-shadow: 0 4px 14px rgba(232, 50, 60, 0.5);
+  transform: translateY(-1px);
+}
+
+.taste-bulk-dock-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Bulk Delete Modal & Preview Strip
+   ───────────────────────────────────────────────────────────── */
+.taste-bulk-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 100000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  animation: sectionModalFade 0.2s ease-out !important;
+}
+
+.taste-bulk-delete-modal-card {
+  width: 100% !important;
+  max-width: 520px !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-radius: 20px !important;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-theme="dark"] .taste-bulk-delete-modal-card {
+  background: #18181b !important;
+  color: #f4f4f5 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75) !important;
+}
+
+.taste-bulk-modal-body {
+  padding: 20px 24px !important;
+}
+
+.taste-bulk-modal-warning {
+  margin: 0 0 16px 0 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #4b5563 !important;
+}
+
+[data-theme="dark"] .taste-bulk-modal-warning {
+  color: #a1a1aa !important;
+}
+
+.taste-bulk-previews-strip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  overflow-x: auto !important;
+  padding: 6px 2px 10px 2px !important;
+  scrollbar-width: thin;
+}
+
+.taste-bulk-preview-item {
+  position: relative !important;
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  border-radius: 12px !important;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  overflow: hidden !important;
+  background: #f4f4f5 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="dark"] .taste-bulk-preview-item {
+  background: #27272a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.taste-bulk-preview-item img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.taste-bulk-preview-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #888888 !important;
+  background: #eaeaea !important;
+}
+
+[data-theme="dark"] .taste-bulk-preview-placeholder {
+  background: #222225 !important;
+  color: #a1a1aa !important;
+}
+
+.taste-bulk-preview-more {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 60px !important;
+  height: 60px !important;
+  border-radius: 12px !important;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  background: rgba(0, 0, 0, 0.06) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #666666 !important;
+  white-space: nowrap !important;
+  padding: 0 8px !important;
+}
+
+[data-theme="dark"] .taste-bulk-preview-more {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #a1a1aa !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Delete CTA Button: 12px Gap, Horizontal Centering & Squircle
+   ───────────────────────────────────────────────────────────── */
+.section-modal-btn-danger.taste-bulk-confirm-btn {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  white-space: nowrap !important;
+  padding: 10px 22px !important;
+  min-height: 42px !important;
+  border-radius: 9999px !important;
+  corner-shape: squircle !important;
+  -webkit-corner-shape: squircle !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  border: none !important;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.3) !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+}
+
+.section-modal-btn-danger.taste-bulk-confirm-btn:hover:not(:disabled) {
+  background: #b91c1c !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+.section-modal-btn-danger.taste-bulk-confirm-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.taste-bulk-confirm-icon {
+  flex-shrink: 0 !important;
+  display: block !important;
+  width: 15px !important;
+  height: 15px !important;
+}
+
+.taste-bulk-confirm-text {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.01em !important;
+}
+
+
+

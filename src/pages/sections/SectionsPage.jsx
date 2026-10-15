@@ -64,7 +64,6 @@ const HeroCarouselCard = React.memo(({ sec, onCardClick }) => {
     <div 
       className="hero-carousel-card"
       onClick={() => onCardClick(sec.id)}
-      title={sec.section_title}
     >
       <div className="hero-carousel-image-wrap">
         {sec.isVideo ? (
@@ -878,9 +877,6 @@ export default function SectionsPage() {
           <div className="sections-filter-status-bar">
             <span>
               Showing {totalMatchingSections} section{totalMatchingSections !== 1 ? 's' : ''}
-              {searchQuery && <> matching <strong>"{searchQuery}"</strong></>}
-              {sourceFilter !== 'all' && <> from <strong>{sourceFilter === 'website' ? 'Websites' : 'Standalone Uploads'}</strong></>}
-              {selectedCategories.length > 0 && <> in <strong>{selectedCategories.join(', ')}</strong></>}
             </span>
             <button type="button" onClick={clearAllFilters} className="sections-status-reset">
               Reset all filters

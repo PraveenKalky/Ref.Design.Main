@@ -1,0 +1,365 @@
+/* ============================================================
+   Ref.Design — Global Standard Modal Styles
+   Source of Truth: Websites -> Delete Website Confirmation Modal
+   ============================================================ */
+
+/* ── 1. Background Overlay ── */
+.admin-modal-overlay,
+.global-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ── 2. Modal Content Card ── */
+.admin-modal-content,
+.global-modal-card {
+  position: relative;
+  background: var(--dv-bg, #ffffff);
+  border: 1px solid var(--dv-border, rgba(0, 0, 0, 0.08));
+  border-radius: 20px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  color: var(--dv-text, #111111);
+  box-sizing: border-box;
+  outline: none;
+}
+
+[data-theme='dark'] .admin-modal-content,
+[data-theme='dark'] .global-modal-card {
+  background: #18181b;
+  border-color: #27272a;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  color: #f4f4f5;
+}
+
+/* ── Size Variants ── */
+.admin-modal-size-sm { max-width: 360px; }
+.admin-modal-size-md { max-width: 400px; }
+.admin-modal-size-lg { max-width: 520px; }
+.admin-modal-size-xl { max-width: 780px; }
+.admin-modal-size-2xl { max-width: 920px; }
+.admin-modal-size-auto { max-width: fit-content; }
+
+/* ── Close Button (Optional Top Right) ── */
+.admin-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dv-text-ghost, #888888);
+  transition: all 0.15s ease;
+}
+
+.admin-modal-close:hover {
+  background: var(--dv-surface-dark, #f0f0f0);
+  color: var(--dv-text, #111111);
+}
+
+[data-theme='dark'] .admin-modal-close {
+  color: #a1a1aa;
+}
+
+[data-theme='dark'] .admin-modal-close:hover {
+  background: #27272a;
+  color: #ffffff;
+}
+
+/* ── 3. Typography ── */
+.admin-modal-title {
+  font-family: 'PolySans Neutral', 'PolySans Trial', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--dv-text, #111111);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+[data-theme='dark'] .admin-modal-title {
+  color: #ffffff;
+}
+
+.admin-modal-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dv-text-ghost, #888888);
+  margin: 0 0 24px 0;
+}
+
+[data-theme='dark'] .admin-modal-body {
+  color: #a1a1aa;
+}
+
+.admin-modal-body strong {
+  color: var(--dv-text, #111111);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .admin-modal-body strong {
+  color: #ffffff;
+}
+
+/* ── 4. Action Grid & Buttons ── */
+.admin-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.admin-modal-actions.single-btn {
+  grid-template-columns: 1fr;
+}
+
+.admin-modal-btn {
+  padding: 10px 18px;
+  height: 42px;
+  border-radius: 14px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.admin-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Cancel / Secondary */
+.admin-modal-btn-cancel {
+  background: var(--dv-surface-dark, #f0f0f0);
+  color: var(--dv-text, #111111);
+}
+
+.admin-modal-btn-cancel:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+[data-theme='dark'] .admin-modal-btn-cancel {
+  background: #27272a;
+  color: #e4e4e7;
+}
+
+[data-theme='dark'] .admin-modal-btn-cancel:hover:not(:disabled) {
+  background: #3f3f46;
+  opacity: 1;
+}
+
+/* Danger / Delete Permanently */
+.admin-modal-btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.admin-modal-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Primary / Confirm / Save */
+.admin-modal-btn-primary {
+  background: var(--dv-text, #111111);
+  color: var(--dv-bg, #ffffff);
+}
+
+.admin-modal-btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+[data-theme='dark'] .admin-modal-btn-primary {
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme='dark'] .admin-modal-btn-primary:hover:not(:disabled) {
+  background: #e4e4e7;
+}
+
+/* ── 5. Standard Form Fields inside Modals ── */
+.admin-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.admin-modal-field:last-child {
+  margin-bottom: 24px;
+}
+
+.admin-modal-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dv-text, #374151);
+}
+
+[data-theme='dark'] .admin-modal-label {
+  color: #d1d5db;
+}
+
+.admin-modal-input,
+.admin-modal-select,
+.admin-modal-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 12px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  background: var(--dv-surface-dark, #f4f4f5);
+  border: 1px solid var(--dv-border, rgba(0, 0, 0, 0.09));
+  color: var(--dv-text, #111827);
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-modal-textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.admin-modal-input:focus,
+.admin-modal-select:focus,
+.admin-modal-textarea:focus {
+  border-color: var(--dv-text, #000000);
+  background: var(--dv-bg, #ffffff);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .admin-modal-input,
+[data-theme='dark'] .admin-modal-select,
+[data-theme='dark'] .admin-modal-textarea {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .admin-modal-input:focus,
+[data-theme='dark'] .admin-modal-select:focus,
+[data-theme='dark'] .admin-modal-textarea:focus {
+  border-color: #ffffff;
+  background: #202023;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+/* Keyboard hint badges inside modal */
+.admin-modal-kbd {
+  font-size: 11px;
+  font-family: inherit;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+[data-theme='dark'] .admin-modal-kbd {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* All legacy modal overlays inherit the 50% opacity, zero blur standard */
+.section-modal-overlay,
+.taste-edit-modal-overlay,
+.taste-delete-confirm-overlay,
+.taste-bulk-modal-overlay,
+.taste-detail-overlay,
+.sud-confirm-overlay,
+.tc-modal-overlay,
+.pmu-modal-overlay,
+.rename-micro-overlay,
+.lm-backdrop {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 10000 !important;
+}
+
+/* All legacy confirmation/modal cards inherit continuous squircle corners & clean background */
+.section-modal-card,
+.taste-edit-modal-card,
+.taste-delete-confirm-card,
+.taste-bulk-delete-modal-card,
+.sud-confirm-card,
+.rename-micro-dialog,
+.tc-modal-content,
+.pmu-modal-content,
+.lm-modal {
+  border-radius: 20px !important;
+  corner-shape: squircle !important;
+  -webkit-corner-shape: squircle !important;
+}
+
+/* Premium Standard Animations (200-250ms) */
+@keyframes globalModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes globalModalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.tc-modal-overlay,
+.pmu-modal-overlay,
+.rename-micro-overlay,
+.section-modal-overlay,
+.taste-edit-modal-overlay {
+  animation: globalModalFadeIn 0.22s ease-out !important;
+}
+
+.tc-modal-content,
+.pmu-modal-content,
+.rename-micro-dialog,
+.section-modal-card,
+.taste-edit-modal-card {
+  animation: globalModalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@media (max-width: 480px) {
+  .admin-modal-actions {
+    grid-template-columns: 1fr;
+  }
+}

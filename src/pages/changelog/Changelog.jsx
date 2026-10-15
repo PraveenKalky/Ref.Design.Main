@@ -3,6 +3,43 @@ import './Changelog.css';
 
 const changelogData = [
   {
+    version: '1.13.0',
+    date: 'Thursday, October 15, 2026',
+    description: 'Standardized global modal dialogs across all features, introduced multi-select bulk operations for UI/UX Tastes, and integrated official social platform icons.',
+    groups: [
+      {
+        type: 'New',
+        title: 'Features',
+        badgeClass: 'new',
+        items: [
+          'Added Multi-Select Mode and a floating bottom action dock to UI/UX Tastes for batch selection and bulk deletion with preview thumbnails.',
+          'Built a standardized global Modal architecture featuring fluid animations, accessible focus trapping, and body scroll lock.',
+          'Introduced dedicated database migrations adding creator avatars and secure update/delete permissions for UI/UX Tastes.'
+        ]
+      },
+      {
+        type: 'Improvement',
+        title: 'Enhancements',
+        badgeClass: 'improvement',
+        items: [
+          'Standardized confirmation dialogs across all card grids, upload drawers, and detail pages to use the new unified modal component.',
+          'Centralized social platform detection and integrated official brand icons for Dribbble, LinkedIn, Instagram, X, Behance, and Pinterest.',
+          'Enhanced the Telegram Bot scraper to automatically capture creator avatars and high-resolution profile details.',
+          'Updated project agent rules with strict UI preservation protocols governing modal components and design consistency.'
+        ]
+      },
+      {
+        type: 'Fix',
+        title: 'Bug Fixes',
+        badgeClass: 'fix',
+        items: [
+          'Resolved platform filter mismatches by normalizing domain detection directly from source URLs.',
+          'Fixed storage cleanup during bulk deletions to ensure unreferenced media is cleanly removed while shared files remain protected.'
+        ]
+      }
+    ]
+  },
+  {
     version: '1.12.0',
     date: 'Wednesday, October 14, 2026',
     description: 'Introduced the UI/UX Tastes Detail Modal, direct clipboard image pasting, viewport-optimized video playback, and Telegram bot scraping upgrades.',

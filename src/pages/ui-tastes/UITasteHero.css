@@ -107,6 +107,14 @@
   );
 }
 
+/* When any modal is active, flatten 3D perspective to stay behind modal backdrop */
+body.has-modal-open .ui-taste-hero-ribbon-stage,
+body.has-modal-open .ui-taste-hero-ribbon-track,
+body.has-modal-open .ui-taste-ribbon-card {
+  transform-style: flat !important;
+  perspective: none !important;
+}
+
 .ui-taste-hero-ribbon-stage:active {
   cursor: grabbing;
 }

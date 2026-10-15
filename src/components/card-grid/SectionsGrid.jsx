@@ -13,6 +13,7 @@ import SectionUploadDrawer from '../../pages/sections/components/SectionUploadDr
 import { sanitizeSectionName } from '../../pages/admin/components/PageMediaUploader';
 import { updateSectionTitleInDB, deleteSectionFromDB } from '../../utils/sectionActions';
 import { isVideoMedia } from '../../utils/mediaUtils';
+import Modal, { ConfirmationModal } from '../modal/Modal';
 import '../../components/navbar/login-modal.css';
 import './card-grid.css';
 
@@ -524,91 +525,56 @@ export const SectionCard = ({
         )}
       </div>
 
-      {/* Layout 2: Compact Centered Micro-Dialog (Portaled to document.body) */}
-      {showRenameModal && typeof document !== 'undefined' && createPortal(
-        <div 
-          className="rename-micro-overlay" 
-          onClick={() => setShowRenameModal(false)}
-          onKeyDown={(e) => { if (e.key === 'Escape') setShowRenameModal(false); }}
-        >
-          <div className="rename-micro-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="rename-micro-header">
-              <span className="rename-micro-title">Rename Section</span>
-              <button 
-                type="button" 
-                className="rename-micro-close" 
-                onClick={() => setShowRenameModal(false)}
-                aria-label="Close"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <form onSubmit={handleSaveRename}>
-              <div className="rename-micro-body">
-                <input 
-                  type="text" 
-                  className="rename-micro-input"
-                  value={renameInput}
-                  onChange={(e) => setRenameInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      e.stopPropagation();
-                      setShowRenameModal(false);
-                    }
-                  }}
-                  placeholder="Enter section name..."
-                  autoFocus
-                  required
-                />
-              </div>
-              <div className="rename-micro-footer">
-                <button 
-                  type="button" 
-                  className="rename-micro-btn rename-micro-cancel" 
-                  onClick={() => setShowRenameModal(false)} 
-                  disabled={isSubmitting}
-                >
-                  Cancel <kbd className="rename-micro-kbd">Esc</kbd>
-                </button>
-                <button 
-                  type="submit" 
-                  className="rename-micro-btn rename-micro-save" 
-                  disabled={isSubmitting || !renameInput.trim()}
-                >
-                  {isSubmitting ? 'Saving…' : <>Save <kbd className="rename-micro-kbd">↵</kbd></>}
-                </button>
-              </div>
-            </form>
+      {/* Rename Modal */}
+      <Modal
+        isOpen={showRenameModal}
+        onClose={() => setShowRenameModal(false)}
+        title="Rename Section"
+        size="md"
+      >
+        <form onSubmit={handleSaveRename}>
+          <div className="admin-modal-field">
+            <input 
+              type="text" 
+              className="admin-modal-input"
+              value={renameInput}
+              onChange={(e) => setRenameInput(e.target.value)}
+              placeholder="Enter section name..."
+              autoFocus
+              required
+            />
           </div>
-        </div>,
-        document.body
-      )}
+          <div className="admin-modal-actions">
+            <button 
+              type="button" 
+              className="admin-modal-btn admin-modal-btn-cancel" 
+              onClick={() => setShowRenameModal(false)} 
+              disabled={isSubmitting}
+            >
+              Cancel <kbd className="admin-modal-kbd">Esc</kbd>
+            </button>
+            <button 
+              type="submit" 
+              className="admin-modal-btn admin-modal-btn-primary" 
+              disabled={isSubmitting || !renameInput.trim()}
+            >
+              {isSubmitting ? 'Saving…' : <>Save <kbd className="admin-modal-kbd">↵</kbd></>}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
-      {/* Delete Confirmation Modal (Portaled to document.body) */}
-      {showDeleteModal && typeof document !== 'undefined' && createPortal(
-        <div className="section-modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="section-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="section-modal-header">
-              <h3>Delete section?</h3>
-              <button type="button" className="section-modal-close" onClick={() => setShowDeleteModal(false)}>
-                <X size={18} />
-              </button>
-            </div>
-            <div className="section-modal-body">
-              <p>This will remove this uploaded asset and its section data.</p>
-            </div>
-            <div className="section-modal-footer">
-              <button type="button" className="section-modal-btn section-modal-btn-cancel" onClick={() => setShowDeleteModal(false)} disabled={isSubmitting}>
-                Cancel
-              </button>
-              <button type="button" className="section-modal-btn section-modal-btn-danger" onClick={handleConfirmDelete} disabled={isSubmitting}>
-                {isSubmitting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Section"
+        description={<>Are you sure you want to delete <strong>"{sectionName || 'this section'}"</strong>? This will permanently remove this uploaded asset and its section data.</>}
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+        isLoading={isSubmitting}
+      />
 
       {/* Ref.Design Toast Feedback Container (Portaled to document.body for bottom-center viewport alignment) */}
       {toasts.length > 0 && typeof document !== 'undefined' && createPortal(

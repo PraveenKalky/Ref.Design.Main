@@ -99,6 +99,62 @@ async function tryDribbbleAPI(url: string): Promise<string | null> {
   }
 }
 
+// ─── Strategy 0.2: Dedicated Dribbble Headless Reader ─────────────────────────
+// Dribbble blocks direct datacenter fetch() with AWS WAF HTTP 202.
+// This function queries the headless rendering proxy to extract the shot image,
+// creator name, Dribbble handle, avatar URL, and description.
+async function tryDribbbleHeadless(url: string): Promise<{
+  mediaUrl: string | null;
+  description: string | null;
+  title: string | null;
+  creatorName: string | null;
+  avatarUrl: string | null;
+}> {
+  try {
+    const cleanUrl = url.split('?')[0];
+    const res = await fetch(`https://r.jina.ai/${cleanUrl}`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'RefDesign/1.0',
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) return { mediaUrl: null, description: null, title: null, creatorName: null, avatarUrl: null };
+
+    const json = await res.json();
+    const data = json.data || {};
+    const content = data.content || '';
+    const desc = data.description || '';
+
+    const descByMatch = desc.match(/designed by\s+([^.]+?)\.\s+Connect with them/i);
+    let creatorName = descByMatch ? descByMatch[1].trim() : null;
+
+    const avatarLinkMatch = content.match(/\[!\[(?:Image \d+:\s*)?([^\]]*)\]\((https:\/\/cdn\.dribbble\.com\/users\/[^\)]*avatars[^\)]*)\)\]\((https:\/\/dribbble\.com\/[^\)]+)\)/i);
+    const simpleAvatarMatch = content.match(/!\[(?:Image \d+:\s*)?([^\]]*)\]\((https:\/\/cdn\.dribbble\.com\/users\/[^\)]*avatars[^\)]*)\)/i);
+
+    let avatarUrl = avatarLinkMatch ? avatarLinkMatch[2] : (simpleAvatarMatch ? simpleAvatarMatch[2] : null);
+    if (!creatorName && avatarLinkMatch && avatarLinkMatch[1]) {
+      creatorName = avatarLinkMatch[1].trim();
+    }
+
+    const title = data.title ? decodeHTMLEntities(data.title.trim()) : null;
+    const shotImgMatch = content.match(/!\[[^\]]*\]\((https:\/\/cdn\.dribbble\.com\/userupload\/[^\)]+)\)/i);
+    const mediaUrl = shotImgMatch ? shotImgMatch[1] : null;
+
+    return {
+      mediaUrl,
+      description: desc ? decodeHTMLEntities(desc.trim()) : null,
+      title,
+      creatorName,
+      avatarUrl
+    };
+  } catch (e) {
+    console.warn('[dribbble-headless] Error:', e);
+    return { mediaUrl: null, description: null, title: null, creatorName: null, avatarUrl: null };
+  }
+}
+
 // ─── Strategy 1: noembed (oEmbed aggregator) ─────────────────────────────────
 // Works for: YouTube, Vimeo, Twitter/X (sometimes), Instagram (sometimes)
 // Does NOT work for: Dribbble, Behance, LinkedIn
@@ -222,6 +278,18 @@ function decodeHTMLEntities(str: string): string {
     .replace(/&#39;/g, "'");
 }
 
+function detectPlatform(url: string): string {
+  const u = (url || '').toLowerCase();
+  if (u.includes('instagram.com')) return 'Instagram';
+  if (u.includes('dribbble.com')) return 'Dribbble';
+  if (u.includes('linkedin.com') || u.includes('lnkd.in')) return 'LinkedIn';
+  if (u.includes('twitter.com') || u.includes('x.com')) return 'X';
+  if (u.includes('behance.net')) return 'Behance';
+  if (u.includes('pinterest.com') || u.includes('pin.it')) return 'Pinterest';
+  return 'Web';
+}
+
+
 // ─── Strategy 0.2: Dedicated Instagram Uncropped Scraper ──────────────────────
 // Instagram serves cropped square thumbnails (stp=c...) in og:image/twitter:image.
 // This function fetches the uncropped original high-res image (4:5 portrait, 9:16 reel, 1:1, landscape)
@@ -231,6 +299,7 @@ async function tryInstagramFetch(url: string): Promise<{
   description: string | null;
   title: string | null;
   isVideo: boolean;
+  avatarUrl: string | null;
 }> {
   try {
     console.log(`[instagram-fetch] Fetching uncropped Instagram post: ${url}`);
@@ -292,6 +361,42 @@ async function tryInstagramFetch(url: string): Promise<{
       }
     }
 
+    // Strategy 0.2b: Instagram Embed fallback if direct HTML returned no media (login wall)
+    if (!uncroppedUrl) {
+      const shortcodeMatch = url.match(/(?:p|reel|reels)\/([A-Za-z0-9_-]+)/);
+      if (shortcodeMatch) {
+        const shortcode = shortcodeMatch[1];
+        try {
+          console.log(`[instagram-fetch] Trying embed fallback for shortcode: ${shortcode}`);
+          const embedRes = await fetch(`https://www.instagram.com/p/${shortcode}/embed/captioned/`, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            signal: AbortSignal.timeout(10000)
+          });
+          if (embedRes.ok) {
+            const embedHtml = await embedRes.text();
+            if (!embedHtml.includes('The link to this photo or video may be broken')) {
+              const imgs = [...embedHtml.matchAll(/<img[^>]+src="([^">]+)"/g)].map(m => m[1].replace(/&amp;/g, '&'));
+              if (imgs.length >= 2) {
+                if (!avatarUrl) avatarUrl = imgs[0];
+                uncroppedUrl = imgs[1]; // Cover frame
+              } else if (imgs.length === 1) {
+                uncroppedUrl = imgs[0];
+              }
+
+              const authorMatch = embedHtml.match(/stories\/([^\/"?]+)/);
+              if (authorMatch && (!title || title === 'Instagram' || title === 'imported_post')) {
+                title = `${authorMatch[1]} on Instagram`;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[instagram-fetch] Embed fallback error:`, e);
+        }
+      }
+    }
+
     // 2. Extract description and title
     const ogDescMatch =
       html.match(/<meta[^>]+property="og:description"[^>]+content="([^">]+)"/i) ||
@@ -313,15 +418,26 @@ async function tryInstagramFetch(url: string): Promise<{
     const hasVideo = html.includes('"video_versions"') || html.includes('video_duration');
     const isVideo = isReel || hasVideo;
 
+    // 4. Extract creator profile image URI
+    const avatarMatch =
+      html.match(/"profile_image_uri"\s*:\s*"([^"]+)"/i) ||
+      html.match(/"profile_pic_url"\s*:\s*"([^"]+)"/i) ||
+      html.match(/"profile_pic_url_hd"\s*:\s*"([^"]+)"/i);
+    let avatarUrl: string | null = null;
+    if (avatarMatch && avatarMatch[1]) {
+      avatarUrl = avatarMatch[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+    }
+
     return {
       mediaUrl: uncroppedUrl,
       description,
       title,
-      isVideo
+      isVideo,
+      avatarUrl
     };
   } catch (err) {
     console.error(`[instagram-fetch] Error fetching uncropped Instagram:`, err);
-    return { mediaUrl: null, description: null, title: null, isVideo: false };
+    return { mediaUrl: null, description: null, title: null, isVideo: false, avatarUrl: null };
   }
 }
 
@@ -388,6 +504,7 @@ async function fetchMetadata(url: string): Promise<{
   description: string;
   title: string;
   isVideo: boolean;
+  avatarUrl: string | null;
   fetchMethod: string;
   error: string | null;
 }> {
@@ -395,6 +512,7 @@ async function fetchMetadata(url: string): Promise<{
   let title = 'imported_post';
   let isVideo = false;
   let mediaUrl: string | null = null;
+  let avatarUrl: string | null = null;
   let fetchMethod = 'none';
   const errors: string[] = [];
 
@@ -410,6 +528,7 @@ async function fetchMetadata(url: string): Promise<{
       if (insta.description) description = insta.description;
       if (insta.title && insta.title.trim().toLowerCase() !== 'instagram') title = insta.title;
       isVideo = insta.isVideo;
+      if (insta.avatarUrl) avatarUrl = insta.avatarUrl;
       console.log(`[instagram-uncropped] Extracted uncropped original media: ${mediaUrl.substring(0, 80)}`);
     } else {
       errors.push('instagram-uncropped: could not extract uncropped candidate from direct fetch');
@@ -441,39 +560,55 @@ async function fetchMetadata(url: string): Promise<{
             fetchMethod = 'instagram-scraper-og';
           }
         }
-        const titleMatch = scraperHtml.match(/<title>([^<]+)<\/title>/i);
-        if (titleMatch && titleMatch[1] && titleMatch[1].trim().toLowerCase() !== 'instagram') {
-          title = decodeHTMLEntities(titleMatch[1].trim());
+        if (!avatarUrl) {
+          const avatarMatch = scraperHtml.match(/"profile_image_uri"\s*:\s*"([^"]+)"/i) ||
+                              scraperHtml.match(/"profile_pic_url"\s*:\s*"([^"]+)"/i);
+          if (avatarMatch && avatarMatch[1]) {
+            avatarUrl = decodeHTMLEntities(avatarMatch[1]);
+          }
         }
       }
     }
   }
 
-  // ── Strategy 0: Dribbble Scraper / API ──
+  // ── Strategy 0: Dribbble Headless / Scraper / API ──
   if (isDribbble) {
-    const scraperHtml = await tryScrapingService(url);
-    if (scraperHtml) {
-      const extractedImg = extractDribbbleImage(scraperHtml);
-      if (extractedImg) {
-        mediaUrl = extractedImg;
-        fetchMethod = 'dribbble-scraper';
-        console.log(`[dribbble-scraper] Got thumbnail: ${mediaUrl}`);
-        
-        // Try extracting metadata (title and description)
-        const titleMatch = scraperHtml.match(/<title>([^<]+)<\/title>/i);
-        if (titleMatch) {
-          title = titleMatch[1].trim().replace(/\s*\|\s*Dribbble.*/i, '');
-        }
-        const descMatch = scraperHtml.match(/<meta[^>]+name="description"[^>]+content="([^">]+)"/i) ||
-                          scraperHtml.match(/<meta[^>]+property="og:description"[^>]+content="([^">]+)"/i);
-        if (descMatch) {
-          description = decodeHTMLEntities(descMatch[1].trim());
+    const headless = await tryDribbbleHeadless(url);
+    if (headless && (headless.mediaUrl || headless.avatarUrl)) {
+      if (headless.mediaUrl) mediaUrl = headless.mediaUrl;
+      if (headless.description) description = headless.description;
+      if (headless.creatorName) title = headless.creatorName;
+      else if (headless.title) title = headless.title;
+      if (headless.avatarUrl) avatarUrl = headless.avatarUrl;
+      fetchMethod = 'dribbble-headless';
+      console.log(`[dribbble-headless] Got Dribbble creator: ${title}, avatar: ${avatarUrl ? avatarUrl.substring(0, 50) : 'none'}`);
+    }
+
+    if (!mediaUrl) {
+      const scraperHtml = await tryScrapingService(url);
+      if (scraperHtml) {
+        const extractedImg = extractDribbbleImage(scraperHtml);
+        if (extractedImg) {
+          mediaUrl = extractedImg;
+          fetchMethod = 'dribbble-scraper';
+          console.log(`[dribbble-scraper] Got thumbnail: ${mediaUrl}`);
+          
+          // Try extracting metadata (title and description)
+          const titleMatch = scraperHtml.match(/<title>([^<]+)<\/title>/i);
+          if (titleMatch) {
+            title = titleMatch[1].trim().replace(/\s*\|\s*Dribbble.*/i, '');
+          }
+          const descMatch = scraperHtml.match(/<meta[^>]+name="description"[^>]+content="([^">]+)"/i) ||
+                            scraperHtml.match(/<meta[^>]+property="og:description"[^>]+content="([^">]+)"/i);
+          if (descMatch) {
+            description = decodeHTMLEntities(descMatch[1].trim());
+          }
+        } else {
+          errors.push('dribbble-scraper: No shot image found in returned HTML');
         }
       } else {
-        errors.push('dribbble-scraper: No shot image found in returned HTML');
+        errors.push('dribbble-scraper: Scraper API call returned empty or failed');
       }
-    } else {
-      errors.push('dribbble-scraper: Scraper API call returned empty or failed');
     }
 
     if (!mediaUrl) {
@@ -566,7 +701,41 @@ async function fetchMetadata(url: string): Promise<{
     title = isInstagram ? 'Instagram Post' : 'Design Inspiration';
   }
 
-  return { mediaUrl, description, title, isVideo, fetchMethod, error: errorSummary };
+  // ── X / Twitter creator avatar fallback ──
+  if (!avatarUrl && (url.includes('twitter.com') || url.includes('x.com'))) {
+    const handleMatch = url.match(/(?:x|twitter)\.com\/([^\/\?]+)/i);
+    if (handleMatch && !['status', 'home', 'explore', 'i'].includes(handleMatch[1])) {
+      avatarUrl = `https://unavatar.io/x/${handleMatch[1]}?fallback=false`;
+    }
+  }
+
+  // ── Dribbble creator avatar fallback ──
+  if (!avatarUrl && isDribbble) {
+    const utmMatch = url.match(/utm_campaign=([^&]+)/i);
+    let handle = utmMatch ? utmMatch[1] : null;
+    if (!handle && title && title.includes(' by ')) {
+      const byParts = title.split(' by ');
+      if (byParts[1]) handle = byParts[1].trim().replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+    }
+    if (handle) {
+      avatarUrl = `https://unavatar.io/dribbble/${handle}?fallback=false`;
+    }
+  }
+
+  // ── Resolve and store creator avatar to permanent Supabase Storage ──
+  if (avatarUrl && !avatarUrl.includes('/submissions/avatars/')) {
+    console.log(`[fetchMetadata] Uploading avatar to permanent storage: ${avatarUrl.substring(0, 80)}`);
+    const permAvatar = await uploadToStorage(avatarUrl, 'avatars');
+    if (permAvatar) {
+      avatarUrl = permAvatar;
+      console.log(`[fetchMetadata] Successfully resolved permanent avatar URL: ${avatarUrl}`);
+    } else {
+      console.warn(`[fetchMetadata] Failed to cache avatar to storage; continuing with fallback.`);
+      avatarUrl = null;
+    }
+  }
+
+  return { mediaUrl, description, title, isVideo, avatarUrl, fetchMethod, error: errorSummary };
 }
 
 serve(async (req) => {
@@ -634,14 +803,18 @@ serve(async (req) => {
 
       if (body.id) {
         console.log(`[frontend] Updating post ${body.id} in DB...`);
+        const updatePayload: Record<string, any> = {
+          media_url: meta.mediaUrl,
+          username: meta.title,
+          description: meta.description,
+          is_video: meta.isVideo
+        };
+        if (meta.avatarUrl) {
+          updatePayload.avatar_url = meta.avatarUrl;
+        }
         const { error } = await supabase
           .from('ui_tastes')
-          .update({
-            media_url: meta.mediaUrl,
-            username: meta.title,
-            description: meta.description,
-            is_video: meta.isVideo
-          })
+          .update(updatePayload)
           .eq('id', body.id);
         if (error) {
           console.error(`[frontend] DB update failed for ${body.id}:`, error.message);
@@ -653,13 +826,7 @@ serve(async (req) => {
       if (body.insert) {
         console.log(`[frontend] Inserting new post into DB for URL: ${body.url}`);
         
-        let platform = 'Web';
-        if (body.url.includes('dribbble.com')) platform = 'Dribbble';
-        else if (body.url.includes('twitter.com') || body.url.includes('x.com')) platform = 'X';
-        else if (body.url.includes('behance.net')) platform = 'Behance';
-        else if (body.url.includes('instagram.com')) platform = 'Instagram';
-        else if (body.url.includes('linkedin.com')) platform = 'LinkedIn';
-
+        const platform = detectPlatform(body.url);
         const category = body.category || 'Landing Pages';
         
         const { error } = await supabase
@@ -671,7 +838,8 @@ serve(async (req) => {
             description: meta.description || `Manually added ${category} inspiration.`,
             media_url: meta.mediaUrl,
             is_video: meta.isVideo,
-            category
+            category,
+            avatar_url: meta.avatarUrl || null
           }]);
           
         if (error) {
@@ -694,6 +862,7 @@ serve(async (req) => {
             title: meta.title,
             isVideo: meta.isVideo,
             fetchMethod: meta.fetchMethod,
+            avatarUrl: meta.avatarUrl,
           },
           warning: meta.error || undefined,
         }),
@@ -706,14 +875,18 @@ serve(async (req) => {
       console.log(`[backend] Reprocessing post ${body.id} URL: ${body.url}`);
       const meta = await fetchMetadata(body.url);
       
+      const updatePayload: Record<string, any> = {
+        media_url: meta.mediaUrl,
+        username: meta.title,
+        description: meta.description,
+        is_video: meta.isVideo
+      };
+      if (meta.avatarUrl) {
+        updatePayload.avatar_url = meta.avatarUrl;
+      }
       const { error } = await supabase
         .from('ui_tastes')
-        .update({
-          media_url: meta.mediaUrl,
-          username: meta.title,
-          description: meta.description,
-          is_video: meta.isVideo
-        })
+        .update(updatePayload)
         .eq('id', body.id);
 
       if (error) {
@@ -735,12 +908,7 @@ serve(async (req) => {
       if (urls && urls.length > 0) {
         const postUrl = urls[0];
 
-        let platform = 'Web';
-        if (postUrl.includes('dribbble.com')) platform = 'Dribbble';
-        else if (postUrl.includes('twitter.com') || postUrl.includes('x.com')) platform = 'X';
-        else if (postUrl.includes('behance.net')) platform = 'Behance';
-        else if (postUrl.includes('instagram.com')) platform = 'Instagram';
-        else if (postUrl.includes('linkedin.com')) platform = 'LinkedIn';
+        const platform = detectPlatform(postUrl);
 
         const meta = await fetchMetadata(postUrl);
 
@@ -751,7 +919,8 @@ serve(async (req) => {
           description: meta.description,
           media_url: meta.mediaUrl,
           is_video: meta.isVideo,
-          category: 'Uncategorized'
+          category: 'Uncategorized',
+          avatar_url: meta.avatarUrl || null
         }]);
 
         if (error) throw error;

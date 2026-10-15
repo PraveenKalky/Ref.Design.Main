@@ -45,3 +45,14 @@ Before completing any change, compare the page before vs after and verify that u
 - **Pull Requests**: Changes must be pushed on their respective feature branch and merged via Pull Request into `main`.
 - **Preserve Work**: Stashes and backups must be checked before creating new branches to avoid losing uncommitted progress.
 
+## Rule 8 — Modal Dialogs & Action Button Design Standards
+For all modals and confirmation dialogs across Ref.Design:
+1. **Backdrop & Opacity**: Reuse the standard Sections page backdrop with **10% transparency** (`background: rgba(0, 0, 0, 0.1)`).
+2. **Zero Backdrop Blur**: **NEVER add background blur (`backdrop-filter: blur(...)`)** to modal overlays unless explicitly requested by the user.
+3. **Action Button Alignment & Spacing**:
+   - Action buttons with icons must use `display: inline-flex`, `align-items: center`, `justify-content: center`, and a **consistent 12px gap** between icon and text.
+   - Text and icons must remain horizontally centered without stacking, wrapping, or collision.
+4. **Figma-Style Smooth Corners**: Preserve Figma-style smooth corners (`corner-shape: squircle; -webkit-corner-shape: squircle; border-radius: 9999px;` on pills / `20px` on cards).
+5. **Shared Component Tokens**: Always reuse shared design tokens and modal classes (`.section-modal-overlay`, `.section-modal-card`, `.section-modal-btn`) rather than introducing inconsistent isolated styles.
+
+

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Card } from './CardGrid';
+import { ConfirmationModal } from '../modal/Modal';
 import Pagination from '../pagination/Pagination';
 import './card-grid.css';
 
@@ -13,6 +14,8 @@ export default function SubmissionsGrid({ selectedCategory }) {
   // Bulk action states
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
 
   const cardsPerPage = 24;
 
@@ -135,9 +138,14 @@ export default function SubmissionsGrid({ selectedCategory }) {
     );
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} selected website cards permanently?`)) return;
+    setShowBulkDeleteModal(true);
+  };
+
+  const executeBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeletingBulk(true);
 
     try {
       const { data, error } = await supabase
@@ -180,6 +188,7 @@ export default function SubmissionsGrid({ selectedCategory }) {
       setSubmissions((prev) => prev.filter((item) => !deletedIds.includes(item.id)));
       setSelectedIds([]);
       setIsSelectMode(false);
+      setShowBulkDeleteModal(false);
       
       if (deletedIds.length < selectedIds.length) {
          alert(`Only ${deletedIds.length} of ${selectedIds.length} were deleted due to permissions.`);
@@ -187,6 +196,8 @@ export default function SubmissionsGrid({ selectedCategory }) {
     } catch (err) {
       console.error('Failed bulk delete:', err);
       alert(`Failed to delete selected websites: ${err.message}`);
+    } finally {
+      setIsDeletingBulk(false);
     }
   };
 
@@ -291,6 +302,19 @@ export default function SubmissionsGrid({ selectedCategory }) {
           onPageChange={handlePageChange} 
         />
       )}
+
+      {/* Bulk Delete Confirmation Modal (Standardized) */}
+      <ConfirmationModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={executeBulkDelete}
+        title={`Delete ${selectedIds.length} ${selectedIds.length === 1 ? 'Website' : 'Websites'}?`}
+        description={`Are you sure you want to permanently delete ${selectedIds.length === 1 ? 'this website' : `these ${selectedIds.length} websites`} and all associated media? This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.length} ${selectedIds.length === 1 ? 'Website' : 'Websites'}`}
+        isLoading={isDeletingBulk}
+        loadingText="Deleting…"
+        size="md"
+      />
     </section>
   );
 }

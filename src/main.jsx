@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import './styles/global.css'
+import './components/modal/modal.css'
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { cardsData } from './cards-data';
 import Pagination from '../pagination/Pagination';
 import { isVideoMedia } from '../../utils/mediaUtils';
+import { ConfirmationModal } from '../modal/Modal';
 import './card-grid.css';
 
 export const Card = ({ 
@@ -137,32 +138,15 @@ export const Card = ({
         </Link>
       </div>
 
-      {showDeleteModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="admin-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="admin-modal-title">Delete Website</h3>
-            <p className="admin-modal-body">
-              Are you sure you want to delete <strong>"{title}"</strong>? This action cannot be undone and will permanently remove all associated pages and uploaded media.
-            </p>
-            <div className="admin-modal-actions">
-              <button 
-                type="button" 
-                onClick={() => setShowDeleteModal(false)}
-                className="admin-modal-btn admin-modal-btn-cancel"
-              >
-                Cancel
-              </button>
-              <button 
-                type="button" 
-                onClick={confirmDelete}
-                className="admin-modal-btn admin-modal-btn-danger"
-              >
-                Delete Permanently
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Website"
+        description={<>Are you sure you want to delete <strong>"{title}"</strong>? This action cannot be undone and will permanently remove all associated pages and uploaded media.</>}
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+      />
     </>
   );
 };

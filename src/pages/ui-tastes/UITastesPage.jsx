@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { Check, X, Trash2 } from 'lucide-react';
 import UITasteInput from './UITasteInput';
 import UITasteCard from './UITasteCard';
 import UITasteHero from './UITasteHero';
@@ -9,6 +10,11 @@ import '../../components/card-grid/card-grid.css'; // For reusing card hover sta
 import './ui-tastes.css';
 import '../../components/navbar/login-modal.css'; // Reuse existing toast styles
 import { supabase } from '../../lib/supabase';
+import { detectPlatform } from '../../utils/platformIcons';
+import { deleteMultipleTastesFromDB, parseSocialPost } from '../../utils/tasteActions';
+import { getDisplayImageUrl } from '../../utils/mediaUtils';
+import { useAuth } from '../../context/AuthContext';
+import { ConfirmationModal } from '../../components/modal/Modal';
 
 export default function UITastesPage({ savedItems, toggleSave }) {
   const [posts, setPosts] = useState([]);
@@ -17,6 +23,44 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   const [toasts, setToasts] = useState([]);
   const [isExtensionConnected, setIsExtensionConnected] = useState(false);
   const hasNotifiedConnectedRef = useRef(false);
+
+  // Multi-Select & Bulk Deletion State
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+
+  // Authentication check
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+  } catch (e) {
+    user = null;
+  }
+  const isAuthorized = Boolean(user) || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+
+  // Lock background scroll and body state when bulk delete modal is open
+  useEffect(() => {
+    if (showBulkDeleteModal) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('has-modal-open');
+
+      const handleGlobalKeyDown = (e) => {
+        if (e.key === 'Escape' && !isDeletingBulk) {
+          setShowBulkDeleteModal(false);
+        }
+      };
+      window.addEventListener('keydown', handleGlobalKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.classList.remove('has-modal-open');
+        window.removeEventListener('keydown', handleGlobalKeyDown);
+      };
+    }
+  }, [showBulkDeleteModal, isDeletingBulk]);
 
   // Discovery Filter State (Category, Type, Tag matching approved layout)
   const [activePlatform, setActivePlatform] = useState('all');
@@ -135,7 +179,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
   const fetchPosts = async () => {
     const { data, error } = await supabase
       .from('ui_tastes')
-      .select('id, url, platform, username, description, media_url, is_video, category, created_at')
+      .select('*')
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -196,9 +240,10 @@ export default function UITastesPage({ savedItems, toggleSave }) {
           const isVideo = !!meta.isVideo;
           const description = meta.description || post.description;
           const username = meta.title || post.username;
+          const avatarUrl = meta.avatarUrl || post.avatar_url;
 
           // Update React state directly
-          setPosts(prev => prev.map(p => p.id === post.id ? { ...p, media_url: mediaUrl, is_video: isVideo, description, username } : p));
+          setPosts(prev => prev.map(p => p.id === post.id ? { ...p, media_url: mediaUrl, is_video: isVideo, description, username, ...(avatarUrl ? { avatar_url: avatarUrl } : {}) } : p));
         }
       } catch (err) {
         console.error('Failed to migrate post:', post.id, err);
@@ -272,7 +317,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     } else if (activePlatform === 'upload') {
       list = list.filter(p => p.url && p.url.includes('/manual-upload/'));
     } else if (activePlatform !== 'all') {
-      list = list.filter(p => (p.platform || '').toLowerCase() === activePlatform.toLowerCase());
+      list = list.filter(p => detectPlatform(p.url, p.platform).toLowerCase() === activePlatform.toLowerCase());
     }
 
     // 2. Category Filter (multi-select or single-select)
@@ -345,7 +390,7 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     } else if (activePlatform === 'upload') {
       baseList = baseList.filter(p => p.url && p.url.includes('/manual-upload/'));
     } else if (activePlatform !== 'all') {
-      baseList = baseList.filter(p => (p.platform || '').toLowerCase() === activePlatform.toLowerCase());
+      baseList = baseList.filter(p => detectPlatform(p.url, p.platform).toLowerCase() === activePlatform.toLowerCase());
     }
 
     // 2. Media Type Filter
@@ -396,8 +441,68 @@ export default function UITastesPage({ savedItems, toggleSave }) {
     return Object.values(savedItems).filter(Boolean).length;
   }, [savedItems]);
 
+  // Multi-Select Handlers
+  const handleToggleSelectMode = () => {
+    setIsSelectMode(prev => {
+      if (prev) {
+        setSelectedIds(new Set());
+      }
+      return !prev;
+    });
+  };
+
+  const handleToggleSelect = (postId) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllFiltered = () => {
+    const allIds = filteredPosts.map(p => p.id);
+    setSelectedIds(new Set(allIds));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleOpenBulkDeleteModal = () => {
+    if (selectedIds.size === 0) return;
+    setShowBulkDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setIsDeletingBulk(true);
+
+    const postsToDelete = posts.filter(p => selectedIds.has(p.id));
+    const count = postsToDelete.length;
+
+    try {
+      const { count: deletedCount, error } = await deleteMultipleTastesFromDB(postsToDelete);
+      if (error) throw error;
+
+      setPosts(prev => prev.filter(p => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+      setIsSelectMode(false);
+      setShowBulkDeleteModal(false);
+      addToast(`Deleted ${count} ${count === 1 ? 'post' : 'posts'} successfully`, 'success');
+    } catch (err) {
+      console.error('Error during bulk deletion:', err);
+      addToast('Failed to delete selected posts. Please try again.', 'error');
+    } finally {
+      setIsDeletingBulk(false);
+    }
+  };
+
   return (
-    <div className="ui-tastes-page">
+    <div className={`ui-tastes-page ${isSelectMode ? 'has-active-select-mode' : ''}`}>
       {/* 3D Curved Perspective Ribbon Hero - Inspired by Melius Reference */}
       <UITasteHero posts={posts}>
         <UITasteInput 
@@ -431,6 +536,9 @@ export default function UITastesPage({ savedItems, toggleSave }) {
           categoryCounts={categoryCounts}
           savedCount={savedCount}
           onResetFilters={handleResetFilters}
+          isSelectMode={isSelectMode}
+          onToggleSelectMode={isAuthorized ? handleToggleSelectMode : undefined}
+          selectedCount={selectedIds.size}
         />
 
         {filteredPosts.length === 0 ? (
@@ -459,6 +567,9 @@ export default function UITastesPage({ savedItems, toggleSave }) {
                   onUpdatePost={handleUpdatePost}
                   onDeletePost={handleDeletePost}
                   onToast={addToast}
+                  isSelectMode={isSelectMode}
+                  isSelected={selectedIds.has(post.id)}
+                  onToggleSelect={handleToggleSelect}
                 />
               </div>
             ))}
@@ -466,6 +577,106 @@ export default function UITastesPage({ savedItems, toggleSave }) {
         )}
 
       </div>
+
+      {/* Floating Bottom Action Dock (Visible when Select Mode is active) */}
+      {isSelectMode && (
+        <div className="taste-bulk-dock-container">
+          <div className="taste-bulk-dock">
+            <div className="taste-bulk-dock-info">
+              <span className="taste-bulk-dock-badge">{selectedIds.size}</span>
+              <span className="taste-bulk-dock-label">
+                {selectedIds.size === 1 ? 'item selected' : 'items selected'}
+              </span>
+            </div>
+
+            <div className="taste-bulk-dock-divider" />
+
+            <div className="taste-bulk-dock-actions">
+              {selectedIds.size < filteredPosts.length ? (
+                <button
+                  type="button"
+                  className="taste-bulk-dock-btn secondary"
+                  onClick={handleSelectAllFiltered}
+                  title="Select all currently visible posts"
+                >
+                  Select All ({filteredPosts.length})
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="taste-bulk-dock-btn secondary"
+                  onClick={handleDeselectAll}
+                  title="Deselect all posts"
+                >
+                  Deselect All
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="taste-bulk-dock-btn secondary"
+                onClick={() => {
+                  setSelectedIds(new Set());
+                  setIsSelectMode(false);
+                }}
+                title="Exit selection mode"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="taste-bulk-dock-btn danger"
+                disabled={selectedIds.size === 0}
+                onClick={handleOpenBulkDeleteModal}
+                title={selectedIds.size === 0 ? "Select posts to delete" : `Delete ${selectedIds.size} posts`}
+              >
+                <Trash2 size={14} />
+                <span>Delete {selectedIds.size > 0 ? `(${selectedIds.size})` : ''}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal (Standardized) */}
+      <ConfirmationModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title={`Delete ${selectedIds.size} ${selectedIds.size === 1 ? 'Post' : 'Posts'}?`}
+        description={`Are you sure you want to permanently delete ${selectedIds.size === 1 ? 'this post' : `these ${selectedIds.size} posts`} and their associated media? This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.size} ${selectedIds.size === 1 ? 'Post' : 'Posts'}`}
+        confirmIcon={<Trash2 size={15} style={{ marginRight: 6 }} />}
+        isLoading={isDeletingBulk}
+        loadingText="Deleting…"
+        size="md"
+      >
+        {/* Visual Thumbnail Strip of Target Posts */}
+        <div className="taste-bulk-previews-strip" style={{ marginBottom: 20 }}>
+          {posts.filter(p => selectedIds.has(p.id)).slice(0, 10).map(p => {
+            const previewImg = getDisplayImageUrl(p.thumbnail_url || p.media_url);
+            const { displayName } = parseSocialPost(p);
+            return (
+              <div key={p.id} className="taste-bulk-preview-item" title={displayName}>
+                {previewImg ? (
+                  <img src={previewImg} alt={displayName} />
+                ) : (
+                  <div className="taste-bulk-preview-placeholder">
+                    {displayName ? displayName.charAt(0).toUpperCase() : 'P'}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {selectedIds.size > 10 && (
+            <div className="taste-bulk-preview-more">
+              +{selectedIds.size - 10}
+            </div>
+          )}
+        </div>
+      </ConfirmationModal>
+
       
       {/* Toast Notification Container */}
       <div className="lm-toast-container">

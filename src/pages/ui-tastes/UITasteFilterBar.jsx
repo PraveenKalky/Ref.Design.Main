@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, CheckSquare } from 'lucide-react';
 import { 
   CaretDown, 
   MagnifyingGlass, 
@@ -7,7 +7,8 @@ import {
   PlayCircle,
   Image as ImageIcon,
   Check,
-  Globe
+  Globe,
+  LinkedinLogo
 } from '@phosphor-icons/react';
 import './UITasteFilterBar.css';
 
@@ -32,7 +33,7 @@ const IconX = () => (
 
 const IconDribbble = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.952-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.017-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.logout c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.477 0-.945.04-1.4.113v.175zm4.815 7.38c.21-.06.42-.12.63-.174-1.74-3.105-3.62-5.696-3.886-6.067-1.897.386-3.58 1.31-4.9 2.612C7.586 6.29 9.383 8.72 10.82 10.785c1.19-.398 2.46-.74 3.596-.953z"/>
+    <path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.952-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.017-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.87c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.477 0-.945.04-1.4.113v.175zm4.815 7.38c.21-.06.42-.12.63-.174-1.74-3.105-3.62-5.696-3.886-6.067-1.897.386-3.58 1.31-4.9 2.612C7.586 6.29 9.383 8.72 10.82 10.785c1.19-.398 2.46-.74 3.596-.953z"/>
   </svg>
 );
 
@@ -48,11 +49,16 @@ const IconPinterest = () => (
   </svg>
 );
 
+const IconLinkedIn = () => (
+  <LinkedinLogo size={14} weight="bold" />
+);
+
 export const PLATFORM_TABS = [
   { id: 'all', label: 'All', icon: IconAll },
   { id: 'Instagram', label: 'Instagram', icon: IconInstagram },
-  { id: 'X', label: 'X (Twitter)', icon: IconX },
   { id: 'Dribbble', label: 'Dribbble', icon: IconDribbble },
+  { id: 'LinkedIn', label: 'LinkedIn', icon: IconLinkedIn },
+  { id: 'X', label: 'X (Twitter)', icon: IconX },
   { id: 'Behance', label: 'Behance', icon: IconBehance },
   { id: 'Pinterest', label: 'Pinterest', icon: IconPinterest },
   { id: 'Web', label: 'Web', icon: Globe },
@@ -104,7 +110,10 @@ export default function UITasteFilterBar({
   filteredCount,
   categoryCounts = {},
   savedCount = 0,
-  onResetFilters
+  onResetFilters,
+  isSelectMode = false,
+  onToggleSelectMode,
+  selectedCount = 0
 }) {
   // Expand state for full-width categories tray
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
@@ -336,6 +345,32 @@ export default function UITasteFilterBar({
               </div>
             )}
           </div>
+
+          {/* Multi-Select Toggle Button */}
+          {onToggleSelectMode && (
+            <button
+              type="button"
+              className={`ui-taste-select-toggle-btn ${isSelectMode ? 'is-active' : ''}`}
+              onClick={onToggleSelectMode}
+              title={isSelectMode ? 'Exit Selection Mode' : 'Select items to delete or organize'}
+              aria-pressed={isSelectMode}
+            >
+              {isSelectMode ? (
+                <>
+                  <Check size={14} weight="bold" />
+                  <span>Done</span>
+                  {selectedCount > 0 && (
+                    <span className="ui-taste-select-badge">{selectedCount}</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <CheckSquare size={14} strokeWidth={2.2} />
+                  <span>Select</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 

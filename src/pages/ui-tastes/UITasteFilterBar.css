@@ -767,3 +767,77 @@
     width: auto;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Multi-Select Toggle Button
+   ───────────────────────────────────────────────────────────── */
+.ui-taste-select-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--ui-taste-control-bg, #F0F0F0);
+  border: none !important;
+  border-radius: 9999px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-color, #111111);
+  cursor: pointer;
+  white-space: nowrap;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.ui-taste-select-toggle-btn:hover {
+  background: #e5e5e5;
+  transform: translateY(-1px);
+}
+
+.ui-taste-select-toggle-btn.is-active {
+  background: #111111;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+}
+
+.ui-taste-select-toggle-btn.is-active:hover {
+  background: #222222;
+}
+
+[data-theme="dark"] .ui-taste-select-toggle-btn {
+  background: #1c1c1c;
+  color: #f0f0f0;
+}
+
+[data-theme="dark"] .ui-taste-select-toggle-btn:hover {
+  background: #282828;
+}
+
+[data-theme="dark"] .ui-taste-select-toggle-btn.is-active {
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="dark"] .ui-taste-select-toggle-btn.is-active:hover {
+  background: #e0e0e0;
+}
+
+.ui-taste-select-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #E8323C;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
